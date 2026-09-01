@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8c3a34"/>
+      <stop offset="55%" stop-color="#5f2723"/>
+      <stop offset="100%" stop-color="#2e1412"/>
+    </linearGradient>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0"/></filter>
+  </defs>
+  <rect width="900" height="1100" fill="url(#g)"/>
+  <g opacity="0.5" fill="#d8a892">
+    <circle cx="300" cy="300" r="70"/><circle cx="470" cy="360" r="60"/><circle cx="620" cy="280" r="55"/>
+    <circle cx="380" cy="470" r="65"/><circle cx="540" cy="520" r="58"/><circle cx="260" cy="530" r="50"/>
+  </g>
+  <rect width="900" height="1100" filter="url(#grain)"/>
+</svg>

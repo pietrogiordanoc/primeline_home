@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="35%" r="80%">
+      <stop offset="0%" stop-color="#e2503d"/>
+      <stop offset="60%" stop-color="#a82f22"/>
+      <stop offset="100%" stop-color="#5c1712"/>
+    </radialGradient>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0"/></filter>
+  </defs>
+  <rect width="900" height="1100" fill="url(#g)"/>
+  <circle cx="330" cy="380" r="150" fill="#c8452f" opacity="0.6"/>
+  <circle cx="600" cy="620" r="190" fill="#8f2419" opacity="0.5"/>
+  <path d="M330 230 C 340 190, 380 190, 380 240" stroke="#4c7a2a" stroke-width="14" fill="none"/>
+  <rect width="900" height="1100" filter="url(#grain)"/>
+</svg>

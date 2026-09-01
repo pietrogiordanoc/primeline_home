@@ -1,0 +1,92 @@
+/* ============================================================
+   PRIME LINE — Base design system
+   Shared across all home concepts (variables, reset, typography)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+:root{
+  /* Brand palette — derived from Prime Line logo */
+  --pl-navy: #16264a;
+  --pl-navy-deep: #0d1830;
+  --pl-gold: #c8973f;
+  --pl-gold-soft: #d8b878;
+  --pl-cream: #faf7f2;
+  --pl-cream-dark: #f1ebe1;
+  --pl-ink: #24262b;
+  --pl-ink-soft: #55585f;
+  --pl-line: rgba(22,38,74,0.12);
+
+  --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+
+  --container: 1320px;
+  --gutter: clamp(24px, 5vw, 72px);
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+html{ scroll-behavior: smooth; }
+body{
+  margin: 0;
+  background: var(--pl-cream);
+  color: var(--pl-ink);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+img{ max-width: 100%; display: block; }
+a{ color: inherit; text-decoration: none; }
+ul{ list-style: none; margin: 0; padding: 0; }
+h1,h2,h3,h4{ margin: 0; font-family: var(--font-serif); font-weight: 500; letter-spacing: .01em; }
+p{ margin: 0; }
+button{ font-family: inherit; cursor: pointer; }
+
+.eyebrow{
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--pl-gold);
+}
+.wrap{
+  max-width: var(--container);
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+.hairline{
+  width: 48px;
+  height: 1px;
+  background: var(--pl-gold);
+  border: none;
+  margin: 22px 0;
+}
+.btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 30px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  transition: background .35s var(--ease), color .35s var(--ease);
+}
+.btn--dark{ color: var(--pl-cream); }
+.btn--dark:hover{ background: var(--pl-cream); color: var(--pl-navy); }
+.btn--light{ color: var(--pl-navy); }
+.btn--light:hover{ background: var(--pl-navy); color: var(--pl-cream); }
+
+.reveal{
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 1s var(--ease), transform 1s var(--ease);
+}
+.reveal.is-visible{
+  opacity: 1;
+  transform: translateY(0);
+}
