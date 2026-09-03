@@ -25,4 +25,41 @@ document.addEventListener('DOMContentLoaded', () => {
   if (toggle && links) {
     toggle.addEventListener('click', () => links.classList.toggle('is-open'));
   }
+
+  const slider = document.querySelector('.banner-slider');
+  if (slider) {
+    const slides = Array.from(slider.querySelectorAll('.slide'));
+    const dotsWrap = slider.querySelector('.slider-dots');
+    const prevBtn = slider.querySelector('.slider-arrow--prev');
+    const nextBtn = slider.querySelector('.slider-arrow--next');
+    let current = Math.max(0, slides.findIndex((s) => s.classList.contains('is-active')));
+    let timer;
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'dot' + (i === current ? ' is-active' : '');
+      dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+      dot.addEventListener('click', () => goTo(i));
+      dotsWrap.appendChild(dot);
+    });
+    const dots = Array.from(dotsWrap.children);
+
+    function goTo(index) {
+      slides[current].classList.remove('is-active');
+      dots[current].classList.remove('is-active');
+      current = (index + slides.length) % slides.length;
+      slides[current].classList.add('is-active');
+      dots[current].classList.add('is-active');
+      resetTimer();
+    }
+    function resetTimer() {
+      clearInterval(timer);
+      timer = setInterval(() => goTo(current + 1), 5000);
+    }
+
+    prevBtn.addEventListener('click', () => goTo(current - 1));
+    nextBtn.addEventListener('click', () => goTo(current + 1));
+    resetTimer();
+  }
 });

@@ -2,161 +2,58 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Prime Line — Home Concept 01</title>
+<title>Prime Line — Importers of Selected Specialty Foods</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Prime Line — Importers of Selected Specialty Foods. Editorial home concept.">
+<meta name="description" content="Prime Line — Importers of Selected Specialty Foods.">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/home-v1.css">
 </head>
 <body>
 
-<header class="site-header">
-  <a href="index.html" class="brand">
-    <strong>Prime Line</strong>
-    <span>Importers of Selected Specialty Foods</span>
-  </a>
-  <nav class="nav-links">
-    <a href="#categories">Catalog</a>
-    <a href="#origin">Producers</a>
-    <a href="#spotlight">Journal</a>
-    <a href="#trade">Wholesale</a>
-    <a href="#contact">Contact</a>
-  </nav>
-  <div class="header-utility">
-    <span>EN</span>
-    <a href="#" class="btn btn--dark">Wholesale Login</a>
+<header class="site-header-simple">
+  <div class="header-bar">
+    <span class="header-spacer" aria-hidden="true"></span>
+    <a href="index.html" class="brand-logo">
+      <img src="images/Logo1500.png" alt="Prime Line — Importers of Selected Specialty Foods">
+    </a>
+    <nav class="header-nav">
+      <button type="button" class="menu-toggle">MENU <span class="menu-icon">&#9776;</span></button>
+      <a href="#" class="login-link">LOG IN <span class="login-icon">&#128100;</span></a>
+    </nav>
   </div>
 </header>
 
-<!-- 1. HERO — beauty shot, mozzarella concept -->
-<section class="hero">
-  <img src="assets/img/hero-mozzarella.svg" alt="Fresh mozzarella, hand pulled">
-  <div class="hero-content">
-    <span class="eyebrow">Since 1988 · New York</span>
-    <h1>The finest of Italy and&nbsp;Europe, brought to the American table.</h1>
-    <p>Prime Line sources, imports and distributes selected specialty foods for the country&rsquo;s most discerning retailers, restaurants and chefs.</p>
+<!-- BANNER SLIDER -->
+<section class="banner-slider" id="bannerSlider">
+  <div class="slider-track">
+    <div class="slide is-active"><img src="images/Banners/taglieri.jpg" alt="Charcuterie board"></div>
+    <div class="slide"><img src="images/Banners/meat.jpg" alt="Cured meats"></div>
+    <div class="slide"><img src="images/Banners/meat2.jpg" alt="Sliced prosciutto"></div>
+    <div class="slide"><img src="images/Banners/cheese1.jpg" alt="Cheese selection"></div>
+    <div class="slide"><img src="images/Banners/cheese2.jpg" alt="Cheese wheels"></div>
+    <div class="slide"><img src="images/Banners/cheese3.jpg" alt="Cheese board"></div>
+    <div class="slide"><img src="images/Banners/burrata.jpg" alt="Fresh burrata"></div>
+    <div class="slide"><img src="images/Banners/mozzarella.jpg" alt="Fresh mozzarella"></div>
+    <div class="slide"><img src="images/Banners/parmigiano.png" alt="Parmigiano Reggiano"></div>
+    <div class="slide"><img src="images/Banners/olive.jpg" alt="Olives"></div>
+    <div class="slide"><img src="images/Banners/oil.jpg" alt="Olive oil"></div>
+    <div class="slide"><img src="images/Banners/oil2.jpg" alt="Olive oil pouring"></div>
+    <div class="slide"><img src="images/Banners/pasta.jpg" alt="Fresh pasta"></div>
+    <div class="slide"><img src="images/Banners/pasta1.jpg" alt="Pasta dish"></div>
+    <div class="slide"><img src="images/Banners/fruit.jpg" alt="Fresh fruit"></div>
+    <div class="slide"><img src="images/Banners/spice.jpg" alt="Spices"></div>
+    <div class="slide"><img src="images/Banners/coffee.jpg" alt="Coffee"></div>
+    <div class="slide"><img src="images/Banners/coffeedesert.jpg" alt="Coffee dessert"></div>
   </div>
-  <div class="hero-scroll">Scroll</div>
+  <button type="button" class="slider-arrow slider-arrow--prev" aria-label="Previous slide">&#10094;</button>
+  <button type="button" class="slider-arrow slider-arrow--next" aria-label="Next slide">&#10095;</button>
+  <div class="slider-dots"></div>
 </section>
 
-<!-- 2. BRAND STATEMENT -->
-<section class="statement reveal">
-  <div class="wrap">
-    <blockquote>&ldquo;We do not sell products. We bring home the craft, the land and the hands behind every jar, wheel and bottle.&rdquo;</blockquote>
-    <hr class="hairline" style="margin-left:auto;margin-right:auto;">
-    <cite>Prime Line Distributors, Inc.</cite>
-  </div>
-</section>
-
-<!-- 3. CATEGORIES — organic beauty-shot modules, not product photography -->
-<section class="categories" id="categories">
-  <div class="section-head reveal">
-    <span class="eyebrow">Our World</span>
-    <h2>A Catalog Told Through Craft</h2>
-    <p>Eighteen categories, one philosophy: source what is made with patience, and let it speak for itself.</p>
-  </div>
-
-  <div class="mosaic">
-    <a class="tile tile--wide tile--tall reveal" href="#">
-      <img src="assets/img/cat-cheese.svg" alt="Cheese &amp; Dairy">
-      <span class="tile-label"><span class="eyebrow">01</span><h3>Cheese &amp; Dairy</h3></span>
-      <span class="tile-arrow">→</span>
-    </a>
-    <a class="tile reveal" href="#">
-      <img src="assets/img/cat-olive-oil.svg" alt="Olive Oils">
-      <span class="tile-label"><span class="eyebrow">02</span><h3>Olive Oils</h3></span>
-      <span class="tile-arrow">→</span>
-    </a>
-    <a class="tile reveal" href="#">
-      <img src="assets/img/cat-tomato.svg" alt="Tomatoes">
-      <span class="tile-label"><span class="eyebrow">03</span><h3>Tomatoes</h3></span>
-      <span class="tile-arrow">→</span>
-    </a>
-    <a class="tile tile--narrow reveal" href="#">
-      <img src="assets/img/cat-vinegar.svg" alt="Vinegars">
-      <span class="tile-label"><span class="eyebrow">04</span><h3>Vinegars</h3></span>
-      <span class="tile-arrow">→</span>
-    </a>
-    <a class="tile tile--narrow reveal" href="#">
-      <img src="assets/img/cat-pasta.svg" alt="Pasta">
-      <span class="tile-label"><span class="eyebrow">05</span><h3>Pasta</h3></span>
-      <span class="tile-arrow">→</span>
-    </a>
-    <a class="tile tile--wide reveal" href="#">
-      <img src="assets/img/cat-cured-meats.svg" alt="Cured Meats &amp; Charcuterie">
-      <span class="tile-label"><span class="eyebrow">06</span><h3>Cured Meats &amp; Charcuterie</h3></span>
-      <span class="tile-arrow">→</span>
-    </a>
-  </div>
-</section>
-
-<!-- 4. PROVENANCE -->
-<section class="origin" id="origin">
-  <div class="origin-copy reveal">
-    <span class="eyebrow">Provenance</span>
-    <h2>Regions We Call Home</h2>
-    <p>For nearly four decades we have travelled the back roads of Italy and Europe to stand beside the families who make what we import — never the other way around.</p>
-    <ul class="origin-regions">
-      <li>Tuscany</li>
-      <li>Piedmont</li>
-      <li>Emilia-Romagna</li>
-      <li>Basilicata</li>
-      <li>Abruzzo</li>
-      <li>Trentino</li>
-    </ul>
-  </div>
-  <div class="origin-photo">
-    <img src="assets/img/origin-grove.svg" alt="Olive groves in Tuscany">
-  </div>
-</section>
-
-<!-- 5. PRODUCER SPOTLIGHT -->
-<section class="spotlight" id="spotlight">
-  <div class="spotlight-photo reveal">
-    <img src="assets/img/producer-portrait.svg" alt="A Prime Line producer">
-  </div>
-  <div class="spotlight-copy reveal">
-    <span class="eyebrow">From the Journal</span>
-    <h2>Three Generations, One Grove</h2>
-    <p>Every harvest, the same hands return to the same trees. We tell these stories because they are the reason our imports taste the way they do &mdash; unmistakably, honestly themselves.</p>
-    <blockquote>&ldquo;We don&rsquo;t rush the oil. The oil tells us when it is ready.&rdquo;</blockquote>
-    <a href="#">Read the Full Story</a>
-  </div>
-</section>
-
-<!-- 6. TRADE / WHOLESALE CTA -->
-<section class="trade" id="trade">
-  <span class="eyebrow">For Retailers &amp; Restaurants</span>
-  <h2>A Partner for Your Table</h2>
-  <p>Prime Line supplies specialty grocers, fine dining and hospitality groups across the United States. Wholesale accounts unlock our full catalog, pricing and order entry by region.</p>
-  <div class="trade-actions">
-    <a href="#" class="btn btn--light" style="color:#fff;border-color:#fff;">Wholesale Login</a>
-    <a href="#" class="btn btn--light" style="color:#fff;border-color:#fff;">Request an Account</a>
-  </div>
-</section>
-
-<!-- 7. NEWSLETTER -->
-<section class="newsletter">
-  <h3>Join the Table</h3>
-  <p>Seasonal arrivals, producer stories and trade news — occasionally, and always worth reading.</p>
-  <form class="newsletter-form" onsubmit="return false;">
-    <input type="email" placeholder="Email address" required>
-    <button type="submit">Subscribe →</button>
-  </form>
-</section>
-
-<footer class="site-footer" id="contact">
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <strong>Prime Line</strong>
-      <p>Importers and Distributors of Specialty Foods &amp; Beverages in the USA since 1988.</p>
-      <div class="footer-social">
-        <a href="#" aria-label="Instagram">IG</a>
-        <a href="#" aria-label="Facebook">FB</a>
-      </div>
-    </div>
+<footer class="site-footer-simple" id="contact">
+  <div class="footer-columns">
     <div class="footer-col">
-      <h4>Company</h4>
+      <h4>COMPANY</h4>
       <ul>
         <li><a href="#">About Us</a></li>
         <li><a href="#">Coffee Division</a></li>
@@ -165,33 +62,30 @@
       </ul>
     </div>
     <div class="footer-col">
-      <h4>Catalog</h4>
+      <h4>CATALOG</h4>
       <ul>
         <li><a href="#">Products</a></li>
         <li><a href="#">Register</a></li>
         <li><a href="#">Log In</a></li>
       </ul>
+      <a href="#" class="footer-highlight">NEC CAT</a>
     </div>
     <div class="footer-col">
-      <h4>Order Entry</h4>
+      <h4>ORDER ENTRY</h4>
       <ul>
         <li><a href="#">Florida</a></li>
         <li><a href="#">New York</a></li>
-        <li><a href="#">Las Vegas</a></li>
+        <li><a href="#">Las vegas</a></li>
         <li><a href="#">Los Angeles</a></li>
       </ul>
     </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <ul>
-        <li><a href="#">Get in Touch</a></li>
-        <li><a href="#">Wholesale Support</a></li>
-      </ul>
+    <div class="footer-col footer-col--contact">
+      <h4><a href="#">CONTACT US</a></h4>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>&copy; 2026 Prime Line Distributors, Inc. All Rights Reserved.</span>
-    <span>Concept 01 — &ldquo;Mozzarella&rdquo; Editorial</span>
+    <p>Importers of Selected Specialty Foods</p>
+    <p>&copy; 2026 Prime Line Distributors, Inc. All Rights Reserved.</p>
   </div>
 </footer>
 
