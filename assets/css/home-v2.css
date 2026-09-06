@@ -453,15 +453,32 @@
   padding: 40px 44px;
   box-sizing: border-box;
 }
-.masterlink-access{ width: min(100%, 360px); text-align: center; }
-.catalog-pdf-book{
+.masterlink-access{ width: min(100%, 380px); text-align: center; }
+.access-brand{
   display: block;
-  width: min(100%, 290px);
+  width: min(100%, 176px);
   height: auto;
   margin: 0 auto 30px;
+}
+.access-mark{
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 18px;
+  border: 1px solid rgba(194, 143, 55, .5);
+  border-radius: 50%;
+  color: var(--pl-gold);
+}
+.access-mark svg{ width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.catalog-pdf-book{
+  display: block;
+  width: min(100%, 220px);
+  height: auto;
+  margin: -2px auto 20px;
   object-fit: contain;
 }
-.masterlink-title{ margin: 8px 0 8px; font-size: 30px; }
+.masterlink-title{ margin: 8px 0 10px; font-size: 32px; }
 .masterlink-lead{ color: var(--pl-ink-soft); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
 .masterlink-form{ display: flex; flex-direction: column; gap: 12px; }
 .masterlink-form[hidden]{ display: none; }
@@ -476,6 +493,18 @@
 }
 .masterlink-form .btn{ justify-content: center; background: var(--pl-navy); color: #fff; cursor: pointer; }
 .masterlink-form .btn:disabled{ opacity: .55; cursor: wait; }
+.access-code-form input{
+  max-width: 280px;
+  margin: 0 auto;
+  padding: 17px 20px;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: 30px;
+  letter-spacing: .28em;
+  line-height: 1;
+}
+.access-code-form input::placeholder{ color: #9aa0aa; letter-spacing: .28em; }
+.access-code-form .btn{ width: 100%; }
 .masterlink-status{ min-height: 22px; margin: 14px 0 0; color: var(--pl-navy); font-size: 13px; }
 .masterlink-status.is-error{ color: #9a3030; }
 .masterlink-back{
