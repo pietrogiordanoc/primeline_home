@@ -1,5 +1,4 @@
 const crypto = require('node:crypto');
-const { getStore } = require('@netlify/blobs');
 
 const CODE_LIFETIME_MS = 10 * 60 * 1000;
 const SESSION_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
@@ -23,6 +22,8 @@ const getCookie = (event, name) => {
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405);
+
+  const { getStore } = await import('@netlify/blobs');
 
   let payload;
   try {

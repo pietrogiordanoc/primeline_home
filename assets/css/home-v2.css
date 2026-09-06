@@ -464,6 +464,7 @@
 .masterlink-title{ margin: 8px 0 8px; font-size: 30px; }
 .masterlink-lead{ color: var(--pl-ink-soft); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
 .masterlink-form{ display: flex; flex-direction: column; gap: 12px; }
+.masterlink-form[hidden]{ display: none; }
 .masterlink-form input,
 .masterlink-recovery input{
   width: 100%;
