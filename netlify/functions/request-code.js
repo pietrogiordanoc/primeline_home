@@ -1,4 +1,4 @@
-const crypto = require('node:crypto');
+import { createHash, randomInt, randomUUID } from 'node:crypto';
 
 const CODE_LIFETIME_MS = 10 * 60 * 1000;
 const COOKIE_LIFETIME_SECONDS = 10 * 60;
@@ -12,7 +12,7 @@ const json = (body, statusCode = 200, headers = {}) => ({
 
 const cookie = (name, value, maxAge) => `${name}=${value}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax`;
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405);
 
   const { getStore } = await import('@netlify/blobs');
@@ -30,13 +30,13 @@ exports.handler = async (event) => {
     return json({ error: 'Invalid request.' }, 400);
   }
 
-  const code = String(crypto.randomInt(0, 1000)).padStart(3, '0');
-  const challengeId = crypto.randomUUID();
+  const code = String(randomInt(0, 1000)).padStart(3, '0');
+  const challengeId = randomUUID();
   const store = getStore({ name: 'prime-line-access', consistency: 'strong' });
   await store.setJSON(`challenge:${challengeId}`, {
     email,
     resource,
-    codeHash: crypto.createHash('sha256').update(code).digest('hex'),
+    codeHash: createHash('sha256').update(code).digest('hex'),
     attempts: 0,
     createdAt: Date.now(),
     expiresAt: Date.now() + CODE_LIFETIME_MS

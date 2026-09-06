@@ -1,4 +1,4 @@
-const crypto = require('node:crypto');
+import { createHash, randomUUID } from 'node:crypto';
 
 const CODE_LIFETIME_MS = 10 * 60 * 1000;
 const SESSION_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
@@ -20,7 +20,7 @@ const getCookie = (event, name) => {
   return entry ? entry.slice(name.length + 1) : '';
 };
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405);
 
   const { getStore } = await import('@netlify/blobs');
@@ -51,7 +51,7 @@ exports.handler = async (event) => {
     return json({ error: 'Too many attempts. Try again later.' }, 429);
   }
 
-  const submittedHash = crypto.createHash('sha256').update(code).digest('hex');
+  const submittedHash = createHash('sha256').update(code).digest('hex');
   if (submittedHash !== challenge.codeHash) {
     challenge.attempts += 1;
     if (challenge.attempts >= 3) challenge.lockedUntil = Date.now() + LOCKOUT_MS;
@@ -59,7 +59,7 @@ exports.handler = async (event) => {
     return json({ error: challenge.lockedUntil ? 'Too many attempts. Try again later.' : 'Invalid code.' }, 401);
   }
 
-  const sessionId = crypto.randomUUID();
+  const sessionId = randomUUID();
   await store.setJSON(`session:${sessionId}`, {
     email,
     resource,
