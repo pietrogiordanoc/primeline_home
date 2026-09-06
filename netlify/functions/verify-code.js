@@ -14,6 +14,16 @@ const json = (body, statusCode = 200, headers = {}, multiValueHeaders = {}) => (
 
 const cookie = (name, value, maxAge) => `${name}=${value}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax`;
 
+const getAccessStore = async () => {
+  const { getStore } = await import('@netlify/blobs');
+  return getStore({
+    name: 'prime-line-access',
+    consistency: 'strong',
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_AUTH_TOKEN
+  });
+};
+
 const getCookie = (event, name) => {
   const cookies = event.headers.cookie || event.headers.Cookie || '';
   const entry = cookies.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${name}=`));
@@ -22,8 +32,6 @@ const getCookie = (event, name) => {
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405);
-
-  const { getStore } = await import('@netlify/blobs');
 
   let payload;
   try {
@@ -40,7 +48,7 @@ export const handler = async (event) => {
     return json({ error: 'Invalid code.' }, 401);
   }
 
-  const store = getStore({ name: 'prime-line-access', consistency: 'strong' });
+  const store = await getAccessStore();
   const key = `challenge:${challengeId}`;
   const challenge = await store.get(key, { type: 'json' });
   if (!challenge || challenge.email !== email || challenge.resource !== resource || challenge.expiresAt < Date.now()) {

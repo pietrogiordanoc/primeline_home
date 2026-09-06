@@ -12,10 +12,18 @@ const json = (body, statusCode = 200, headers = {}) => ({
 
 const cookie = (name, value, maxAge) => `${name}=${value}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax`;
 
+const getAccessStore = async () => {
+  const { getStore } = await import('@netlify/blobs');
+  return getStore({
+    name: 'prime-line-access',
+    consistency: 'strong',
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_AUTH_TOKEN
+  });
+};
+
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405);
-
-  const { getStore } = await import('@netlify/blobs');
 
   let payload;
   try {
@@ -32,7 +40,7 @@ export const handler = async (event) => {
 
   const code = String(randomInt(0, 1000)).padStart(3, '0');
   const challengeId = randomUUID();
-  const store = getStore({ name: 'prime-line-access', consistency: 'strong' });
+  const store = await getAccessStore();
   await store.setJSON(`challenge:${challengeId}`, {
     email,
     resource,
