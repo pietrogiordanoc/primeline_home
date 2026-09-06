@@ -286,6 +286,102 @@ document.addEventListener('DOMContentLoaded', () => {
     catalogRegister?.addEventListener('blur', hideCatalogNotice);
   }
 
+  const setupEmailCodeAccess = (panel, resourceName) => {
+    const emailForm = panel.querySelector('.access-email-form');
+    const codeForm = panel.querySelector('.access-code-form');
+    const emailInput = emailForm?.querySelector('[name="access-email"]');
+    const codeInput = codeForm?.querySelector('[name="access-code"]');
+    const status = panel.querySelector('.masterlink-status');
+    const backButton = panel.querySelector('.masterlink-back');
+    const lead = panel.querySelector('.masterlink-lead');
+    let email = '';
+
+    const showStatus = (message, isError = false) => {
+      if (!status) return;
+      status.textContent = message;
+      status.classList.toggle('is-error', isError);
+    };
+
+    emailForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      email = emailInput?.value.trim().toLowerCase() || '';
+      if (!email.endsWith('@primelinedist.com')) {
+        showStatus('Please use your company email address.', true);
+        return;
+      }
+
+      const button = emailForm.querySelector('button');
+      if (button) button.disabled = true;
+      showStatus('Sending your access code...');
+      try {
+        const response = await fetch('/api/access/request-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, resource: resourceName })
+        });
+        if (!response.ok) throw new Error('request-failed');
+        emailForm.hidden = true;
+        codeForm.hidden = false;
+        backButton.hidden = false;
+        if (lead) lead.textContent = `Enter the 3-digit code sent to ${email}.`;
+        showStatus('The code expires in 10 minutes.');
+        codeInput?.focus();
+      } catch {
+        showStatus('We could not send the code. Please try again.', true);
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+
+    codeForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = codeInput?.value.trim() || '';
+      if (!/^\d{3}$/.test(code)) {
+        showStatus('Enter the 3-digit code from your email.', true);
+        return;
+      }
+
+      const button = codeForm.querySelector('button');
+      if (button) button.disabled = true;
+      showStatus('Checking your code...');
+      try {
+        const response = await fetch('/api/access/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, code, resource: resourceName })
+        });
+        if (!response.ok) {
+          showStatus('That code is incorrect or has expired.', true);
+          codeInput?.select();
+          return;
+        }
+        codeInput.value = '';
+        showStatus('Access granted.');
+      } catch {
+        showStatus('We could not verify the code. Please try again.', true);
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+
+    codeInput?.addEventListener('input', () => {
+      codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 3);
+    });
+
+    backButton?.addEventListener('click', () => {
+      email = '';
+      emailForm.hidden = false;
+      codeForm.hidden = true;
+      backButton.hidden = true;
+      codeInput.value = '';
+      if (lead) lead.textContent = 'Enter your company email to receive a 3-digit access code.';
+      showStatus('');
+      emailInput?.focus();
+    });
+  };
+
   if (masterlinkPanel && masterlinkTriggers.length) {
     const openMasterlink = (e) => {
       e.preventDefault();
@@ -320,27 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
     masterlinkTriggers.forEach((trigger) => trigger.addEventListener('click', openMasterlink));
     masterlinkPanelClose?.addEventListener('click', closeMasterlink);
 
-    const masterlinkForm = masterlinkPanel.querySelector('.masterlink-form');
-    const masterlinkStatus = masterlinkPanel.querySelector('.masterlink-status');
-    const masterlinkPassword = masterlinkPanel.querySelector('[name="masterlink-password"]');
-    masterlinkForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const isValid = masterlinkPassword?.value === 'master1981';
-      masterlinkStatus.textContent = isValid ? 'Access granted.' : 'Incorrect password.';
-      masterlinkStatus.classList.toggle('is-error', !isValid);
-      if (isValid) masterlinkPassword.value = '';
-    });
-
-    const forgotButton = masterlinkPanel.querySelector('.masterlink-forgot');
-    const recoveryForm = masterlinkPanel.querySelector('.masterlink-recovery');
-    forgotButton?.addEventListener('click', () => recoveryForm?.classList.toggle('is-open'));
-    recoveryForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const requesterEmail = recoveryForm.querySelector('[name="requester-email"]')?.value.trim();
-      const subject = encodeURIComponent('Masterlink password request');
-      const body = encodeURIComponent(`Please send the Masterlink password to: ${requesterEmail}`);
-      window.location.href = `mailto:pietro@primelinedist.com?subject=${subject}&body=${body}`;
-    });
+    setupEmailCodeAccess(masterlinkPanel, 'masterlink');
   }
 
   if (catalogPdfPanel && catalogPdfTriggers.length) {
@@ -374,27 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
     catalogPdfTriggers.forEach((trigger) => trigger.addEventListener('click', openCatalogPdf));
     catalogPdfPanelClose?.addEventListener('click', closeCatalogPdf);
 
-    const pdfForm = catalogPdfPanel.querySelector('.catalog-pdf-form');
-    const pdfStatus = catalogPdfPanel.querySelector('.catalog-pdf-status');
-    const pdfPassword = catalogPdfPanel.querySelector('[name="catalog-pdf-password"]');
-    pdfForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const isValid = pdfPassword?.value === 'master1981';
-      pdfStatus.textContent = isValid ? 'Access granted.' : 'Incorrect password.';
-      pdfStatus.classList.toggle('is-error', !isValid);
-      if (isValid) pdfPassword.value = '';
-    });
-
-    const pdfForgot = catalogPdfPanel.querySelector('.catalog-pdf-forgot');
-    const pdfRecovery = catalogPdfPanel.querySelector('.catalog-pdf-recovery');
-    pdfForgot?.addEventListener('click', () => pdfRecovery?.classList.toggle('is-open'));
-    pdfRecovery?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const requesterEmail = pdfRecovery.querySelector('[name="requester-email"]')?.value.trim();
-      const subject = encodeURIComponent('Catalog PDF password request');
-      const body = encodeURIComponent(`Please send the Catalog PDF password to: ${requesterEmail}`);
-      window.location.href = `mailto:pietro@primelinedist.com?subject=${subject}&body=${body}`;
-    });
+    setupEmailCodeAccess(catalogPdfPanel, 'catalog-pdf');
   }
 
   if (orderEntryPanel && orderEntryTriggers.length) {

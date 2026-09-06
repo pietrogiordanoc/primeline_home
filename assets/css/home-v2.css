@@ -474,9 +474,10 @@
   color: var(--pl-ink);
 }
 .masterlink-form .btn{ justify-content: center; background: var(--pl-navy); color: #fff; cursor: pointer; }
+.masterlink-form .btn:disabled{ opacity: .55; cursor: wait; }
 .masterlink-status{ min-height: 22px; margin: 14px 0 0; color: var(--pl-navy); font-size: 13px; }
 .masterlink-status.is-error{ color: #9a3030; }
-.masterlink-forgot{
+.masterlink-back{
   display: inline-block;
   margin-top: 12px;
   border: none;
@@ -488,11 +489,6 @@
   font: inherit;
   font-size: 12px;
 }
-.masterlink-recovery{ display: none; margin-top: 24px; text-align: left; }
-.masterlink-recovery.is-open{ display: block; }
-.masterlink-recovery label{ display: block; color: var(--pl-ink-soft); font-size: 12px; margin-bottom: 8px; }
-.masterlink-recovery .btn{ width: 100%; justify-content: center; margin-top: 10px; cursor: pointer; }
-.masterlink-recovery-note{ color: var(--pl-ink-soft); font-size: 12px; line-height: 1.5; margin: 0 0 12px; }
 
 /* ---------- Order entry and new-account document curtains ---------- */
 .order-entry-panel,

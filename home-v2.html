@@ -151,18 +151,17 @@
       <div class="masterlink-access">
         <span class="eyebrow">Private Access</span>
         <h2 class="masterlink-title">Masterlink</h2>
-        <p class="masterlink-lead">Enter the universal password to continue.</p>
-        <form class="masterlink-form">
-          <input type="password" name="masterlink-password" placeholder="Password" autocomplete="current-password" required>
+        <p class="masterlink-lead">Enter your company email to receive a 3-digit access code.</p>
+        <form class="masterlink-form access-email-form">
+          <input type="email" name="access-email" placeholder="Email address" autocomplete="email" required>
+          <button type="submit" class="btn">Send access code</button>
+        </form>
+        <form class="masterlink-form access-code-form" hidden>
+          <input type="text" name="access-code" placeholder="000" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" autocomplete="one-time-code" required>
           <button type="submit" class="btn">Access Masterlink</button>
         </form>
         <p class="masterlink-status" aria-live="polite"></p>
-        <button type="button" class="masterlink-forgot">Forgot the password?</button>
-        <form class="masterlink-recovery">
-          <p class="masterlink-recovery-note">Enter your email and we will send a request to the webmaster.</p>
-          <label>Email address<input type="email" name="requester-email" autocomplete="email" required></label>
-          <button type="submit" class="btn btn--light">Request password</button>
-        </form>
+        <button type="button" class="masterlink-back" hidden>Use a different email</button>
       </div>
     </div>
   </aside>
@@ -174,18 +173,17 @@
         <img class="catalog-pdf-book" src="images/spots/book.png" alt="Prime Line product catalog book">
         <span class="eyebrow">Private Access</span>
         <h2 class="masterlink-title">Catalog PDF</h2>
-        <p class="masterlink-lead">Enter the universal password to access the PDF catalog.</p>
-        <form class="masterlink-form catalog-pdf-form">
-          <input type="password" name="catalog-pdf-password" placeholder="Password" autocomplete="current-password" required>
+        <p class="masterlink-lead">Enter your company email to receive a 3-digit access code.</p>
+        <form class="masterlink-form access-email-form catalog-pdf-form">
+          <input type="email" name="access-email" placeholder="Email address" autocomplete="email" required>
+          <button type="submit" class="btn">Send access code</button>
+        </form>
+        <form class="masterlink-form access-code-form" hidden>
+          <input type="text" name="access-code" placeholder="000" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" autocomplete="one-time-code" required>
           <button type="submit" class="btn">Access Catalog PDF</button>
         </form>
         <p class="masterlink-status catalog-pdf-status" aria-live="polite"></p>
-        <button type="button" class="masterlink-forgot catalog-pdf-forgot">Forgot the password?</button>
-        <form class="masterlink-recovery catalog-pdf-recovery">
-          <p class="masterlink-recovery-note">Enter your email and we will send a request to the webmaster.</p>
-          <label>Email address<input type="email" name="requester-email" autocomplete="email" required></label>
-          <button type="submit" class="btn btn--light">Request password</button>
-        </form>
+        <button type="button" class="masterlink-back" hidden>Use a different email</button>
       </div>
     </div>
   </aside>
