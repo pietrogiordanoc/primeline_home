@@ -1,0 +1,13 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/access/request-code"
+  to = "/.netlify/functions/request-code"
+  status = 200
+
+[[redirects]]
+  from = "/api/access/verify-code"
+  to = "/.netlify/functions/verify-code"
+  status = 200
