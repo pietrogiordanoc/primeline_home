@@ -677,11 +677,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <section class="banner-caption">
           <div class="banner-caption-inner">
-            <button type="button" class="detail-slider-arrow detail-slider-arrow--prev" aria-label="Previous slide">&#10094;</button>
             <span class="eyebrow banner-caption-eyebrow">${data.eyebrow}</span>
             <h2 class="banner-caption-title">${data.title}</h2>
             <p class="banner-caption-text">${data.text}</p>
-            <button type="button" class="detail-slider-arrow detail-slider-arrow--next" aria-label="Next slide">&#10095;</button>
           </div>
         </section>`;
     }
@@ -696,7 +694,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const render = categoryDetailTemplates[key] || (() => defaultDetailTemplate(data));
       categoryDetail.classList.add('is-fading');
       setTimeout(() => {
-        categoryDetail.innerHTML = render();
+        categoryDetail.innerHTML = `
+          <div class="category-detail-nav" aria-label="Slide navigation">
+            <button type="button" class="detail-slider-arrow detail-slider-arrow--prev" aria-label="Previous slide"></button>
+            <button type="button" class="detail-slider-arrow detail-slider-arrow--next" aria-label="Next slide"></button>
+          </div>
+          ${render()}`;
         categoryDetail.classList.remove('is-fading');
         categoryDetail.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-visible'));
       }, 300);
