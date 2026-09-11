@@ -677,9 +677,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <section class="banner-caption">
           <div class="banner-caption-inner">
+            <button type="button" class="detail-slider-arrow detail-slider-arrow--prev" aria-label="Previous slide">&#10094;</button>
             <span class="eyebrow banner-caption-eyebrow">${data.eyebrow}</span>
             <h2 class="banner-caption-title">${data.title}</h2>
             <p class="banner-caption-text">${data.text}</p>
+            <button type="button" class="detail-slider-arrow detail-slider-arrow--next" aria-label="Next slide">&#10095;</button>
           </div>
         </section>`;
     }
@@ -728,6 +730,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCategoryDetail(slides[current]);
         resetTimer();
       }
+      categoryDetail?.addEventListener('click', (e) => {
+        const button = e.target.closest('.detail-slider-arrow');
+        if (!button) return;
+        goTo(button.classList.contains('detail-slider-arrow--prev') ? current - 1 : current + 1);
+      });
       function resetTimer() {
         clearInterval(timer);
         if (!autoplayAllowed) return;
