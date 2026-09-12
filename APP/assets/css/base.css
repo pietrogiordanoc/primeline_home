@@ -1,12 +1,12 @@
 /* ============================================================
-   PRIME LINE — Base design system
+  PRIME LINE - Base design system
    Shared across all home concepts (variables, reset, typography)
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
 :root{
-  /* Brand palette — derived from Prime Line logo */
+  /* Brand palette - derived from Prime Line logo */
   --pl-navy: #16264a;
   --pl-navy-deep: #0d1830;
   --pl-gold: #c8973f;
@@ -63,6 +63,46 @@ button{ font-family: inherit; cursor: pointer; }
   background: var(--pl-gold);
   border: none;
   margin: 22px 0;
+}
+img[src*="images/spots/"], .cheese-card img, .cv-hero img, .cv-intro-photo img, .cv-trio-card img, .cv-spot-photo img, .cv-diff-photo img, .cv-close img{ cursor: zoom-in; }
+.spot-lightbox{
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgba(13,24,48,.88);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+.spot-lightbox.is-open{
+  opacity: 1;
+  pointer-events: auto;
+}
+.spot-lightbox-image{
+  display: block;
+  max-width: min(92vw, 1400px);
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  box-shadow: 0 18px 60px rgba(0,0,0,.35);
+}
+.spot-lightbox-close{
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255,255,255,.6);
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
 }
 .btn{
   display: inline-flex;

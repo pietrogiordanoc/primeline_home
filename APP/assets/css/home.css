@@ -1,5 +1,5 @@
 /* ============================================================
-   PRIME LINE — Home (Classic Layout: logo header + banner slider)
+  PRIME LINE - Home (Classic Layout: logo header + banner slider)
    ============================================================ */
 
 /* ---------- Header ---------- */
@@ -106,7 +106,7 @@
 }
 .nav-panel-links a:hover{ color: var(--pl-gold); padding-left: 8px; }
 
-/* ---------- Side drawers container — stacked curtains sliding from the same left edge ---------- */
+/* ---------- Side drawers container - stacked curtains sliding from the same left edge ---------- */
 .side-drawers{
   position: fixed;
   top: 0; bottom: 0; left: 0;
@@ -124,7 +124,7 @@
 .side-drawers .order-entry-panel,
 .side-drawers .account-forms-panel{ pointer-events: auto; }
 
-/* ---------- Contact panel — second curtain that grows out from beside the menu ---------- */
+/* ---------- Contact panel - second curtain that grows out from beside the menu ---------- */
 .contact-panel{
   position: relative;
   height: 100%;
@@ -199,7 +199,7 @@
   padding: 15px 34px;
 }
 
-/* ---------- Locations panel — third curtain, revealed alongside the contact form ---------- */
+/* ---------- Locations panel - third curtain, revealed alongside the contact form ---------- */
 .locations-panel{
   position: relative;
   height: 100%;
@@ -298,7 +298,7 @@
 }
 .copy-btn.is-copied::after{ opacity: 1; }
 
-/* ---------- About Us panel — independent curtain triggered from the menu ---------- */
+/* ---------- About Us panel - independent curtain triggered from the menu ---------- */
 .about-panel{
   position: relative;
   height: 100%;
@@ -816,7 +816,7 @@
   background: #fff;
 }
 
-/* ---------- Category detail — dynamic content mounted below the active banner ---------- */
+/* ---------- Category detail - dynamic content mounted below the active banner ---------- */
 .category-detail{
   position: relative;
   opacity: 1;
@@ -833,7 +833,7 @@
   pointer-events: none;
 }
 
-/* ---------- Trusted By — client logo wall ---------- */
+/* ---------- Trusted By - client logo wall ---------- */
 .clients{
   background: #fff;
   padding: 90px var(--gutter);
@@ -915,6 +915,7 @@
   margin-left: auto;
   margin-right: auto;
 }
+.banner-caption-action{ margin-top: 22px; }
 .detail-slider-arrow{
   position: absolute;
   top: 50%;

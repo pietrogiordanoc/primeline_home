@@ -1,0 +1,63 @@
+/* Prime Line - Baking & Pastry editorial landing */
+.bp-page{ background:var(--bp-cream); --bp-cream:#f7f0e6; --bp-flour:#ede2d2; --bp-cocoa:#211917; --bp-caramel:#b87a45; --bp-pistachio:#7f8c55; }
+.bp-hero{ position:relative; min-height:92vh; display:flex; align-items:flex-end; overflow:hidden; background:var(--bp-cocoa); }
+.bp-hero > img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 55%; }
+.bp-hero-shade{ position:absolute; inset:0; background:linear-gradient(180deg,rgba(23,14,12,.12),rgba(23,14,12,.12) 38%,rgba(23,14,12,.78)); }
+.bp-hero-content{ position:relative; z-index:1; max-width:720px; padding:0 var(--gutter) 100px; color:#fff; }
+.bp-eyebrow-light{ color:#e3bd83; }
+.bp-hero h1{ font-size:clamp(42px,5.6vw,72px); line-height:1.03; margin:16px 0 22px; }
+.bp-hero p{ max-width:550px; color:rgba(255,255,255,.88); font-size:16px; margin-bottom:30px; }
+.bp-hero-cta{ color:#fff; }
+.bp-intro,.bp-feature,.bp-cannoli{ display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:70px; max-width:var(--container); margin:0 auto; padding:112px var(--gutter); }
+.bp-intro-photo img,.bp-cannoli-photo img{ width:100%; aspect-ratio:4 / 3; object-fit:cover; }
+.bp-copy{ max-width:540px; }
+.bp-copy h2,.bp-cannoli-copy h2{ font-size:clamp(31px,3.8vw,49px); line-height:1.08; margin:14px 0 24px; color:var(--bp-cocoa); }
+.bp-copy p,.bp-cannoli-copy p{ max-width:500px; color:#625a54; font-size:15px; line-height:1.8; margin-bottom:14px; }
+.bp-detail{ font-size:13px!important; line-height:1.7!important; color:#80756d!important; }
+.bp-feature{ max-width:none; padding-left:max(var(--gutter),calc((100vw - var(--container)) / 2 + var(--gutter))); padding-right:max(var(--gutter),calc((100vw - var(--container)) / 2 + var(--gutter))); background:var(--bp-flour); }
+.bp-feature--chocolate{ background:var(--bp-cocoa); }
+.bp-feature--chocolate .bp-copy{ order:2; }
+.bp-feature--finishing{ background:#f8f3eb; }
+.bp-feature--specialties{ background:var(--bp-flour); }
+.bp-copy--light h2{ color:#fff; }
+.bp-copy--light p{ color:rgba(255,255,255,.8); }
+.bp-copy--light .bp-detail{ color:rgba(255,255,255,.62)!important; }
+.bp-media{ min-height:430px; display:flex; align-items:flex-end; padding:28px; overflow:hidden; position:relative; background:#d6c4ae; }
+.bp-media::before{ content:""; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.25),transparent 52%),repeating-linear-gradient(110deg,rgba(110,72,45,.08) 0 1px,transparent 1px 18px); }
+.bp-media--pending span{ position:relative; z-index:1; color:#755f4e; font-size:11px; letter-spacing:.08em; text-transform:uppercase; line-height:1.8; }
+.bp-media--pending strong{ color:#45352c; font-weight:600; }
+.bp-feature--chocolate .bp-media{ background:#30201d; }
+.bp-feature--chocolate .bp-media::before{ background:radial-gradient(circle at 36% 36%,rgba(176,105,57,.45),transparent 36%),linear-gradient(125deg,#4d2d24,#1a1211 62%); }
+.bp-feature--chocolate .bp-media--pending span{ color:#d7b58b; }
+.bp-feature--chocolate .bp-media--pending strong{ color:#f0d6ad; }
+.bp-cannoli{ background:var(--bp-cream); }
+.bp-cannoli-copy{ max-width:540px; }
+.bp-cannoli-photo{ overflow:hidden; }
+.bp-cannoli-photo img{ transition:transform 1.1s var(--ease); }
+.bp-cannoli-photo:hover img{ transform:scale(1.04); }
+.bp-close{ position:relative; min-height:68vh; display:flex; align-items:center; justify-content:center; overflow:hidden; background:var(--bp-cocoa); }
+.bp-close .bp-media{ position:absolute; inset:0; min-height:0; padding:0; background:#3c2821; }
+.bp-close .bp-media::before{ background:radial-gradient(circle at 55% 38%,rgba(190,126,63,.32),transparent 42%),linear-gradient(120deg,#39251e,#171111); }
+.bp-close-copy{ position:relative; z-index:1; max-width:700px; padding:0 var(--gutter); text-align:center; color:#fff; }
+.bp-close-copy h2{ color:#fff; font-size:clamp(35px,4.6vw,59px); line-height:1.05; margin:16px 0 22px; }
+.bp-close-copy p{ color:rgba(255,255,255,.86); font-size:15px; margin-bottom:30px; }
+.bp-close .bp-media--pending span{ position:absolute; left:var(--gutter); bottom:28px; color:rgba(255,255,255,.5); }
+.bp-close .bp-media--pending strong{ color:rgba(255,255,255,.75); }
+.bp-close::after{ content:""; position:absolute; inset:0; background:radial-gradient(ellipse at center,rgba(29,18,15,.35),rgba(29,18,15,.78)); pointer-events:none; }
+.bp-close-copy{ z-index:2; }
+@media (max-width:900px){
+  .bp-hero{ min-height:78vh; }
+  .bp-hero-content{ padding-bottom:72px; }
+  .bp-intro,.bp-feature,.bp-cannoli{ grid-template-columns:1fr; gap:38px; padding-top:76px; padding-bottom:76px; }
+  .bp-feature--chocolate .bp-copy{ order:0; }
+  .bp-media{ min-height:360px; }
+  .bp-close{ min-height:62vh; }
+}
+@media (max-width:640px){
+  .bp-hero > img{ object-position:center 58%; }
+  .bp-hero h1{ font-size:clamp(38px,11vw,55px); }
+  .bp-hero p{ font-size:15px; }
+  .bp-intro,.bp-feature,.bp-cannoli{ padding-top:64px; padding-bottom:64px; }
+  .bp-media{ min-height:280px; padding:20px; }
+  .bp-close-copy h2{ font-size:clamp(34px,10vw,50px); }
+}

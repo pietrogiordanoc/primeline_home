@@ -1,4 +1,4 @@
-# Prime Line — Home Redesign
+# Prime Line - Home Redesign
 
 Sitio estatico (HTML/CSS/JS, sin build) para el nuevo home de Prime Line.
 

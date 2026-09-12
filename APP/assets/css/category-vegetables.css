@@ -1,6 +1,6 @@
 /* ============================================================
-   PRIME LINE — Category Landing: Preserved Vegetables & Antipasti
-   "Seduce first, catalog later" — editorial, generous whitespace.
+  PRIME LINE - Category Landing: Preserved Vegetables & Antipasti
+  "Seduce first, catalog later" - editorial, generous whitespace.
    ============================================================ */
 
 .cv-hero{
@@ -166,13 +166,13 @@
   line-height: 1.6;
 }
 .cv-tips li::before{
-  content: "—";
+  content: "-";
   position: absolute;
   left: 0;
   color: var(--pl-gold);
 }
 
-/* ---------- Icon module — hand-drawn illustrations, single row ---------- */
+/* ---------- Icon module - hand-drawn illustrations, single row ---------- */
 .cv-icons{
   background: var(--pl-cream);
   padding: 10px var(--gutter) 90px;

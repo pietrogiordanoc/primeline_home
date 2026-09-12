@@ -1,5 +1,37 @@
-// Prime Line — shared interactions (header solid state, reveal-on-scroll, nav toggle)
+// Prime Line - shared interactions (header solid state, reveal-on-scroll, nav toggle)
 document.addEventListener('DOMContentLoaded', () => {
+  const spotLightbox = document.createElement('div');
+  spotLightbox.className = 'spot-lightbox';
+  spotLightbox.setAttribute('aria-hidden', 'true');
+  spotLightbox.innerHTML = `
+    <button type="button" class="spot-lightbox-close" aria-label="Close image">&times;</button>
+    <img class="spot-lightbox-image" alt="">
+  `;
+  document.body.appendChild(spotLightbox);
+  const spotLightboxImage = spotLightbox.querySelector('.spot-lightbox-image');
+  const closeSpotLightbox = () => {
+    spotLightbox.classList.remove('is-open');
+    spotLightbox.setAttribute('aria-hidden', 'true');
+    spotLightboxImage.removeAttribute('src');
+  };
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.slider-arrow, .detail-slider-arrow')) return;
+    const spotModule = e.target.closest('.cheese-card, .cheese-feature, .cheese-close, .category-detail, .cv-hero, .cv-intro, .cv-trio-card, .cv-spot, .cv-diff, .cv-close');
+    const image = e.target.closest('img') || spotModule?.querySelector('img');
+    if (!image) return;
+    if (e.target.closest('a')) e.preventDefault();
+    spotLightboxImage.src = image.currentSrc || image.src;
+    spotLightboxImage.alt = image.alt;
+    spotLightbox.classList.add('is-open');
+    spotLightbox.setAttribute('aria-hidden', 'false');
+  });
+  spotLightbox.addEventListener('click', (e) => {
+    if (e.target === spotLightbox || e.target.closest('.spot-lightbox-close')) closeSpotLightbox();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSpotLightbox();
+  });
+
   const header = document.querySelector('.site-header');
   if (header) {
     const onScroll = () => header.classList.toggle('is-solid', window.scrollY > 60);
@@ -63,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const contactInfo = document.querySelector('.contact-info');
 
-  // Collapses locations, then contact, one step at a time — never all at once.
+  // Collapses locations, then contact, one step at a time - never all at once.
   const closeContact = (onClosed) => {
     locationsPanel?.classList.remove('is-open');
     locationsPanel?.setAttribute('aria-hidden', 'true');
@@ -576,10 +608,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // Placeholder copy keyed by image filename (without extension) — replace with final copy per category.
+    // Placeholder copy keyed by image filename (without extension) - replace with final copy per category.
     const bannerCopy = {
+      parmigiano: { eyebrow: 'Cheese', title: 'Exceptional Cheese, Selected at the Source', text: 'Parmigiano and international specialties for professional kitchens.' },
       antipasto_and_vegetables: { eyebrow: 'Antipasto', title: 'Antipasto & Vegetables', text: 'Reference text about antipasto and vegetables. Replace with final copy.' },
-      baking_and_pastry: { eyebrow: 'Bakery', title: 'Baking & Pastry', text: 'Reference text about baking and pastry. Replace with final copy.' },
+      baking_and_pastry: { eyebrow: 'Baking & Pastry', title: 'Crafted for the Art of Pastry', text: 'Premium ingredients and authentic specialties selected for professional bakers, pastry chefs and culinary creators.' },
       balsamic1: { eyebrow: 'Vinegars', title: 'Balsamic Vinegar', text: 'Reference text about balsamic vinegar. Replace with final copy.' },
       beans_and_legumes: { eyebrow: 'Legumes', title: 'Beans & Legumes', text: 'Reference text about beans and legumes. Replace with final copy.' },
       coffee_and_tea: { eyebrow: 'Coffee & Tea', title: 'Coffee & Tea', text: 'Reference text about coffee and tea. Replace with final copy.' },
@@ -593,8 +626,127 @@ document.addEventListener('DOMContentLoaded', () => {
       pasta: { eyebrow: 'Pasta', title: 'Italian Pasta', text: 'We sell the finest pasta from Italy. Replace with final copy.' },
     };
 
-    // Full rich landing (intro/trio/spot/tips/diff/close) for categories with final copy — others fall back to a simple caption.
+    // Centralized placeholders: replace these paths when the final cheese photography arrives.
+    const cheeseImages = {
+      hero: 'images/banners/parmigiano.jpg',
+      parmigiano: 'images/banners/parmigiano.jpg',
+      agedFirm: 'images/banners/parmigiano.jpg',
+      alpine: 'images/spots/gruyere01.png',
+      blue: 'images/spots/gorgonzola01.png',
+      italy: 'images/spots/cheesesmisce.png',
+      world: 'images/spots/romacheese.jpg',
+    };
+
+    // Full rich landing (intro/trio/spot/tips/diff/close) for categories with final copy - others fall back to a simple caption.
     const categoryDetailTemplates = {
+      baking_and_pastry: () => `
+        <div class="bp-page">
+          <section class="bp-intro" id="baking-collection">
+            <div class="bp-intro-photo reveal"><img src="images/banners/baking_and_pastry.jpeg" alt="Traditional cannoli prepared with pastry cream and pistachio" style="object-position: 34% center;"></div>
+            <div class="bp-copy reveal"><span class="eyebrow">A Considered Collection</span><h2>Where Craft Meets Ingredient</h2><p>From fine chocolate and aromatic vanilla to delicate pastry shells and traditional Italian specialties, our collection brings together the ingredients professionals trust to create exceptional desserts.</p></div>
+          </section>
+          <section class="bp-feature bp-feature--essentials">
+            <div class="bp-copy reveal"><span class="eyebrow">01 &nbsp; Baking Essentials</span><h2>The Essentials Behind Every Creation</h2><p>Carefully selected ingredients that bring aroma, structure, texture and consistency to every recipe.</p><p class="bp-detail">Vanilla beans, extracts and paste sit alongside almond and coffee extracts, orange blossom water, honey, gelatin, yeast and puff pastry sheets.</p></div>
+            <div class="bp-media bp-media--pending reveal" role="img" aria-label="Pending baking essentials photography"><span>Photography to be placed:<br><strong>images/spots/baking-essentials.jpg</strong></span></div>
+          </section>
+          <section class="bp-feature bp-feature--chocolate">
+            <div class="bp-media bp-media--pending reveal" role="img" aria-label="Pending professional chocolate photography"><span>Photography to be placed:<br><strong>images/spots/professional-chocolate.jpg</strong></span></div>
+            <div class="bp-copy bp-copy--light reveal"><span class="eyebrow bp-eyebrow-light">02 &nbsp; Professional Chocolate</span><h2>Chocolate Without Compromise</h2><p>Professional couverture, callets, cocoa and pastry fillings created for precision, performance and remarkable flavor.</p><p class="bp-detail">Callebaut chocolate blocks, callets, chocolate chips, cocoa powder and white chocolate for pastry work that demands control and depth.</p></div>
+          </section>
+          <section class="bp-feature bp-feature--finishing">
+            <div class="bp-copy reveal"><span class="eyebrow">03 &nbsp; Amarena &amp; Finishing</span><h2>The Perfect Finishing Touch</h2><p>Distinctive fruit, glazes and finishing ingredients that transform every dessert into a memorable presentation.</p><p class="bp-detail">Toschi Amarena cherries, cherries in syrup and refined finishing ingredients for pastry chefs who understand the final detail.</p></div>
+            <div class="bp-media bp-media--pending reveal" role="img" aria-label="Pending fruit and finishing ingredients photography"><span>Photography to be placed:<br><strong>images/spots/amarena-finishing.jpg</strong></span></div>
+          </section>
+          <section class="bp-cannoli">
+            <div class="bp-cannoli-photo reveal"><img src="images/banners/baking_and_pastry.jpeg" alt="Crisp Sicilian cannoli filled with ricotta cream and finished with pistachio" style="object-position: 31% 63%;"></div>
+            <div class="bp-cannoli-copy reveal"><span class="eyebrow">04 &nbsp; Cannoli</span><h2>A Sicilian Classic, Ready to Create</h2><p>Crisp traditional shells and rich Sicilian ricotta cream bring authentic flavor, texture and character to every cannolo.</p><p class="bp-detail">Large and mini cannoli shells, ricotta cream and professional ingredients for an unmistakably Sicilian finish.</p></div>
+          </section>
+          <section class="bp-feature bp-feature--specialties">
+            <div class="bp-copy reveal"><span class="eyebrow">05 &nbsp; Italian Pastry Specialties</span><h2>Layers of Italian Tradition</h2><p>Delicate, crisp and unmistakably Italian, our pastry specialties bring authentic craftsmanship to today&apos;s professional kitchen.</p><p class="bp-detail">Sfogliatella and other traditional Italian bakery products selected for pastry shops, hotels, restaurants and chefs.</p></div>
+            <div class="bp-media bp-media--pending reveal" role="img" aria-label="Pending sfogliatella photography"><span>Photography to be placed:<br><strong>images/spots/sfogliatella.jpg</strong></span></div>
+          </section>
+          <section class="bp-close">
+            <div class="bp-media bp-media--pending bp-media--close reveal" role="img" aria-label="Pending Le Delizie cannoli photography"><span>Photography to be placed:<br><strong>images/spots/ledelizie.jpg</strong></span></div>
+            <div class="bp-close-copy reveal"><span class="eyebrow bp-eyebrow-light">Le Delizie</span><h2>Authentic Cannoli, Made Effortless</h2><p>Le Delizie brings together traditional Sicilian cannoli shells and rich ricotta cream, giving professionals everything they need to create an authentic Italian favorite.</p></div>
+          </section>
+        </div>`,
+      parmigiano: () => `
+        <section class="cheese-title reveal">
+          <span class="eyebrow">Cheese</span>
+          <h2>Exceptional Cheese, Selected at the Source</h2>
+          <span class="cheese-title-sub">Parmigiano &amp; International Specialties</span>
+        </section>
+        <section class="cheese-intro">
+          <div class="cheese-intro-photo reveal"><img class="cheese-image" src="${cheeseImages.hero}" alt="Parmigiano Reggiano wheels resting in an aging room" style="object-position: 22% center;"></div>
+          <div class="cheese-intro-copy reveal">
+            <span class="eyebrow">The Heart of the Collection</span>
+            <h2>The Heart of the Collection</h2>
+            <p>Since 1981, Prime Line has built its specialty food portfolio around authenticity, craftsmanship and an uncompromising respect for quality.</p>
+            <p>At the heart of our cheese collection stands Parmigiano Reggiano, a remarkable expression of origin, patience and time-honored tradition. From balanced younger profiles to deeply matured wheels with complex aromas and crystalline textures, each selection is carefully evaluated for its distinctive character and professional versatility.</p>
+            <p>Beyond Parmigiano, our collection brings together celebrated classics and compelling regional specialties from Italy, France, Spain, Switzerland, the Netherlands, England, Denmark, Germany, Norway and the United States, carefully selected for chefs and hospitality professionals who recognize the value of exceptional ingredients.</p>
+          </div>
+        </section>
+        <section class="cheese-feature">
+          <div class="cheese-feature-copy reveal">
+            <span class="eyebrow">The Heart of the Collection</span>
+            <h2>Where Time Becomes Flavor</h2>
+            <p>Parmigiano Reggiano reveals its character slowly. As it matures, its texture becomes more crystalline, its aroma more complex and its flavor increasingly profound.</p>
+            <p>Our collection spans distinctive ages and profiles, allowing chefs to select the ideal expression for finishing, service, tasting and refined culinary applications.</p>
+            <a href="#">Discover Our Parmigiano Selection</a>
+          </div>
+          <div class="cheese-feature-photo reveal"><img class="cheese-image" src="images/spots/gennari01.jpg" alt="Parmigiano Reggiano wheels and cheese tools in an Italian aging room" style="object-position: 70% center;"></div>
+        </section>
+        <section class="cheese-trio">
+          <article class="cheese-card reveal">
+            <img class="cheese-image" src="images/spots/pecorino01.jpg" alt="Pecorino cheese from an Italian producer" style="object-position: 12% center;">
+            <div class="cheese-card-copy"><h3>Pecorino</h3><p>A distinguished selection from Italy's finest producers and celebrated regions, offering diverse origins, aging profiles and expressions of authentic sheep's milk cheese.</p></div>
+          </article>
+          <article class="cheese-card reveal">
+            <img class="cheese-image" src="${cheeseImages.alpine}" alt="Cheese resting on timber in a cool aging room" style="object-position: 78% center;">
+            <div class="cheese-card-copy"><h3>Alpine &amp; Mountain</h3><p>A distinguished selection of Gruyère and mountain cheeses from renowned European producers, shaped by high pastures, traditional craftsmanship and careful aging.</p></div>
+          </article>
+          <article class="cheese-card reveal">
+            <img class="cheese-image" src="${cheeseImages.blue}" alt="Gorgonzola cheese from an Italian producer" style="object-position: 48% center;">
+            <div class="cheese-card-copy"><h3>Gorgonzola</h3><p>A distinguished selection from renowned Italian producers, offering styles from creamy and delicately veined to bold, complex and intensely expressive.</p></div>
+          </article>
+        </section>
+        <section class="cheese-feature cheese-feature--italy">
+          <div class="cheese-feature-photo reveal"><img class="cheese-image" src="${cheeseImages.italy}" alt="An assortment of Italian cheeses from celebrated regions and producers" style="object-position: 34% center;"></div>
+          <div class="cheese-feature-copy reveal">
+            <span class="eyebrow">Italy, Region by Region</span>
+            <h2>Traditions with a Sense of Place</h2>
+            <p>Beyond Parmigiano, our Italian collection brings together distinctive cheeses from celebrated regions and respected producers.</p>
+            <p>From aged Pecorino and Grana varieties to Taleggio, Gorgonzola, Asiago, Fontina and Provolone, each selection reflects the milk, landscape and traditions of its origin.</p>
+          </div>
+        </section>
+        <section class="cheese-origins">
+          <div class="cheese-origins-copy reveal">
+            <span class="eyebrow">Selected Across Continents</span>
+            <h2>A World of Cheese, Thoughtfully Curated</h2>
+            <p>Prime Line sources from celebrated cheesemaking regions across Italy, France, Spain, Switzerland, the Netherlands, England, Denmark, Germany, Norway and the United States, bringing together established classics and distinctive discoveries for today&apos;s professional kitchens.</p>
+          </div>
+          <div class="cheese-origin-list reveal">
+            <span>Italy</span><span>France</span><span>Spain</span><span>Switzerland</span><span>The Netherlands</span>
+            <span>England</span><span>Denmark</span><span>Germany</span><span>Norway</span><span>United States</span>
+          </div>
+          <p class="cheese-origin-note">Many origins. Distinct traditions. One carefully considered collection.</p>
+        </section>
+        <section class="cheese-values">
+          <span class="eyebrow">A Collection Built for Food Professionals</span>
+          <div class="cheese-values-grid">
+            <div class="cheese-value reveal"><h3>Carefully Selected</h3><p>Distinctive cheeses chosen for origin, maturation, texture and exceptional culinary character.</p></div>
+            <div class="cheese-value reveal"><h3>Professional Formats</h3><p>Practical formats and profiles selected for consistency, service and demanding kitchen applications.</p></div>
+            <div class="cheese-value reveal"><h3>Global Assortment</h3><p>Celebrated classics and compelling discoveries sourced from respected cheesemaking regions worldwide.</p></div>
+          </div>
+        </section>
+        <section class="cheese-close">
+          <img class="cheese-image" src="${cheeseImages.world}" alt="A curated selection of cheeses from renowned regions around the world" style="object-position: 46% center;">
+          <div class="cheese-close-copy reveal">
+            <span class="eyebrow cv-eyebrow--light">Exceptional Origins</span>
+            <h2>From the Great Cheese Regions of the World</h2>
+            <p>A distinguished collection shaped by place, tradition and time, selected for chefs and hospitality professionals who understand the value of exceptional ingredients.</p>
+          </div>
+        </section>`,
       antipasto_and_vegetables: () => `
         <section class="cv-title reveal">
           <h2>Preserved Vegetables</h2>
@@ -612,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <section class="cv-trio">
           <a class="cv-trio-card reveal" href="#">
             <img src="images/spots/Primizia Artichokes VE59.png" alt="Artichoke hearts, whole and halved" style="object-position: left center;">
-            <div class="cv-trio-label"><h3>Artichokes</h3><p>Tender, flavorful and remarkably versatile—from antipasti and salads to pizzas, pastas and signature entrées.</p></div>
+            <div class="cv-trio-label"><h3>Artichokes</h3><p>Tender, flavorful and remarkably versatile, from antipasti and salads to pizzas, pastas and signature entrées.</p></div>
           </a>
           <a class="cv-trio-card reveal" href="#">
             <img src="images/spots/deliziedicalabria02.jpg" alt="Hand-harvesting fresh Calabrian chili peppers into a crate">
@@ -620,14 +772,14 @@ document.addEventListener('DOMContentLoaded', () => {
           </a>
           <a class="cv-trio-card reveal" href="#">
             <img src="images/spots/cappers.jpg" alt="Capers in a rustic wooden bowl">
-            <div class="cv-trio-label"><h3>Capers</h3><p>Hand-harvested on Pantelleria, off the southern coast of Italy — prized for their delicate texture and briny, aromatic flavor.</p></div>
+            <div class="cv-trio-label"><h3>Capers</h3><p>Hand-harvested on Pantelleria, off the southern coast of Italy, prized for their delicate texture and briny, aromatic flavor.</p></div>
           </a>
         </section>
         <section class="cv-spot">
           <div class="cv-spot-copy reveal">
             <span class="eyebrow">A Closer Look</span>
             <h2>The Art of Antipasto</h2>
-            <p>Roasted and grilled over open flame, then rested in oil to develop deep, smoky sweetness — this is antipasto the way Sicilian kitchens have always made it.</p>
+            <p>Roasted and grilled over open flame, then rested in oil to develop deep, smoky sweetness. This is antipasto the way Sicilian kitchens have always made it.</p>
             <p>Our selection includes artichokes, eggplants, mixed mushrooms, peppers, tomatoes and zucchini, each prepared to be ready for the table in minutes.</p>
             <a href="#">Discover Our Antipasto Selection</a>
           </div>
@@ -636,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <section class="cv-tips reveal">
           <span class="eyebrow">From Our Table</span>
           <h2>Simple Ways to Elevate the Menu</h2>
-          <p>Our assortment spans the full range of Mediterranean preserved vegetables — tender artichokes and hearts, sweet and hot peppers roasted or stuffed, giardiniera and cornichons, capers in salt or oil, sun-dried and semi-dried tomatoes, marinated grape leaves and specialty accompaniments like hearts of palm and preserved lemons. Every item is chosen for consistent quality, practical formats and the authentic flavor chefs expect from true Mediterranean sourcing.</p>
+          <p>Our assortment spans the full range of Mediterranean preserved vegetables: tender artichokes and hearts, sweet and hot peppers roasted or stuffed, giardiniera and cornichons, capers in salt or oil, sun-dried and semi-dried tomatoes, marinated grape leaves and specialty accompaniments like hearts of palm and preserved lemons. Every item is chosen for consistent quality, practical formats and the authentic flavor chefs expect from true Mediterranean sourcing.</p>
         </section>
         <section class="cv-icons">
           <div class="cv-icons-row">
@@ -664,22 +816,22 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="cv-close-content reveal">
             <span class="eyebrow cv-eyebrow--light">Grown in Calabria, Italy</span>
             <h1>Sun-Ripened, Hand-Harvested, Truly Authentic</h1>
-            <p>From sun-drenched hillsides overlooking the Ionian coast, our Calabrian chili peppers are hand-harvested at their peak and prepared using time-honored methods — bringing fiery, authentic flavor to every dish.</p>
-            <div class="cv-close-actions">
-              <a href="#" class="btn btn--light" style="color:#fff;border-color:#fff;">View Products</a>
-              <a href="#contact" class="btn btn--light" style="color:#fff;border-color:#fff;">Request Information</a>
-            </div>
+            <p>From sun-drenched hillsides overlooking the Ionian coast, our Calabrian chili peppers are hand-harvested at their peak and prepared using time-honored methods, bringing fiery, authentic flavor to every dish.</p>
           </div>
         </section>`,
     };
 
     function defaultDetailTemplate(data) {
+      const action = data.title === 'Crafted for the Art of Pastry'
+        ? '<a class="btn btn--dark banner-caption-action" href="baking-and-pastry.html">Explore the Full Collection</a>'
+        : '';
       return `
         <section class="banner-caption">
           <div class="banner-caption-inner">
             <span class="eyebrow banner-caption-eyebrow">${data.eyebrow}</span>
             <h2 class="banner-caption-title">${data.title}</h2>
             <p class="banner-caption-text">${data.text}</p>
+            ${action}
           </div>
         </section>`;
     }

@@ -1,0 +1,229 @@
+/* ============================================================
+   PRIME LINE - Cheese editorial landing
+   ============================================================ */
+
+.cheese-title{
+  background: var(--pl-cream);
+  text-align: center;
+  padding: 34px var(--gutter) 26px;
+  border-bottom: 1px solid var(--pl-line);
+}
+.cheese-title h2{
+  display: inline-block;
+  font-size: clamp(22px, 2.6vw, 30px);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--pl-navy);
+}
+.cheese-title > .eyebrow{
+  display: block;
+  margin-bottom: 10px;
+}
+.cheese-title-sub{
+  display: block;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--pl-ink-soft);
+}
+.cheese-intro,
+.cheese-feature{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 70px;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 112px var(--gutter);
+}
+.cheese-intro-copy{ max-width: 540px; }
+.cheese-intro-copy h2,
+.cheese-feature-copy h2{
+  font-size: clamp(30px, 3.8vw, 48px);
+  line-height: 1.1;
+  margin: 14px 0 24px;
+}
+.cheese-intro-copy p,
+.cheese-feature-copy p,
+.cheese-origins-copy p{
+  color: var(--pl-ink-soft);
+  font-size: 15px;
+  line-height: 1.8;
+  max-width: 500px;
+  margin-bottom: 14px;
+}
+.cheese-image{
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center;
+}
+.cheese-feature{
+  max-width: none;
+  padding-left: max(var(--gutter), calc((100vw - var(--container)) / 2 + var(--gutter)));
+  padding-right: max(var(--gutter), calc((100vw - var(--container)) / 2 + var(--gutter)));
+  background: var(--pl-cream-dark);
+}
+.cheese-feature-photo{ order: 2; }
+.cheese-feature-copy a{
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--pl-navy);
+  border-bottom: 1px solid var(--pl-navy);
+  padding-bottom: 4px;
+}
+.cheese-trio{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gutter);
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--gutter) 112px;
+}
+.cheese-card{
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: var(--pl-navy-deep);
+}
+.cheese-card .cheese-image{
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  transition: transform 1.1s var(--ease);
+}
+.cheese-card:hover .cheese-image{ transform: scale(1.05); }
+.cheese-card::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 42%, rgba(13,24,48,.78) 100%);
+}
+.cheese-card-copy{
+  position: absolute;
+  z-index: 1;
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  color: #fff;
+}
+.cheese-card-copy h3{ font-size: 25px; margin-bottom: 8px; }
+.cheese-card-copy p{ font-size: 13px; line-height: 1.6; color: rgba(255,255,255,.84); }
+.cheese-origins{
+  padding: 112px var(--gutter);
+  background: var(--pl-cream);
+  text-align: center;
+}
+.cheese-origins-copy{
+  max-width: 700px;
+  margin: 0 auto;
+}
+.cheese-origins-copy h2{
+  font-size: clamp(30px, 3.8vw, 48px);
+  line-height: 1.1;
+  margin: 14px 0 22px;
+}
+.cheese-origins-copy p{ max-width: 640px; margin: 0 auto 34px; }
+.cheese-origin-list{
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid var(--pl-line);
+  border-left: 1px solid var(--pl-line);
+}
+.cheese-origin-list span{
+  padding: 18px 10px;
+  border-right: 1px solid var(--pl-line);
+  border-bottom: 1px solid var(--pl-line);
+  color: var(--pl-navy);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.cheese-origin-note{
+  margin-top: 28px;
+  color: var(--pl-gold);
+  font-family: var(--font-serif);
+  font-size: 21px;
+  font-style: italic;
+}
+.cheese-values{
+  padding: 108px var(--gutter);
+  text-align: center;
+}
+.cheese-values > .eyebrow{ display: block; margin-bottom: 50px; }
+.cheese-values-grid{
+  max-width: var(--container);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 50px;
+}
+.cheese-value h3{
+  color: var(--pl-navy);
+  font-size: 23px;
+  margin-bottom: 12px;
+}
+.cheese-value p{
+  max-width: 320px;
+  margin: 0 auto;
+  color: var(--pl-ink-soft);
+  font-size: 14px;
+}
+.cheese-close{
+  position: relative;
+  min-height: 68vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--pl-navy-deep);
+}
+.cheese-close .cheese-image{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: brightness(.58);
+}
+.cheese-close::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(13,24,48,.62) 0%, rgba(13,24,48,.38) 55%, rgba(13,24,48,.72) 100%);
+}
+.cheese-close-copy{
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  padding: 0 var(--gutter);
+  color: #fff;
+  text-align: center;
+}
+.cheese-close-copy h2{ font-size: clamp(34px, 4.6vw, 58px); line-height: 1.05; margin: 16px 0 22px; }
+.cheese-close-copy p{ color: rgba(255,255,255,.86); font-size: 15px; margin-bottom: 30px; }
+.cheese-close-actions{ display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; }
+
+@media (max-width: 900px){
+  .cheese-intro,
+  .cheese-feature{ grid-template-columns: 1fr; gap: 38px; padding-top: 76px; padding-bottom: 76px; }
+  .cheese-feature-photo{ order: 0; }
+  .cheese-trio{ grid-template-columns: 1fr; padding-bottom: 76px; }
+  .cheese-origin-list{ grid-template-columns: repeat(2, 1fr); }
+  .cheese-values-grid{ grid-template-columns: 1fr; gap: 34px; }
+  .cheese-close{ min-height: 62vh; }
+}
+@media (max-width: 640px){
+  .cheese-title{ padding-top: 34px; }
+  .cheese-origins,
+  .cheese-values{ padding-top: 76px; padding-bottom: 76px; }
+  .cheese-origin-list{ grid-template-columns: 1fr 1fr; }
+  .cheese-origin-list span{ font-size: 10px; letter-spacing: .1em; }
+}
