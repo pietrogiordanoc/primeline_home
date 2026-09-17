@@ -150,8 +150,9 @@ export const handler = async (event) => {
       await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: process.env.FROM_EMAIL, to: [process.env.HR_EMAIL], subject: 'New Prime Line job application', text: 'A new application is ready in the protected HR review area.' }) });
     }
     return json({ received: true, downloadUrl: download?.signedUrl || null });
-  } catch {
+  } catch (error) {
+    console.error('Application save failed:', error);
     await Promise.all(uploaded.map((path) => supabase.storage.from(BUCKET).remove([path])));
-    return json({ error: 'The application could not be saved. Please try again.' }, 502);
+    return json({ error: testMode ? `The application could not be saved: ${error.message || error}` : 'The application could not be saved. Please try again.' }, 502);
   }
 };
