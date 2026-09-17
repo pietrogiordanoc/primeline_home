@@ -1,12 +1,11 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { PDFDocument } from 'pdf-lib';
 import { createClient } from '@supabase/supabase-js';
 
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const templatePath = path.resolve(currentDir, '../../PDF/1. PLD Job Application-Fillable.pdf');
+const taskRoot = process.env.LAMBDA_TASK_ROOT || process.cwd();
+const templatePath = path.join(taskRoot, 'PDF', '1. PLD Job Application-Fillable.pdf');
 
 const MAX_RESUME_BYTES = 5 * 1024 * 1024;
 const MAX_FIELD_COUNT = 150;
@@ -42,7 +41,12 @@ const pdfSignatureTarget = (form, pages) => {
 };
 
 const fillPdf = async (fields, signatureData) => {
-  const template = await readFile(templatePath);
+  let template;
+  try {
+    template = await readFile(templatePath);
+  } catch (error) {
+    template = await readFile(path.join(process.cwd(), 'PDF', '1. PLD Job Application-Fillable.pdf'));
+  }
   const pdf = await PDFDocument.load(template);
   const form = pdf.getForm();
   const pages = pdf.getPages();
