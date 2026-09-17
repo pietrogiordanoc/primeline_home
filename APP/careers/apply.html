@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Careers | Prime Line Distributors</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Apply to join Prime Line Distributors.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/job-application.css">
+</head>
+<body class="application-page">
+  <header class="application-header">
+    <a class="application-brand" href="../home.html"><img src="../images/Logo1500.png" alt="Prime Line Distributors"></a>
+    <a class="application-back" href="../home.html">Back to Prime Line Home</a>
+  </header>
+
+  <main>
+    <section class="application-intro wrap">
+      <div>
+        <span class="eyebrow">Careers at Prime Line</span>
+        <h1>Join the team behind exceptional food.</h1>
+        <p>Complete the original application below. Your information is kept private and is reviewed by the Prime Line team.</p>
+      </div>
+      <ol class="application-steps" aria-label="Application progress">
+        <li class="is-active"><span>01</span>Complete</li>
+        <li><span>02</span>Review</li>
+        <li><span>03</span>Submit</li>
+      </ol>
+    </section>
+
+    <section class="application-workspace wrap">
+      <div class="application-toolbar" aria-label="PDF controls">
+        <div class="page-controls">
+          <button type="button" class="icon-button" id="previousPage" aria-label="Previous page">&#8592;</button>
+          <label>Page <input id="pageNumber" type="number" min="1" value="1" aria-label="Page number"> <span>of <strong id="pageCount">9</strong></span></label>
+          <button type="button" class="icon-button" id="nextPage" aria-label="Next page">&#8594;</button>
+        </div>
+        <div class="zoom-controls">
+          <button type="button" class="icon-button" id="zoomOut" aria-label="Zoom out">&minus;</button>
+          <output id="zoomValue">100%</output>
+          <button type="button" class="icon-button" id="zoomIn" aria-label="Zoom in">+</button>
+        </div>
+        <label class="resume-control">Résumé <input id="resume" type="file" accept="application/pdf,.pdf,.doc,.docx" data-max-bytes="5242880"></label>
+      </div>
+
+      <div class="application-status" id="applicationStatus" role="status" aria-live="polite">Loading the original application...</div>
+      <div class="pdf-stage" id="pdfStage" aria-label="Job application PDF"></div>
+
+      <section class="signature-panel" aria-labelledby="signatureTitle">
+        <div>
+          <span class="eyebrow">Applicant acknowledgement</span>
+          <h2 id="signatureTitle">Sign before submitting</h2>
+          <p>Draw your signature with a mouse, finger or stylus. This is an electronic acknowledgement, not a certified digital signature.</p>
+        </div>
+        <canvas id="signaturePad" width="720" height="180" aria-label="Signature drawing area"></canvas>
+        <button type="button" class="text-button" id="clearSignature">Clear signature</button>
+      </section>
+
+      <div class="application-actions">
+        <p><strong id="requiredCount">0</strong> required fields completed</p>
+        <button type="button" class="btn btn--dark" id="reviewApplication">Review Application</button>
+      </div>
+    </section>
+
+    <section class="review-panel wrap" id="reviewPanel" hidden>
+      <span class="eyebrow">Final review</span>
+      <h2>Check your application</h2>
+      <p>Review the PDF above, confirm your résumé and signature, then submit your application to Prime Line.</p>
+      <label class="review-confirm"><input type="checkbox" id="reviewConfirmation"> I confirm that the information provided is accurate.</label>
+      <button type="button" class="btn btn--dark" id="submitApplication">Submit Application</button>
+    </section>
+
+    <section class="application-success wrap" id="applicationSuccess" hidden>
+      <span class="eyebrow">Application received</span>
+      <h2>Thank you for applying to Prime Line.</h2>
+      <p>Your application has been securely received. Keep a copy of the completed document for your records.</p>
+      <a class="btn btn--light" id="downloadApplication" href="#" download>Download completed application</a>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+  <script src="../assets/js/job-application.js" type="module"></script>
+</body>
+</html>
