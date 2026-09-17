@@ -13,6 +13,13 @@ let currentPage = 1;
 let scale = 1.25;
 let lastPageFields = [];
 
+const computeFitToWidthScale = (page) => {
+  const baseViewport = page.getViewport({ scale: 1 });
+  const availableWidth = pdfStage.clientWidth - 72;
+  if (!availableWidth || !baseViewport.width) return scale;
+  return Math.max(0.6, Math.min(2.2, availableWidth / baseViewport.width));
+};
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 const setStatus = (message, isError = false) => {
@@ -201,6 +208,9 @@ try {
     const annotations = await page.getAnnotations({ intent: 'display' });
     annotations.filter((annotation) => annotation.subtype === 'Widget' && annotation.fieldFlags & 2).forEach((annotation) => requiredFields.add(annotation.fieldName));
   }
+  const firstPage = await pdfDocument.getPage(1);
+  scale = computeFitToWidthScale(firstPage);
+  zoomValue.textContent = `${Math.round(scale * 100)}%`;
   await renderPage(1);
   setStatus('Complete the original application. Your progress stays saved as you move between pages.');
 } catch (error) {
