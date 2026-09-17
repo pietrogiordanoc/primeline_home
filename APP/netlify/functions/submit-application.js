@@ -80,6 +80,7 @@ export const handler = async (event) => {
   const fields = payload.fields;
   if (!fields || typeof fields !== 'object' || Array.isArray(fields) || Object.keys(fields).length > MAX_FIELD_COUNT) return json({ error: 'Invalid application fields.' }, 400);
   const testMode = payload.testMode === true && process.env.ALLOW_TEST_APPLICATIONS === 'true';
+  if (payload.testMode === true && !testMode) return json({ error: 'Test mode is not enabled on the server.' }, 403);
   const signature = payload.signature ? dataUrlToBuffer(payload.signature, new Set(['image/png']), 512 * 1024) : null;
   if (!signature && !testMode) return json({ error: 'A signature is required.' }, 400);
 

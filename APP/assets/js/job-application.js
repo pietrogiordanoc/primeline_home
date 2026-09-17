@@ -64,7 +64,7 @@ const makeControl = (annotation, box) => {
     control.value = annotation.exportValue || annotation.buttonValue || 'Yes';
     control.checked = fieldState.get(control.name) === true;
   } else {
-    control.type = 'text';
+    if (control instanceof HTMLInputElement) control.type = 'text';
     control.value = fieldState.get(control.name) || annotation.fieldValue || '';
     control.maxLength = 500;
   }
