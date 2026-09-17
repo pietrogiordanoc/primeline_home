@@ -156,7 +156,13 @@ export const handler = async (event) => {
       : [];
     const recipients = testRecipients.length ? testRecipients : (process.env.HR_EMAIL ? [process.env.HR_EMAIL] : []);
     if (process.env.RESEND_API_KEY && process.env.FROM_EMAIL && recipients.length) {
-      await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: process.env.FROM_EMAIL, to: recipients, subject: 'New Prime Line job application', text: 'A new application is ready in the protected HR review area.' }) });
+      const siteUrl = process.env.URL || 'https://primelinehome.netlify.app';
+      await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({
+        from: process.env.FROM_EMAIL,
+        to: recipients,
+        subject: `New Prime Line job application — ${applicantName}`,
+        text: `${applicantName} (${applicantEmail}) submitted a new job application.\n\nReview it in the protected HR area:\n${siteUrl}/careers/admin/\n\nSign in with your HR account. This email does not include the application document.`
+      }) });
     }
     return json({ received: true, downloadUrl: download?.signedUrl || null });
   } catch (error) {

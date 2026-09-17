@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HR Review | Prime Line Distributors</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/job-application.css">
+<link rel="stylesheet" href="../../assets/css/careers-admin.css">
+</head>
+<body class="admin-page">
+  <header class="admin-header">
+    <a class="admin-brand" href="../../home.html"><img src="../../images/Logo1500.png" alt="Prime Line Distributors"></a>
+    <span class="eyebrow">HR Review Area</span>
+  </header>
+
+  <main class="wrap admin-main">
+    <section class="admin-login" id="loginSection">
+      <span class="eyebrow">Authorized Access Only</span>
+      <h1>HR Sign In</h1>
+      <p>Sign in with your Prime Line HR account to review submitted applications.</p>
+      <form id="loginForm" class="admin-login-form">
+        <label>Email<input type="email" id="loginEmail" autocomplete="username" required></label>
+        <label>Password<input type="password" id="loginPassword" autocomplete="current-password" required></label>
+        <button type="submit" class="btn-solid">Sign In</button>
+      </form>
+      <p class="admin-status" id="loginStatus" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="admin-list" id="listSection" hidden>
+      <div class="admin-list-header">
+        <div>
+          <span class="eyebrow">Prime Line Careers</span>
+          <h1>Submitted Applications</h1>
+        </div>
+        <button type="button" class="text-button" id="signOutButton">Sign out</button>
+      </div>
+      <p class="admin-status" id="listStatus" role="status" aria-live="polite"></p>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Received</th><th>Applicant</th><th>Email</th><th>Status</th><th>Application</th><th>Résumé</th></tr>
+        </thead>
+        <tbody id="applicationsBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="../../assets/js/careers-admin.js" type="module"></script>
+</body>
+</html>

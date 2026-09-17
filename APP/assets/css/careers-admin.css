@@ -1,0 +1,21 @@
+.admin-page{ background:#f4f0e9; color:var(--pl-ink); min-height:100vh; }
+.admin-header{ display:flex; align-items:center; justify-content:space-between; padding:22px var(--gutter); background:var(--pl-navy-deep); color:#fff; }
+.admin-header .admin-brand img{ width:150px; filter:brightness(0) invert(1); }
+.admin-header .eyebrow{ color:var(--pl-gold-soft); }
+.admin-main{ padding:60px 0 90px; }
+.admin-login{ max-width:420px; margin:0 auto; padding:40px 36px; background:#fff; border-top:4px solid var(--pl-gold); }
+.admin-login h1{ margin:8px 0 10px; color:var(--pl-navy); font-size:32px; }
+.admin-login p{ color:var(--pl-ink-soft); font-size:13px; margin-bottom:22px; }
+.admin-login-form{ display:grid; gap:16px; }
+.admin-login-form label{ display:block; font-size:12px; color:var(--pl-ink-soft); }
+.admin-login-form input{ display:block; width:100%; margin-top:6px; padding:10px 12px; border:1px solid var(--pl-line); font-size:14px; }
+.admin-status{ margin-top:16px; font-size:12px; color:var(--pl-ink-soft); }
+.admin-status.is-error{ color:#9f372e; }
+.admin-list-header{ display:flex; justify-content:space-between; align-items:end; margin-bottom:22px; }
+.admin-list-header h1{ margin:8px 0 0; color:var(--pl-navy); font-size:34px; }
+.admin-table{ width:100%; border-collapse:collapse; background:#fff; }
+.admin-table th,.admin-table td{ padding:12px 14px; border-bottom:1px solid var(--pl-line); text-align:left; font-size:13px; }
+.admin-table th{ background:var(--pl-navy); color:#fff; font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+@media (max-width:760px){
+  .admin-table{ display:block; overflow-x:auto; white-space:nowrap; }
+}
