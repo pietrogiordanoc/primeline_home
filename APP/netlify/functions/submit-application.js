@@ -79,11 +79,14 @@ export const handler = async (event) => {
   try { payload = JSON.parse(event.body || '{}'); } catch { return json({ error: 'Invalid request.' }, 400); }
   const fields = payload.fields;
   if (!fields || typeof fields !== 'object' || Array.isArray(fields) || Object.keys(fields).length > MAX_FIELD_COUNT) return json({ error: 'Invalid application fields.' }, 400);
-  const signature = dataUrlToBuffer(payload.signature, new Set(['image/png']), 512 * 1024);
-  if (!signature) return json({ error: 'A signature is required.' }, 400);
+  const testMode = payload.testMode === true && process.env.ALLOW_TEST_APPLICATIONS === 'true';
+  const signature = payload.signature ? dataUrlToBuffer(payload.signature, new Set(['image/png']), 512 * 1024) : null;
+  if (!signature && !testMode) return json({ error: 'A signature is required.' }, 400);
 
-  const applicantName = String(fields['First Name'] || fields['Last Name'] || fields.name || '').trim().slice(0, 160);
-  const applicantEmail = String(fields['Email Address_2'] || fields['Email Address'] || '').trim().toLowerCase().slice(0, 254);
+  const submittedName = String(fields['First Name'] || fields['Last Name'] || fields.name || '').trim().slice(0, 160);
+  const submittedEmail = String(fields['Email Address_2'] || fields['Email Address'] || '').trim().toLowerCase().slice(0, 254);
+  const applicantName = submittedName || (testMode ? 'Test Applicant' : '');
+  const applicantEmail = submittedEmail || (testMode ? 'test@example.com' : '');
   if (!applicantName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(applicantEmail)) return json({ error: 'Please provide your name and a valid email address.' }, 400);
 
   const idempotencyKey = createHash('sha256').update(JSON.stringify({ fields, signature: payload.signature })).digest('hex');
@@ -114,7 +117,7 @@ export const handler = async (event) => {
       if (resumeUpload.error) throw resumeUpload.error;
       uploaded.push(resumePath);
     }
-    const { error: insertError } = await supabase.from('job_applications').insert({ id, idempotency_key: idempotencyKey, applicant_name: applicantName, applicant_email: applicantEmail, template_version: TEMPLATE_VERSION, final_pdf_path: pdfPath, resume_path: resumePath, signature_accepted_at: new Date().toISOString() });
+    const { error: insertError } = await supabase.from('job_applications').insert({ id, idempotency_key: idempotencyKey, applicant_name: applicantName, applicant_email: applicantEmail, template_version: TEMPLATE_VERSION, final_pdf_path: pdfPath, resume_path: resumePath, signature_accepted_at: signature ? new Date().toISOString() : null });
     if (insertError) {
       if (insertError.code === '23505') {
         const { data: duplicate } = await supabase.from('job_applications').select('final_pdf_path').eq('idempotency_key', idempotencyKey).single();

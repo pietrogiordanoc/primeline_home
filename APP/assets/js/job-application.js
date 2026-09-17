@@ -10,7 +10,7 @@ const fieldState = new Map();
 const requiredFields = new Set();
 let pdfDocument;
 let currentPage = 1;
-let scale = 1;
+let scale = 1.25;
 let lastPageFields = [];
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
@@ -40,6 +40,8 @@ const hasSignatureInk = () => {
   for (let index = 3; index < pixels.length; index += 4) if (pixels[index] > 0) return true;
   return false;
 };
+
+const isTestMode = () => document.querySelector('#testMode').checked;
 
 const makeControl = (annotation, box) => {
   const isRadio = annotation.fieldType === 'Btn' && annotation.radioButton;
@@ -149,8 +151,8 @@ document.querySelector('#zoomIn').addEventListener('click', () => { scale = Math
 
 document.querySelector('#reviewApplication').addEventListener('click', () => {
   const missing = [...requiredFields].filter((name) => !String(fieldState.get(name) || '').trim());
-  if (missing.length) return setStatus('Please complete the required fields before reviewing.', true);
-  if (!hasSignatureInk()) return setStatus('Please add your signature before reviewing.', true);
+  if (!isTestMode() && missing.length) return setStatus('Please complete the required fields before reviewing.', true);
+  if (!isTestMode() && !hasSignatureInk()) return setStatus('Please add your signature before reviewing.', true);
   document.querySelector('#reviewPanel').hidden = false;
   document.querySelector('#reviewPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
@@ -162,7 +164,7 @@ document.querySelector('#submitApplication').addEventListener('click', async () 
   setStatus('Submitting securely...');
   try {
     const resume = await readFileAsDataUrl(document.querySelector('#resume').files[0]);
-    const response = await fetch('/api/careers/submit-application', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: Object.fromEntries(fieldState), signature: signaturePad.toDataURL('image/png'), resume }) });
+    const response = await fetch('/api/careers/submit-application', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: Object.fromEntries(fieldState), signature: hasSignatureInk() ? signaturePad.toDataURL('image/png') : null, resume, testMode: isTestMode() }) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not submit the application.');
     document.querySelector('#applicationSuccess').hidden = false;

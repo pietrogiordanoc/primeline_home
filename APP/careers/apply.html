@@ -15,19 +15,6 @@
   </header>
 
   <main>
-    <section class="application-intro wrap">
-      <div>
-        <span class="eyebrow">Careers at Prime Line</span>
-        <h1>Join the team behind exceptional food.</h1>
-        <p>Complete the original application below. Your information is kept private and is reviewed by the Prime Line team.</p>
-      </div>
-      <ol class="application-steps" aria-label="Application progress">
-        <li class="is-active"><span>01</span>Complete</li>
-        <li><span>02</span>Review</li>
-        <li><span>03</span>Submit</li>
-      </ol>
-    </section>
-
     <section class="application-workspace wrap">
       <div class="application-toolbar" aria-label="PDF controls">
         <div class="page-controls">
@@ -37,10 +24,11 @@
         </div>
         <div class="zoom-controls">
           <button type="button" class="icon-button" id="zoomOut" aria-label="Zoom out">&minus;</button>
-          <output id="zoomValue">100%</output>
+          <output id="zoomValue">125%</output>
           <button type="button" class="icon-button" id="zoomIn" aria-label="Zoom in">+</button>
         </div>
         <label class="resume-control">Résumé <input id="resume" type="file" accept="application/pdf,.pdf,.doc,.docx" data-max-bytes="5242880"></label>
+        <label class="test-mode-control"><input id="testMode" type="checkbox"> Test mode</label>
       </div>
 
       <div class="application-status" id="applicationStatus" role="status" aria-live="polite">Loading the original application...</div>
