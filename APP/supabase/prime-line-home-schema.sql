@@ -30,6 +30,8 @@ alter table public.job_applications enable row level security;
 
 revoke all on table public.job_applications from anon, authenticated;
 grant select, update on table public.job_applications to authenticated;
+grant usage on schema public to service_role;
+grant select, insert, update, delete on table public.job_applications to service_role;
 
 create or replace function public.is_prime_line_hr()
 returns boolean
