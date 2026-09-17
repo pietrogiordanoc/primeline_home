@@ -176,7 +176,8 @@ document.querySelector('#submitApplication').addEventListener('click', async () 
   setModalStatus('Submitting securely...');
   try {
     const resume = await readFileAsDataUrl(document.querySelector('#resume').files[0]);
-    const response = await fetch('/api/careers/submit-application', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: Object.fromEntries(fieldState), signature: hasSignatureInk() ? signaturePad.toDataURL('image/png') : null, resume, testMode: isTestMode() }) });
+    const testNotifyEmails = document.querySelector('#testNotifyEmails').value.split(',').map((value) => value.trim()).filter(Boolean);
+    const response = await fetch('/api/careers/submit-application', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: Object.fromEntries(fieldState), signature: hasSignatureInk() ? signaturePad.toDataURL('image/png') : null, resume, testMode: isTestMode(), testNotifyEmails }) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not submit the application.');
     reviewModal.hidden = true;

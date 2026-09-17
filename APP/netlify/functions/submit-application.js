@@ -150,8 +150,13 @@ export const handler = async (event) => {
       throw insertError;
     }
     const { data: download } = await supabase.storage.from(BUCKET).createSignedUrl(pdfPath, 3600);
-    if (process.env.RESEND_API_KEY && process.env.HR_EMAIL && process.env.FROM_EMAIL) {
-      await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: process.env.FROM_EMAIL, to: [process.env.HR_EMAIL], subject: 'New Prime Line job application', text: 'A new application is ready in the protected HR review area.' }) });
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const testRecipients = testMode && Array.isArray(payload.testNotifyEmails)
+      ? payload.testNotifyEmails.filter((value) => typeof value === 'string' && emailPattern.test(value)).slice(0, 5)
+      : [];
+    const recipients = testRecipients.length ? testRecipients : (process.env.HR_EMAIL ? [process.env.HR_EMAIL] : []);
+    if (process.env.RESEND_API_KEY && process.env.FROM_EMAIL && recipients.length) {
+      await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: process.env.FROM_EMAIL, to: recipients, subject: 'New Prime Line job application', text: 'A new application is ready in the protected HR review area.' }) });
     }
     return json({ received: true, downloadUrl: download?.signedUrl || null });
   } catch (error) {
