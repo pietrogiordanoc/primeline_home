@@ -59,12 +59,20 @@ const fillPdf = async (fields, signatureData) => {
     }
   }
 
-  form.flatten({ updateFieldAppearances: true });
+  try {
+    form.flatten({ updateFieldAppearances: true });
+  } catch (error) {
+    console.error('Flatten failed, saving with the form left interactive:', error);
+  }
   const signature = dataUrlToBuffer(signatureData, new Set(['image/png']), 512 * 1024);
   if (signature && signatureTarget) {
-    const image = await pdf.embedPng(signature.buffer);
-    const { x, y, width, height } = signatureTarget.rectangle;
-    signatureTarget.page.drawImage(image, { x, y, width, height, opacity: .95 });
+    try {
+      const image = await pdf.embedPng(signature.buffer);
+      const { x, y, width, height } = signatureTarget.rectangle;
+      signatureTarget.page.drawImage(image, { x, y, width, height, opacity: .95 });
+    } catch (error) {
+      console.error('Signature embed failed:', error);
+    }
   }
   return Buffer.from(await pdf.save({ useObjectStreams: false }));
 };
@@ -99,7 +107,12 @@ export const handler = async (event) => {
   }
 
   let pdfBuffer;
-  try { pdfBuffer = await fillPdf(fields, payload.signature); } catch { return json({ error: 'Could not generate the completed application.' }, 422); }
+  try {
+    pdfBuffer = await fillPdf(fields, payload.signature);
+  } catch (error) {
+    console.error('PDF generation failed:', error);
+    return json({ error: testMode ? `Could not generate the completed application: ${error.message}` : 'Could not generate the completed application.' }, 422);
+  }
   let resume;
   try {
     if (payload.resume) resume = dataUrlToBuffer(payload.resume, new Set(['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']), MAX_RESUME_BYTES);
