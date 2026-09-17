@@ -34,37 +34,31 @@
       <div class="application-status" id="applicationStatus" role="status" aria-live="polite">Loading the original application...</div>
       <div class="pdf-stage" id="pdfStage" aria-label="Job application PDF"></div>
 
-      <section class="signature-panel" aria-labelledby="signatureTitle">
-        <div>
-          <span class="eyebrow">Applicant acknowledgement</span>
-          <h2 id="signatureTitle">Sign before submitting</h2>
-          <p>Draw your signature with a mouse, finger or stylus. This is an electronic acknowledgement, not a certified digital signature.</p>
-        </div>
-        <canvas id="signaturePad" width="720" height="180" aria-label="Signature drawing area"></canvas>
-        <button type="button" class="text-button" id="clearSignature">Clear signature</button>
-      </section>
-
       <div class="application-actions">
         <p><strong id="requiredCount">0</strong> required fields completed</p>
-        <button type="button" class="btn btn--dark" id="reviewApplication">Review Application</button>
+        <button type="button" class="btn-solid" id="openReviewModal">Review &amp; Sign</button>
       </div>
     </section>
-
-    <section class="review-panel wrap" id="reviewPanel" hidden>
-      <span class="eyebrow">Final review</span>
-      <h2>Check your application</h2>
-      <p>Review the PDF above, confirm your résumé and signature, then submit your application to Prime Line.</p>
-      <label class="review-confirm"><input type="checkbox" id="reviewConfirmation"> I confirm that the information provided is accurate.</label>
-      <button type="button" class="btn btn--dark" id="submitApplication">Submit Application</button>
-    </section>
-
-    <section class="application-success wrap" id="applicationSuccess" hidden>
-      <span class="eyebrow">Application received</span>
-      <h2>Thank you for applying to Prime Line.</h2>
-      <p>Your application has been securely received. Keep a copy of the completed document for your records.</p>
-      <a class="btn btn--light" id="downloadApplication" href="#" download>Download completed application</a>
-    </section>
   </main>
+
+  <div class="review-modal" id="reviewModal" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle" hidden>
+    <div class="review-modal-card">
+      <button type="button" class="modal-close" id="closeReviewModal" aria-label="Close review window">&times;</button>
+      <span class="eyebrow">Final Step</span>
+      <h2 id="reviewModalTitle">Sign &amp; Submit</h2>
+      <p class="review-modal-lead">Draw your signature, confirm your information, then submit your application to Prime Line.</p>
+
+      <span class="field-label">Signature</span>
+      <canvas id="signaturePad" width="640" height="160" aria-label="Signature drawing area"></canvas>
+      <button type="button" class="text-button" id="clearSignature">Clear signature</button>
+
+      <label class="review-confirm"><input type="checkbox" id="reviewConfirmation"> I confirm that the information provided is accurate.</label>
+
+      <p class="modal-status" id="modalStatus" role="status" aria-live="polite" hidden></p>
+
+      <button type="button" class="btn-solid btn-solid--wide" id="submitApplication">Submit Application</button>
+    </div>
+  </div>
 
   <div class="success-modal" id="successModal" role="dialog" aria-modal="true" aria-labelledby="successModalTitle" hidden>
     <div class="success-modal-card">
@@ -72,7 +66,7 @@
       <span class="eyebrow">Prime Line Careers</span>
       <h2 id="successModalTitle">Application sent successfully</h2>
       <p>Your application was securely received by the Prime Line team.</p>
-      <a class="btn btn--light" id="modalDownloadApplication" href="#" download>Download completed application</a>
+      <a class="btn-solid" id="modalDownloadApplication" href="#" download>Download completed application</a>
       <button type="button" class="text-button" id="closeSuccessModal">Close</button>
     </div>
   </div>

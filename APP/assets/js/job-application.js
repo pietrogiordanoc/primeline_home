@@ -149,33 +149,42 @@ pageNumber.addEventListener('change', () => goToPage(pageNumber.value));
 document.querySelector('#zoomOut').addEventListener('click', () => { scale = Math.max(.6, scale - .1); zoomValue.textContent = `${Math.round(scale * 100)}%`; renderPage(currentPage); });
 document.querySelector('#zoomIn').addEventListener('click', () => { scale = Math.min(1.8, scale + .1); zoomValue.textContent = `${Math.round(scale * 100)}%`; renderPage(currentPage); });
 
-document.querySelector('#reviewApplication').addEventListener('click', () => {
-  const missing = [...requiredFields].filter((name) => !String(fieldState.get(name) || '').trim());
-  if (!isTestMode() && missing.length) return setStatus('Please complete the required fields before reviewing.', true);
-  if (!isTestMode() && !hasSignatureInk()) return setStatus('Please add your signature before reviewing.', true);
-  document.querySelector('#reviewPanel').hidden = false;
-  document.querySelector('#reviewPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+const reviewModal = document.querySelector('#reviewModal');
+const modalStatus = document.querySelector('#modalStatus');
+const setModalStatus = (message, isError = false) => {
+  modalStatus.textContent = message;
+  modalStatus.hidden = false;
+  modalStatus.classList.toggle('is-error', isError);
+};
+
+document.querySelector('#openReviewModal').addEventListener('click', () => {
+  modalStatus.hidden = true;
+  reviewModal.hidden = false;
+});
+document.querySelector('#closeReviewModal').addEventListener('click', () => {
+  reviewModal.hidden = true;
 });
 
 document.querySelector('#submitApplication').addEventListener('click', async () => {
-  if (!document.querySelector('#reviewConfirmation').checked) return setStatus('Please confirm that your information is accurate.', true);
+  const missing = [...requiredFields].filter((name) => !String(fieldState.get(name) || '').trim());
+  if (!isTestMode() && missing.length) return setModalStatus(`Please complete ${missing.length} required field(s) in the application before submitting.`, true);
+  if (!isTestMode() && !hasSignatureInk()) return setModalStatus('Please add your signature before submitting.', true);
+  if (!document.querySelector('#reviewConfirmation').checked) return setModalStatus('Please confirm that your information is accurate.', true);
+
   const submitButton = document.querySelector('#submitApplication');
   submitButton.disabled = true;
-  setStatus('Submitting securely...');
+  setModalStatus('Submitting securely...');
   try {
     const resume = await readFileAsDataUrl(document.querySelector('#resume').files[0]);
     const response = await fetch('/api/careers/submit-application', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: Object.fromEntries(fieldState), signature: hasSignatureInk() ? signaturePad.toDataURL('image/png') : null, resume, testMode: isTestMode() }) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not submit the application.');
-    document.querySelector('#applicationSuccess').hidden = false;
-    document.querySelector('#downloadApplication').href = result.downloadUrl;
+    reviewModal.hidden = true;
     document.querySelector('#modalDownloadApplication').href = result.downloadUrl;
     document.querySelector('#successModal').hidden = false;
-    document.querySelector('#applicationSuccess').scrollIntoView({ behavior: 'smooth' });
-    setStatus('Application received.');
   } catch (error) {
     submitButton.disabled = false;
-    setStatus(error.message, true);
+    setModalStatus(error.message, true);
   }
 });
 
