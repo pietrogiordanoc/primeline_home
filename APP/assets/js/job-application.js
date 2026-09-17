@@ -169,12 +169,18 @@ document.querySelector('#submitApplication').addEventListener('click', async () 
     if (!response.ok) throw new Error(result.error || 'Could not submit the application.');
     document.querySelector('#applicationSuccess').hidden = false;
     document.querySelector('#downloadApplication').href = result.downloadUrl;
+    document.querySelector('#modalDownloadApplication').href = result.downloadUrl;
+    document.querySelector('#successModal').hidden = false;
     document.querySelector('#applicationSuccess').scrollIntoView({ behavior: 'smooth' });
     setStatus('Application received.');
   } catch (error) {
     submitButton.disabled = false;
     setStatus(error.message, true);
   }
+});
+
+document.querySelector('#closeSuccessModal').addEventListener('click', () => {
+  document.querySelector('#successModal').hidden = true;
 });
 
 try {

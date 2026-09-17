@@ -66,6 +66,17 @@
     </section>
   </main>
 
+  <div class="success-modal" id="successModal" role="dialog" aria-modal="true" aria-labelledby="successModalTitle" hidden>
+    <div class="success-modal-card">
+      <span class="success-mark" aria-hidden="true">&#10003;</span>
+      <span class="eyebrow">Prime Line Careers</span>
+      <h2 id="successModalTitle">Application sent successfully</h2>
+      <p>Your application was securely received by the Prime Line team.</p>
+      <a class="btn btn--light" id="modalDownloadApplication" href="#" download>Download completed application</a>
+      <button type="button" class="text-button" id="closeSuccessModal">Close</button>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
   <script src="../assets/js/job-application.js" type="module"></script>
 </body>

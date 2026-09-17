@@ -33,6 +33,12 @@
 .review-confirm{ display:block; margin:24px 0; font-size:13px; }
 .review-confirm input{ margin-right:8px; }
 [hidden]{ display:none !important; }
+.success-modal{ position:fixed; z-index:20; inset:0; display:grid; place-items:center; padding:24px; background:rgba(13,24,48,.72); }
+.success-modal-card{ width:min(100%,520px); padding:48px 42px; text-align:center; background:var(--pl-cream); border-top:4px solid var(--pl-gold); box-shadow:0 24px 70px rgba(0,0,0,.3); }
+.success-mark{ display:grid; place-items:center; width:52px; height:52px; margin:0 auto 22px; border-radius:50%; background:var(--pl-navy); color:#fff; font-size:28px; }
+.success-modal-card h2{ margin:10px 0 12px; color:var(--pl-navy); font-size:38px; line-height:1; }
+.success-modal-card p{ margin-bottom:26px; color:var(--pl-ink-soft); }
+.success-modal-card .text-button{ display:block; margin:22px auto 0; }
 @media (max-width:760px){
   .application-header{ padding:18px 22px; }
   .application-back{ font-size:9px; text-align:right; }
