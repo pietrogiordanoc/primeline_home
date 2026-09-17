@@ -2,6 +2,9 @@
   publish = "."
   functions = "netlify/functions"
 
+[functions]
+  included_files = ["PDF/**"]
+
 [[redirects]]
   from = "/api/access/request-code"
   to = "/.netlify/functions/request-code"
