@@ -5,7 +5,7 @@ import { PDFDocument } from 'pdf-lib';
 import { createClient } from '@supabase/supabase-js';
 
 const taskRoot = process.env.LAMBDA_TASK_ROOT || process.cwd();
-const templatePath = path.join(taskRoot, 'PDF', '1. PLD Job Application-Fillable.pdf');
+const templatePath = path.join(taskRoot, 'PDF', 'job_employment_application.pdf');
 
 const MAX_RESUME_BYTES = 5 * 1024 * 1024;
 const MAX_FIELD_COUNT = 150;
@@ -45,7 +45,7 @@ const fillPdf = async (fields, signatureData) => {
   try {
     template = await readFile(templatePath);
   } catch (error) {
-    template = await readFile(path.join(process.cwd(), 'PDF', '1. PLD Job Application-Fillable.pdf'));
+    template = await readFile(path.join(process.cwd(), 'PDF', 'job_employment_application.pdf'));
   }
   const pdf = await PDFDocument.load(template);
   const form = pdf.getForm();
@@ -90,7 +90,6 @@ const getSupabase = () => createClient(process.env.SUPABASE_URL, process.env.SUP
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405);
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return json({ error: 'Application service is not configured.' }, 503);
 
   let payload;
   try { payload = JSON.parse(event.body || '{}'); } catch { return json({ error: 'Invalid request.' }, 400); }
@@ -99,7 +98,20 @@ export const handler = async (event) => {
   const testMode = payload.testMode === true && process.env.ALLOW_TEST_APPLICATIONS === 'true';
   if (payload.testMode === true && !testMode) return json({ error: 'Test mode is not enabled on the server.' }, 403);
   const signature = payload.signature ? dataUrlToBuffer(payload.signature, new Set(['image/png']), 512 * 1024) : null;
+
+  if (payload.preview === true) {
+    try {
+      const previewPdf = await fillPdf(fields, payload.signature);
+      return { statusCode: 200, isBase64Encoded: true, headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': 'inline; filename="completed-application-preview.pdf"', 'Cache-Control': 'no-store' }, body: previewPdf.toString('base64') };
+    } catch (error) {
+      console.error('PDF preview failed:', error);
+      return json({ error: 'Could not prepare the completed application preview.' }, 422);
+    }
+  }
+
   if (!signature && !testMode) return json({ error: 'A signature is required.' }, 400);
+
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return json({ error: 'Application service is not configured.' }, 503);
 
   const submittedName = String(fields['First Name'] || fields['Last Name'] || fields.name || '').trim().slice(0, 160);
   const submittedEmail = String(fields['Email Address_2'] || fields['Email Address'] || '').trim().toLowerCase().slice(0, 254);

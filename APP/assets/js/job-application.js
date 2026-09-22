@@ -1,10 +1,12 @@
 import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
 
-const pdfUrl = '../PDF/1.%20PLD%20Job%20Application-Fillable.pdf';
+const pdfUrl = '../PDF/job_employment_application.pdf';
 const pdfStage = document.querySelector('#pdfStage');
 const status = document.querySelector('#applicationStatus');
 const pageNumber = document.querySelector('#pageNumber');
 const pageCount = document.querySelector('#pageCount');
+const bottomPageNumber = document.querySelector('#bottomPageNumber');
+const bottomPageCount = document.querySelector('#bottomPageCount');
 const zoomValue = document.querySelector('#zoomValue');
 const fieldState = new Map();
 const requiredFields = new Set();
@@ -60,6 +62,8 @@ const makeControl = (annotation, box) => {
   control.style.top = `${box.top}px`;
   control.style.width = `${Math.max(box.width, 8)}px`;
   control.style.height = `${Math.max(box.height, 10)}px`;
+  control.style.fontSize = `${Math.max(10, Math.min(18, 10 * scale))}px`;
+  control.style.lineHeight = '1.15';
   control.autocomplete = 'off';
 
   if (isRadio) {
@@ -118,6 +122,8 @@ const renderPage = async (pageNumberValue) => {
   });
   pageNumber.value = pageNumberValue;
   pageCount.textContent = pdfDocument.numPages;
+  bottomPageNumber.textContent = pageNumberValue;
+  bottomPageCount.textContent = pdfDocument.numPages;
   updateProgress();
 };
 
@@ -152,6 +158,8 @@ document.querySelector('#clearSignature').addEventListener('click', () => signat
 
 document.querySelector('#previousPage').addEventListener('click', () => goToPage(currentPage - 1));
 document.querySelector('#nextPage').addEventListener('click', () => goToPage(currentPage + 1));
+document.querySelector('#previousPageBottom').addEventListener('click', () => goToPage(currentPage - 1));
+document.querySelector('#nextPageBottom').addEventListener('click', () => goToPage(currentPage + 1));
 pageNumber.addEventListener('change', () => goToPage(pageNumber.value));
 document.querySelector('#zoomOut').addEventListener('click', () => { scale = Math.max(.6, scale - .1); zoomValue.textContent = `${Math.round(scale * 100)}%`; renderPage(currentPage); });
 document.querySelector('#zoomIn').addEventListener('click', () => { scale = Math.min(1.8, scale + .1); zoomValue.textContent = `${Math.round(scale * 100)}%`; renderPage(currentPage); });
@@ -164,13 +172,49 @@ const setModalStatus = (message, isError = false) => {
   modalStatus.classList.toggle('is-error', isError);
 };
 
-document.querySelector('#openReviewModal').addEventListener('click', () => {
+const openReviewModal = () => {
   modalStatus.hidden = true;
   reviewModal.hidden = false;
-});
+};
+document.querySelector('#openReviewModalTop').addEventListener('click', openReviewModal);
+document.querySelector('#openReviewModal').addEventListener('click', openReviewModal);
 document.querySelector('#closeReviewModal').addEventListener('click', () => {
   reviewModal.hidden = true;
 });
+
+const previewApplication = async () => {
+  if (window.location.protocol === 'file:') {
+    setStatus('Preview requires the site to run through Netlify Dev or a deployed URL, not a file:// address.', true);
+    return;
+  }
+  const previewButton = document.querySelector('#previewApplication');
+  const previewWindow = window.open('', '_blank');
+  if (!previewWindow) return setModalStatus('Please allow pop-ups to open the application preview.', true);
+  previewWindow.opener = null;
+  previewButton.disabled = true;
+  setModalStatus('Preparing your completed application...');
+  try {
+    const response = await fetch('/api/careers/submit-application', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: Object.fromEntries(fieldState), signature: hasSignatureInk() ? signaturePad.toDataURL('image/png') : null, preview: true }) });
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Could not prepare the application preview.';
+      try { errorMessage = JSON.parse(errorText).error || errorMessage; } catch { /* The platform may return a plain-text error. */ }
+      throw new Error(errorMessage);
+    }
+    const previewUrl = URL.createObjectURL(await response.blob());
+    previewWindow.location.href = previewUrl;
+    setModalStatus('Preview opened in a new browser tab.');
+    window.setTimeout(() => URL.revokeObjectURL(previewUrl), 60000);
+  } catch (error) {
+    previewWindow.close();
+    if (reviewModal.hidden) setStatus(error.message, true);
+    else setModalStatus(error.message, true);
+  } finally {
+    previewButton.disabled = false;
+  }
+};
+document.querySelector('#previewApplication').addEventListener('click', previewApplication);
+document.querySelector('#previewApplicationTop').addEventListener('click', previewApplication);
 
 document.querySelector('#submitApplication').addEventListener('click', async () => {
   const missing = [...requiredFields].filter((name) => !String(fieldState.get(name) || '').trim());

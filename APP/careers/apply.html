@@ -33,11 +33,26 @@
       </div>
 
       <div class="application-status" id="applicationStatus" role="status" aria-live="polite">Loading the original application...</div>
+      <div class="application-top-actions">
+        <button type="button" class="preview-application" id="previewApplicationTop">Preview PDF (does not submit)</button>
+        <button type="button" class="btn-solid" id="openReviewModalTop">Review &amp; Sign</button>
+      </div>
       <div class="pdf-stage" id="pdfStage" aria-label="Job application PDF"></div>
+
+      <div class="application-bottom-toolbar" aria-label="PDF page navigation">
+        <div class="page-controls">
+          <button type="button" class="icon-button" id="previousPageBottom" aria-label="Previous page">&#8592;</button>
+          <span>Page <strong id="bottomPageNumber">1</strong> of <strong id="bottomPageCount">9</strong></span>
+          <button type="button" class="icon-button" id="nextPageBottom" aria-label="Next page">&#8594;</button>
+        </div>
+      </div>
 
       <div class="application-actions">
         <p><strong id="requiredCount">0</strong> required fields completed</p>
-        <button type="button" class="btn-solid" id="openReviewModal">Review &amp; Sign</button>
+          <div class="application-action-buttons">
+            <button type="button" class="preview-application" id="previewApplication">Preview PDF (does not submit)</button>
+            <button type="button" class="btn-solid" id="openReviewModal">Review &amp; Sign</button>
+          </div>
       </div>
     </section>
   </main>
