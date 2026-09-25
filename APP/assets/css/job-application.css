@@ -17,8 +17,6 @@
 .test-notify-control input{ margin-left:7px; width:230px; padding:6px 8px; border:1px solid rgba(159,55,46,.4); font-size:11px; text-transform:none; letter-spacing:normal; }
 .application-status{ padding:12px 0; color:var(--pl-ink-soft); font-size:12px; }
 .application-status.is-error{ color:#9f372e; }
-.application-top-actions{ display:flex; justify-content:flex-end; gap:12px; margin-bottom:14px; }
-.application-top-actions .preview-application{ width:auto; }
 .pdf-stage{ min-height:700px; overflow:auto; padding:36px; background:#777b80; box-shadow:0 18px 50px rgba(13,24,48,.14); }
 .pdf-page{ position:relative; width:max-content; margin:0 auto 28px; background:#fff; box-shadow:0 8px 20px rgba(0,0,0,.22); }
 .pdf-page canvas{ display:block; }
@@ -29,9 +27,6 @@
 .text-button{ border:0; background:none; color:var(--pl-navy); font-size:11px; text-transform:uppercase; letter-spacing:.12em; cursor:pointer; }
 .application-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:22px; }
 .application-actions p{ color:var(--pl-ink-soft); font-size:12px; }
-.application-action-buttons{ display:flex; align-items:center; gap:12px; }
-.application-bottom-toolbar{ display:flex; justify-content:center; margin-top:18px; padding:12px 18px; background:#fff; border:1px solid var(--pl-line); }
-.application-bottom-toolbar .page-controls span{ color:var(--pl-ink-soft); font-size:12px; }
 [hidden]{ display:none !important; }
 
 .btn-solid{
@@ -64,9 +59,6 @@
 .review-modal-card .text-button{ display:block; margin:10px 0 22px; }
 .review-confirm{ display:block; margin:6px 0 20px; font-size:13px; color:var(--pl-ink); }
 .review-confirm input{ margin-right:8px; }
-.preview-application{ display:flex; align-items:center; justify-content:center; width:auto; margin:0; padding:12px 18px; border:1px solid var(--pl-navy); background:#fff; color:var(--pl-navy); font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; transition:background .25s var(--ease), color .25s var(--ease); }
-.preview-application:hover{ background:var(--pl-navy); color:#fff; }
-.preview-application:disabled{ opacity:.55; cursor:wait; }
 .modal-status{ margin:0 0 18px; padding:12px 14px; font-size:12px; line-height:1.5; background:#eef1f4; color:var(--pl-ink-soft); border-left:3px solid var(--pl-navy); }
 .modal-status.is-error{ background:#fbeceb; color:#7a241d; border-left-color:#9f372e; }
 
@@ -84,13 +76,7 @@
   .resume-control{ width:100%; }
   .test-mode-control{ margin-left:0; }
   .pdf-stage{ padding:12px; }
-  .application-top-actions{ display:block; }
-  .application-top-actions .preview-application,.application-top-actions .btn-solid{ width:100%; }
-  .application-top-actions .preview-application{ margin-bottom:14px; }
-  .application-bottom-toolbar{ padding:12px; }
   .application-actions{ display:block; }
-  .application-action-buttons{ display:block; }
-  .application-action-buttons .preview-application{ width:100%; margin-bottom:14px; }
   .application-actions .btn-solid{ margin-top:14px; width:100%; }
   .review-modal-card{ padding:38px 24px 30px; }
 }
