@@ -15,9 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     spotLightboxImage.removeAttribute('src');
   };
   document.addEventListener('click', (e) => {
-    if (e.target.closest('.slider-arrow, .detail-slider-arrow')) return;
-    const spotModule = e.target.closest('.cheese-card, .cheese-feature, .cheese-close, .category-detail, .cv-hero, .cv-intro, .cv-trio-card, .cv-spot, .cv-diff, .cv-close');
-    const image = e.target.closest('img') || spotModule?.querySelector('img');
+    if (e.target.closest('.banner-slider, .slider-arrow, .detail-slider-arrow')) return;
+    const image = e.target.closest('img');
     if (!image) return;
     if (e.target.closest('a')) e.preventDefault();
     spotLightboxImage.src = image.currentSrc || image.src;
@@ -827,9 +826,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateCategoryDetail(slideEl) {
       if (!categoryDetail) return;
-      const img = slideEl.querySelector('img');
-      const key = decodeURIComponent((img?.getAttribute('src') || '').split('/').pop() || '').replace(/\.[^.]+$/, '');
-      const data = bannerCopy[key] || { eyebrow: 'Prime Line', title: img?.alt || 'Category', text: 'Reference text coming soon.' };
+      const media = slideEl.querySelector('img, video');
+      const key = slideEl.dataset.category || decodeURIComponent((media?.getAttribute('src') || '').split('/').pop() || '').replace(/\.[^.]+$/, '');
+      const data = bannerCopy[key] || { eyebrow: 'Prime Line', title: media?.getAttribute('alt') || 'Category', text: 'Reference text coming soon.' };
       const render = categoryDetailTemplates[key] || (() => defaultDetailTemplate(data));
       categoryDetail.classList.add('is-fading');
       setTimeout(() => {
@@ -850,7 +849,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const requestedCategory = new URLSearchParams(window.location.search).get('category');
       const requestedIndex = requestedCategory
         ? slides.findIndex((slide) => {
-          const src = slide.querySelector('img')?.getAttribute('src') || '';
+          const src = slide.querySelector('img, video')?.getAttribute('src') || '';
+          if (slide.dataset.category === requestedCategory) return true;
           return decodeURIComponent(src.split('/').pop() || '').replace(/\.[^.]+$/, '') === requestedCategory;
         })
         : -1;
@@ -870,14 +870,39 @@ document.addEventListener('DOMContentLoaded', () => {
         dotsWrap.appendChild(dot);
       });
       const dots = Array.from(dotsWrap.children);
+      slides.forEach((slide) => {
+        const video = slide.querySelector('video');
+        if (!video) return;
+        video.loop = false;
+        video.addEventListener('ended', () => {
+          if (slides[current] === slide) goTo(current + 1);
+        });
+      });
       updateCategoryDetail(slides[current]);
+      slides.forEach((slide, index) => {
+        const video = slide.querySelector('video');
+        if (!video) return;
+        if (index === current) {
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
 
       function goTo(index) {
+        const previousVideo = slides[current].querySelector('video');
+        previousVideo?.pause();
         slides[current].classList.remove('is-active');
         dots[current].classList.remove('is-active');
         current = (index + slides.length) % slides.length;
         slides[current].classList.add('is-active');
         dots[current].classList.add('is-active');
+        const nextVideo = slides[current].querySelector('video');
+        if (nextVideo) {
+          nextVideo.currentTime = 0;
+          nextVideo.play().catch(() => {});
+        }
         updateCategoryDetail(slides[current]);
         resetTimer();
       }
@@ -887,9 +912,12 @@ document.addEventListener('DOMContentLoaded', () => {
         goTo(button.classList.contains('detail-slider-arrow--prev') ? current - 1 : current + 1);
       });
       function resetTimer() {
-        clearInterval(timer);
+        clearTimeout(timer);
         if (!autoplayAllowed) return;
-        timer = setInterval(() => goTo(current + 1), 5000);
+        const slide = slides[current];
+        const video = slide.querySelector('video');
+        if (video) return;
+        timer = setTimeout(() => goTo(current + 1), 5000);
       }
 
       slider.setAttribute('tabindex', '0');
@@ -909,9 +937,9 @@ document.addEventListener('DOMContentLoaded', () => {
           goTo(slides.length - 1);
         }
       });
-      slider.addEventListener('mouseenter', () => clearInterval(timer));
+      slider.addEventListener('mouseenter', () => clearTimeout(timer));
       slider.addEventListener('mouseleave', resetTimer);
-      slider.addEventListener('focusin', () => clearInterval(timer));
+      slider.addEventListener('focusin', () => clearTimeout(timer));
       slider.addEventListener('focusout', (e) => {
         if (!slider.contains(e.relatedTarget)) resetTimer();
       });
@@ -920,7 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const visibilityObserver = new IntersectionObserver(([entry]) => {
         autoplayAllowed = entry.intersectionRatio >= 0.99;
         if (autoplayAllowed) resetTimer();
-        else clearInterval(timer);
+        else clearTimeout(timer);
       }, { threshold: [0, 0.99, 1] });
       visibilityObserver.observe(slider);
 
