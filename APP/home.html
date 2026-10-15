@@ -6,13 +6,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Prime Line - Importers of Selected Specialty Foods.">
 <link rel="stylesheet" href="assets/css/base.css">
-<link rel="stylesheet" href="assets/css/home.css">
+<link rel="stylesheet" href="assets/css/home.css?v=20261015-1">
 <link rel="stylesheet" href="assets/css/category-vegetables.css">
 <link rel="stylesheet" href="assets/css/cheese.css">
+<link rel="stylesheet" href="assets/css/cured-meats.css?v=20261015-1">
+<link rel="stylesheet" href="assets/css/vinegars.css?v=20261015-2">
+<link rel="stylesheet" href="assets/css/beans-legumes.css?v=20261014-1">
+<link rel="stylesheet" href="assets/css/olive-oil.css?v=20261014-1">
+<link rel="stylesheet" href="assets/css/coffee.css?v=20261015-2">
+<link rel="stylesheet" href="assets/css/condiments.css?v=20261015-2">
+<link rel="stylesheet" href="assets/css/confections.css?v=20261014-1">
 <link rel="stylesheet" href="assets/css/baking-pastry.css">
 <link rel="stylesheet" href="assets/css/mozzarella-burrata.css">
-<link rel="stylesheet" href="assets/css/desserts-gelato.css">
-<link rel="stylesheet" href="assets/css/category-titles.css">
+<link rel="stylesheet" href="assets/css/desserts-gelato.css?v=20261014-1">
+<link rel="stylesheet" href="assets/css/fish-seafood.css?v=20261014-1">
+<link rel="stylesheet" href="assets/css/flour-rice-grains.css?v=20261014-1">
+<link rel="stylesheet" href="assets/css/pasta.css?v=20261014-1">
+<link rel="stylesheet" href="assets/css/category-titles.css?v=20261014-9">
 </head>
 <body>
 
@@ -26,6 +36,12 @@
     </a>
   </div>
 </header>
+
+<div class="slider-keyboard-toast" id="sliderKeyboardToast" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">
+  <span class="slider-keyboard-toast-label">Category</span>
+  <strong class="slider-keyboard-toast-name"></strong>
+  <span class="slider-keyboard-toast-hint"><kbd>←</kbd> <kbd>→</kbd> to browse</span>
+</div>
 
 <div class="nav-overlay" id="navOverlay"></div>
 <div class="side-drawers">
@@ -111,10 +127,10 @@
     <div class="about-panel-inner">
       <img class="about-photo" src="images/spots/aboutus.avif" alt="A selection of Prime Line specialty foods: burrata, cheese board, prosciutto, olives, pasta and coffee">
       <h2 class="about-title">About Us</h2>
-      <h3 class="about-subtitle">About Prime Line Distributors</h3>
+      <h3 class="about-subtitle">About Prime Line</h3>
       <div class="about-columns">
         <div>
-          <p>Prime Line Distributors was founded in 1981 in South Florida by Mr. Gianni Landi, an immigrant from Italy with more than 50 years of experience in the specialty food industry. Mr. Landi brought with him the rich culinary traditions and food culture of the Old World. His philosophy has always been that cooking is an art, and appreciating the quality and distinction of authentic foods is essential.</p>
+          <p>Prime Line was founded in 1981 in South Florida by Mr. Gianni Landi, an immigrant from Italy with more than 50 years of experience in the specialty food industry. Mr. Landi brought with him the rich culinary traditions and food culture of the Old World. His philosophy has always been that cooking is an art, and appreciating the quality and distinction of authentic foods is essential.</p>
           <p>From the very beginning, Prime Line has been a pioneer in imported specialty foods in Florida. The company was among the first to introduce unique products to the market such as artisanal imported cheeses, fine cured meats and charcuterie, extra virgin olive oils, aged vinegars, imported pastas, truffles, wild mushrooms, San Marzano tomatoes, specialty rice, premium flours, ancient grains, Italian espresso, and many other exceptional products. In addition to these imports, we proudly represent a number of outstanding artisanal American producers whose products have become staples of the new American cuisine.</p>
           <p>Our sourcing philosophy is simple: we travel extensively through distinct regions of Italy, France, Spain, and the United States in search of authentic and exceptional products. Each item is carefully selected and evaluated before becoming part of our portfolio. We maintain close partnerships with our producers, many of whom share our same dedication to craftsmanship, authenticity, and uncompromising quality.</p>
         </div>
@@ -240,20 +256,20 @@
 <section class="banner-slider" id="bannerSlider">
   <div class="slider-track" data-banner-dir="images/banners/">
     <div class="slide is-active"><img src="images/banners/parmigiano.jpg" alt="Parmigiano Reggiano wheels in an aging room"></div>
-    <div class="slide" data-category="mozzarellaburrata"><video autoplay muted playsinline preload="metadata" data-fade-loop poster="images/banners/mozzarellaburrata.jpg" aria-label="Fresh mozzarella and burrata prepared for service"><source src="images/videos/mozzarella1.mp4" type="video/mp4"></video></div>
-    <div class="slide" data-category="antipasto_and_vegetables"><video autoplay muted playsinline preload="metadata" poster="images/banners/antipasto_and_vegetables.jpeg" aria-label="Antipasto and vegetables"><source src="images/videos/pizza1.mp4" type="video/mp4"></video></div>
-    <div class="slide"><img src="images/banners/baking_and_pastry.jpeg" alt="Baking and pastry"></div>
-    <div class="slide"><img src="images/banners/balsamic1.jpg" alt="Balsamic vinegar"></div>
-    <div class="slide"><img src="images/banners/beans_and_legumes.jpeg" alt="Beans and legumes"></div>
-    <div class="slide" data-category="coffee_and_tea"><video autoplay muted playsinline preload="metadata" poster="images/banners/coffee_and_tea.jpeg" aria-label="Coffee and tea"><source src="images/videos/coffeevideo.mp4" type="video/mp4"></video></div>
-    <div class="slide"><img src="images/banners/condiments_sauces_and_stocks.jpeg" alt="Condiments, sauces and stocks"></div>
-    <div class="slide"><img src="images/banners/confections_and_baked_goods.jpeg" alt="Confections and baked goods"></div>
-    <div class="slide"><img src="images/banners/cured_meats.jpeg" alt="Cured meats"></div>
-    <div class="slide"><img src="images/banners/desserts_and_gelato.jpeg" alt="Desserts and gelatos"></div>
-    <div class="slide" data-category="fish_and_seafood"><video autoplay muted playsinline preload="metadata" poster="images/banners/fish_and_seafood.jpeg" aria-label="Fish and seafood"><source src="images/videos/octopussy1.mp4" type="video/mp4"></video></div>
-    <div class="slide"><img src="images/banners/flour_rice_and_grains.jpeg" alt="Flour, rice and grains"></div>
-    <div class="slide" data-category="olivesand oil"><video autoplay muted playsinline preload="metadata" poster="images/banners/olivesand%20oil.jpeg" aria-label="Olives and oil"><source src="images/videos/oil1.mp4" type="video/mp4"></video></div>
-    <div class="slide"><img src="images/banners/pasta.jpeg" alt="Pasta"></div>
+    <div class="slide" data-category="mozzarellaburrata"><video autoplay muted playsinline preload="metadata" poster="images/banners/mozzarellaburrata.jpg" aria-label="Fresh mozzarella and burrata prepared for service"><source src="images/videos/mozzarella1.mp4" type="video/mp4"></video></div>
+    <div class="slide" data-category="antipasto_and_vegetables"><img src="images/banners/antipasto_and_vegetables.jpeg" alt="Antipasto and vegetables"></div>
+    <div class="slide" data-category="baking_and_pastry"><img src="images/banners/baking_and_pastry.jpeg" alt="Baking and pastry"></div>
+    <div class="slide" data-category="balsamic_vinegars"><img src="images/banners/balsamic1.jpg" alt="Balsamic vinegar" data-image-slot="balsamic-hero"></div>
+    <div class="slide" data-category="beans_and_legumes"><video autoplay muted playsinline preload="metadata" poster="images/banners/beans_and_legumes.jpeg" aria-label="Beans and legumes" data-image-slot="beans-hero"><source src="images/videos/legumes.mp4" type="video/mp4"></video></div>
+    <div class="slide" data-category="coffee_and_tea"><video autoplay muted playsinline preload="metadata" poster="images/banners/coffee_and_tea.jpeg" aria-label="Coffee and tea" data-image-slot="coffee-tea-hero"><source src="images/videos/coffeevideo.mp4" type="video/mp4"></video></div>
+    <div class="slide" data-category="condiments_sauces_and_stocks"><img src="images/banners/condiments_sauces_and_stocks.jpeg" alt="Condiments, sauces and stocks" data-image-slot="condiments-hero"></div>
+    <div class="slide" data-category="confections_and_baked_goods"><img src="images/banners/confections_and_baked_goods.jpeg" alt="Confections and baked goods" data-image-slot="confections-hero"></div>
+    <div class="slide" data-category="cured_meats"><video autoplay muted playsinline preload="metadata" poster="images/banners/cured_meats02.jpeg" aria-label="Cured meats"><source src="images/videos/prosciutto2.mp4" type="video/mp4"></video></div>
+    <div class="slide" data-category="desserts_and_gelato"><img src="images/banners/desserts_and_gelato.jpeg" alt="Desserts and gelato" data-image-slot="desserts-gelato-hero"></div>
+    <div class="slide" data-category="fish_and_seafood"><video autoplay muted playsinline preload="metadata" poster="images/banners/fish_and_seafood.jpeg" aria-label="Fish and seafood" data-image-slot="seafood-hero"><source src="images/videos/octopussy1.mp4" type="video/mp4"></video></div>
+    <div class="slide" data-category="flour_rice_and_grains"><video autoplay muted playsinline preload="metadata" poster="images/banners/flour_rice_and_grains.jpeg" aria-label="Flour, rice and grains" data-image-slot="flour-rice-grains-hero"><source src="images/videos/pizza1.mp4" type="video/mp4"></video></div>
+    <div class="slide" data-category="olivesand oil"><video autoplay muted playsinline preload="metadata" poster="images/banners/olivesand%20oil.jpeg" aria-label="Olive oil" data-image-slot="olive-oil-hero"><source src="images/videos/oil1.mp4" type="video/mp4"></video></div>
+    <div class="slide" data-category="pasta"><img src="images/banners/pasta.jpeg" alt="Italian pasta" data-image-slot="italian-pasta-hero"></div>
   </div>
   <button type="button" class="slider-arrow slider-arrow--prev" aria-label="Previous slide">&#10094;</button>
   <button type="button" class="slider-arrow slider-arrow--next" aria-label="Next slide">&#10095;</button>
@@ -341,10 +357,10 @@
   </div>
   <div class="footer-bottom">
     <p>Importers of Selected Specialty Foods</p>
-    <p>&copy; 2026 Prime Line Distributors, Inc. All Rights Reserved.</p>
+    <p>&copy; 2026 Prime Line, Inc. All Rights Reserved.</p>
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=20260925-4"></script>
+<script src="assets/js/main.js?v=20261015-12"></script>
 </body>
 </html>

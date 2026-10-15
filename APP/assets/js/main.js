@@ -580,17 +580,17 @@ document.addEventListener('DOMContentLoaded', () => {
       mozzarellaburrata: { eyebrow: 'Fresh Cheese', title: 'Mozzarella & Burrata', text: 'Fresh Italian cheese selected for exceptional texture, flavor and professional service.' },
       antipasto_and_vegetables: { eyebrow: 'Antipasto', title: 'Antipasto & Vegetables', text: 'Reference text about antipasto and vegetables. Replace with final copy.' },
       baking_and_pastry: { eyebrow: 'Baking & Pastry', title: 'Crafted for the Art of Pastry', text: 'Premium ingredients and authentic specialties selected for professional bakers, pastry chefs and culinary creators.' },
-      balsamic1: { eyebrow: 'Vinegars', title: 'Balsamic Vinegar', text: 'Selected Italian Vinegars' },
-      beans_and_legumes: { eyebrow: 'Legumes', title: 'Beans & Legumes', text: 'Reference text about beans and legumes. Replace with final copy.' },
-      coffee_and_tea: { eyebrow: 'Coffee & Tea', title: 'Coffee & Tea', text: 'Reference text about coffee and tea. Replace with final copy.' },
-      condiments_sauces_and_stocks: { eyebrow: 'Condiments', title: 'Condiments, Sauces & Stocks', text: 'Reference text about condiments. Replace with final copy.' },
-      confections_and_baked_goods: { eyebrow: 'Confections', title: 'Confections & Baked Goods', text: 'Reference text about confections. Replace with final copy.' },
-      cured_meats: { eyebrow: 'Charcuterie', title: 'Cured Meats', text: 'Reference text about cured meats. Replace with final copy.' },
-      desserts_and_gelato: { eyebrow: 'Desserts', title: 'Desserts & Gelatos', text: 'Reference text about desserts. Replace with final copy.' },
-      fish_and_seafood: { eyebrow: 'Seafood', title: 'Fish & Seafood', text: 'Reference text about fish and seafood. Replace with final copy.' },
-      flour_rice_and_grains: { eyebrow: 'Grains', title: 'Flour, Rice & Grains', text: 'Reference text about grains. Replace with final copy.' },
-      'olivesand oil': { eyebrow: 'Oils', title: 'Olives & Oil', text: 'Reference text about olives and oil. Replace with final copy.' },
-      pasta: { eyebrow: 'Pasta', title: 'Italian Pasta', text: 'We sell the finest pasta from Italy. Replace with final copy.' },
+      balsamic_vinegars: { eyebrow: 'Balsamic Vinegars', title: 'Exceptional Balsamic Vinegars, Selected at the Source', text: 'Italian Tradition & Distinctive Specialties' },
+      beans_and_legumes: { eyebrow: 'Beans & Legumes', title: 'Exceptional Beans & Legumes, Naturally Selected', text: 'Traditional Varieties & Mediterranean Essentials' },
+      coffee_and_tea: { eyebrow: 'Coffee & Tea', title: 'Exceptional Coffee & Tea, Selected with Care', text: 'Timeless Rituals & Distinctive Flavors' },
+      condiments_sauces_and_stocks: { eyebrow: 'Condiments & Sauces', title: 'The Art of Flavor', text: 'Exceptional Condiments & Culinary Specialties' },
+      confections_and_baked_goods: { eyebrow: 'Confections & Baked Goods', title: 'The Sweet Art of Tradition', text: 'Exceptional Confections & Baked Specialties' },
+      cured_meats: { eyebrow: 'Cured Meats', title: 'Exceptional Cured Meats, Selected with Care', text: 'Traditional Salumi & International Specialties' },
+      desserts_and_gelato: { eyebrow: 'Desserts & Gelato', title: 'The Art of Sweet Indulgence', text: 'Exceptional Desserts & Italian Gelato' },
+      fish_and_seafood: { eyebrow: 'Fish & Seafood', title: 'Treasures of the Sea', text: 'Exceptional Fish & Seafood Specialties' },
+      flour_rice_and_grains: { eyebrow: 'Flour, Rice & Grains', title: 'The Foundation of Great Cuisine', text: 'Exceptional Flours, Rice & Traditional Grains' },
+      'olivesand oil': { eyebrow: 'Olive Oil', title: 'Exceptional Olive Oils, Selected at the Source', text: 'Extra Virgin & Mediterranean Specialties' },
+      pasta: { eyebrow: 'Italian Pasta', title: 'The Art of Italian Pasta', text: 'Authentic Tradition & Exceptional Varieties' },
     };
 
     // Centralized placeholders: replace these paths when the final cheese photography arrives.
@@ -619,40 +619,514 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="mb-story-gallery reveal"><img class="mb-story-image mb-story-image--primary" src="images/spots/fioretta01.jpg" alt="Artisan fresh cheese production in a Florida facility"><img class="mb-story-image mb-story-image--detail" src="images/spots/fioretta02.jpg" alt="Fresh mozzarella being shaped by hand during production"></div>
           </section>
         </div>`,
-      desserts_and_gelato: () => `
+      desserts_and_gelato: () => {
+        const collections = [
+          {
+            slot: 'gelato-category-card',
+            title: 'Italian Gelato',
+            description: 'Distinctive frozen specialties inspired by Italian gelato traditions and celebrated for their flavor and smooth texture.'
+          },
+          {
+            slot: 'desserts-category-card',
+            title: 'Classic Desserts',
+            description: 'Timeless sweet creations bringing together refined flavors, inviting textures, and memorable presentation.'
+          },
+          {
+            slot: 'frozen-specialties-card',
+            title: 'Sorbet & Frozen Specialties',
+            description: 'Refreshing frozen expressions and specialty desserts offering variety and creative culinary possibilities.'
+          }
+        ];
+        const verifiedTraditions = [];
+        return `
         <div class="dg-page">
-          <section class="dg-title reveal"><span class="eyebrow">Desserts &amp; Gelatos</span><h2>Desserts &amp; Gelatos</h2><span class="dg-title-sub">Italian Desserts, Gelato &amp; Pastry Specialties</span></section>
-        </div>`,
+          <section class="dg-title reveal">
+            <span class="eyebrow">Desserts &amp; Gelato</span>
+            <h2>The Art of Sweet Indulgence</h2>
+            <span class="dg-title-sub">Exceptional Desserts &amp; Italian Gelato</span>
+          </section>
+          <section class="dg-intro">
+            <div class="dg-intro-photo reveal" role="img" aria-label="Photography pending: Authentic Italian dessert presentation with visible layers and natural textures (desserts-introduction)">
+              <span>Photography to be provided<br><strong>images/spots/desserts-introduction.jpg</strong></span>
+            </div>
+            <div class="dg-intro-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>A Celebration of Sweet Moments</h2>
+              <p>From timeless Italian favorites to refined dessert creations, sweet specialties have always been part of memorable culinary experiences.</p>
+              <p>Prime Line brings together a carefully considered selection of desserts and frozen specialties for restaurants, hotels, cafés, and food professionals who value distinctive flavors and exceptional presentation.</p>
+            </div>
+          </section>
+          <section class="dg-feature dg-feature--gelato">
+            <div class="dg-feature-copy reveal">
+              <span class="eyebrow">The Italian Gelato Tradition</span>
+              <h2>The Italian Art of Gelato</h2>
+              <p>Gelato holds a special place in Italian culinary culture, celebrated for its smooth texture, expressive flavors, and distinctive serving tradition.</p>
+              <p>From familiar classics to creative specialty flavors, the world of gelato brings enjoyment, variety, and a memorable finishing touch to the dining experience.</p>
+              <a href="#dg-collections">Explore Our Gelato Selection</a>
+            </div>
+            <div class="dg-feature-media reveal" role="img" aria-label="Photography pending: Authentic Italian gelato being prepared or served in a professional gelateria (gelato-tradition)">
+              <span>Photography to be provided<br><strong>images/spots/gelato-tradition.jpg</strong></span>
+            </div>
+          </section>
+          <section class="dg-feature dg-feature--desserts">
+            <div class="dg-feature-media reveal" role="img" aria-label="Photography pending: Elegant plated dessert chosen from verified Prime Line specialties (desserts-feature)">
+              <span>Photography to be provided<br><strong>images/spots/desserts-feature.jpg</strong></span>
+            </div>
+            <div class="dg-feature-copy reveal">
+              <span class="eyebrow">The Pleasure of Dessert</span>
+              <h2>The Elegance of a Perfect Dessert</h2>
+              <p>A beautifully presented dessert brings together flavor, texture, and creativity, creating a memorable conclusion to the dining experience.</p>
+              <p>From traditional inspirations to contemporary presentations, desserts offer countless opportunities to delight guests and complement exceptional menus.</p>
+              <a href="#dg-collections">Discover Our Desserts</a>
+            </div>
+          </section>
+          <section class="dg-trio" id="dg-collections" aria-label="Provisional Desserts & Gelato editorial categories">
+            <p class="dg-provisional-note">Provisional editorial categories · Catalog verification pending</p>
+            ${collections.map(({ slot, title, description }) => `
+            <article class="dg-card reveal">
+              <div class="dg-card-media" role="img" aria-label="Photography pending: ${title} (${slot})">
+                <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+              </div>
+              <div class="dg-card-copy"><h3>${title}</h3><p>${description}</p></div>
+            </article>`).join('')}
+          </section>
+          <section class="dg-feature dg-feature--texture">
+            <div class="dg-feature-copy reveal">
+              <span class="eyebrow">Flavor &amp; Indulgence</span>
+              <h2>A World of Flavor &amp; Texture</h2>
+              <p>From the velvety richness of frozen specialties to the delicate layers and contrasting textures of classic desserts, the sweet culinary world offers an exceptional variety of experiences.</p>
+              <p>Different flavors, temperatures, and presentations allow culinary professionals to create desserts that complement every occasion and inspire memorable moments.</p>
+            </div>
+            <div class="dg-feature-media reveal" role="img" aria-label="Photography pending: Realistic gelato texture and delicate dessert layers (desserts-texture)">
+              <span>Photography to be provided<br><strong>images/spots/desserts-texture.jpg</strong></span>
+            </div>
+          </section>
+          <section class="dg-origins">
+            <div class="dg-origins-copy reveal">
+              <span class="eyebrow">Inspired by Tradition</span>
+              <h2>Inspired by Sweet Traditions</h2>
+              <p>Across generations, desserts and frozen specialties have reflected the culinary creativity and traditions of different regions.</p>
+              <p>These distinctive preparations continue to inspire contemporary hospitality, offering classic expressions alongside new possibilities for flavor and presentation.</p>
+            </div>
+            <div class="dg-origin-list reveal" aria-label="Verified dessert and frozen specialty categories">
+              ${verifiedTraditions.length
+                ? verifiedTraditions.map((tradition) => `<span>${tradition}</span>`).join('')
+                : '<p class="dg-origin-pending">Dessert and frozen specialty categories pending catalog verification.</p>'}
+            </div>
+            <p class="dg-origin-note">Timeless traditions. Distinctive flavors. Memorable experiences.</p>
+          </section>
+          <section class="dg-values">
+            <span class="eyebrow">Selected for the Professional Table</span>
+            <h2>The Perfect Finish to Every Experience</h2>
+            <div class="dg-values-grid">
+              <div class="dg-value reveal"><h3>Carefully Selected</h3><p>A considered collection of dessert specialties chosen for their culinary character and presentation appeal.</p></div>
+              <div class="dg-value reveal"><h3>Memorable Presentations</h3><p>Sweet specialties offering distinctive flavors, attractive textures, and versatile dessert possibilities.</p></div>
+              <div class="dg-value reveal"><h3>Hospitality Essentials</h3><p>Dessert selections suited to restaurants, hotels, cafés, and professional foodservice environments.</p></div>
+            </div>
+          </section>
+          <section class="dg-close">
+            <div class="dg-close-media reveal" role="img" aria-label="Photography pending: Elegant restaurant dessert scene featuring gelato and traditional desserts (desserts-gelato-footer)">
+              <span>Photography to be provided<br><strong>images/spots/desserts-gelato-footer.jpg</strong></span>
+            </div>
+            <div class="dg-close-copy reveal">
+              <span class="eyebrow dg-eyebrow--light">The Art of Sweet Moments</span>
+              <h2>Every Sweet Moment, Made Exceptional</h2>
+              <p>Explore our selection of desserts and gelato and discover distinctive sweet specialties for memorable culinary experiences.</p>
+              <div class="dg-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
+      fish_and_seafood: () => {
+        const collections = [
+          {
+            slot: 'seafood-anchovies-card',
+            title: 'Anchovies & Traditional Preserves',
+            description: 'Distinctive seafood specialties celebrated for their rich flavor and enduring Mediterranean culinary traditions.'
+          },
+          {
+            slot: 'seafood-tuna-card',
+            title: 'Tuna & Selected Fish',
+            description: 'Versatile fish specialties offering distinctive textures, balanced flavors, and culinary possibilities.'
+          },
+          {
+            slot: 'seafood-specialties-card',
+            title: 'Seafood Specialties',
+            description: 'Traditional and contemporary seafood preparations bringing character and variety to professional menus.'
+          }
+        ];
+        const verifiedFamilies = [];
+        return `
+        <div class="fs-page">
+          <section class="fs-title reveal">
+            <span class="eyebrow">Fish &amp; Seafood</span>
+            <h2>Treasures of the Sea</h2>
+            <span class="fs-title-sub">Exceptional Fish &amp; Seafood Specialties</span>
+          </section>
+          <section class="fs-intro">
+            <div class="fs-intro-photo reveal" role="img" aria-label="Photography pending: Premium seafood antipasti with authentic natural presentation (seafood-introduction)">
+              <span>Photography to be provided<br><strong>images/spots/seafood-introduction.jpg</strong></span>
+            </div>
+            <div class="fs-intro-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>A Heritage of the Sea</h2>
+              <p>For generations, coastal culinary traditions have celebrated the distinctive flavors and remarkable variety of the sea. From carefully prepared fish to traditional seafood specialties, these ingredients hold an important place in Mediterranean cuisine.</p>
+              <p>Prime Line presents a thoughtfully considered seafood selection for chefs, restaurants, hospitality, and gourmet food professionals who appreciate authenticity, culinary character, and versatility.</p>
+            </div>
+          </section>
+          <section class="fs-feature fs-feature--tradition">
+            <div class="fs-feature-copy reveal">
+              <span class="eyebrow">The Art of Preservation</span>
+              <h2>Preserving the Taste of the Sea</h2>
+              <p>Traditional methods of preparing and preserving seafood have shaped the flavors of coastal cuisines for generations. Salting, marinating, and preserving are among the techniques that contribute to the distinctive character of many Mediterranean seafood specialties.</p>
+              <p>These culinary traditions offer an extraordinary variety of tastes and textures, bringing depth and authenticity to the professional kitchen.</p>
+              <p class="fs-detail">These are culinary traditions, not claims about the production methods used for every product.</p>
+              <a href="#fs-collections">Explore Our Selection</a>
+            </div>
+            <div class="fs-feature-media reveal" role="img" aria-label="Photography pending: Authentic traditional seafood preparation in a Mediterranean coastal setting (seafood-tradition)">
+              <span>Photography to be provided<br><strong>images/spots/seafood-tradition.jpg</strong></span>
+            </div>
+          </section>
+          <section class="fs-trio" id="fs-collections" aria-label="Provisional Fish & Seafood editorial categories">
+            <p class="fs-provisional-note">Provisional editorial categories · Catalog verification pending</p>
+            ${collections.map(({ slot, title, description }) => `
+            <article class="fs-card reveal">
+              <div class="fs-card-media" role="img" aria-label="Photography pending: ${title} (${slot})">
+                <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+              </div>
+              <div class="fs-card-copy"><h3>${title}</h3><p>${description}</p></div>
+            </article>`).join('')}
+          </section>
+          <section class="fs-feature fs-feature--specialties">
+            <div class="fs-feature-media reveal" role="img" aria-label="Photography pending: Authentic seafood specialty presented with natural texture and subtle culinary details (seafood-flavor)">
+              <span>Photography to be provided<br><strong>images/spots/seafood-flavor.jpg</strong></span>
+            </div>
+            <div class="fs-feature-copy reveal">
+              <span class="eyebrow">Flavor from the Sea</span>
+              <h2>Distinctive Flavors from the Sea</h2>
+              <p>Seafood specialties offer a remarkable diversity of textures and flavor intensity, from delicate and balanced to savory and deeply expressive.</p>
+              <p>Carefully chosen preparations can bring distinctive character to antipasti, sauces, appetizers, and a broad range of Mediterranean-inspired dishes.</p>
+              <p class="fs-detail">Product examples and availability will be added only after catalog verification.</p>
+            </div>
+          </section>
+          <section class="fs-feature fs-feature--culinary">
+            <div class="fs-feature-copy reveal">
+              <span class="eyebrow">From Coast to Kitchen</span>
+              <h2>From the Coast to the Kitchen</h2>
+              <p>The versatility of fish and seafood specialties creates opportunities across traditional and contemporary menus. From elegant antipasti and Mediterranean pasta dishes to thoughtfully prepared appetizers and salads, these ingredients bring depth and flavor to the table.</p>
+              <p>Distinctive seafood selections allow culinary professionals to explore classic preparations while creating memorable dishes for their guests.</p>
+              <a href="#fs-collections">Discover Culinary Possibilities</a>
+            </div>
+            <div class="fs-feature-media reveal" role="img" aria-label="Photography pending: Finished Mediterranean seafood dish in a sophisticated restaurant environment (seafood-culinary)">
+              <span>Photography to be provided<br><strong>images/spots/seafood-culinary.jpg</strong></span>
+            </div>
+          </section>
+          <section class="fs-origins">
+            <div class="fs-origins-copy reveal">
+              <span class="eyebrow">Rooted in Maritime Heritage</span>
+              <h2>A Tradition Shaped by the Sea</h2>
+              <p>Across Mediterranean and international coastal communities, seafood traditions have evolved through generations of culinary knowledge, regional ingredients, and distinctive preparations.</p>
+              <p>These traditions continue to influence the flavors, textures, and culinary expressions appreciated in professional kitchens today.</p>
+            </div>
+            <div class="fs-origin-list reveal" aria-label="Verified seafood product families, preparations, and origins">
+              ${verifiedFamilies.length
+                ? verifiedFamilies.map((family) => `<span>${family}</span>`).join('')
+                : '<p class="fs-origin-pending">Product families, preparations, and origins pending catalog verification.</p>'}
+            </div>
+            <p class="fs-origin-note">Distinctive traditions. Authentic flavors. A world of culinary possibilities.</p>
+          </section>
+          <section class="fs-values">
+            <span class="eyebrow">Selected for the Professional Table</span>
+            <h2>Selected for Exceptional Cuisine</h2>
+            <div class="fs-values-grid">
+              <div class="fs-value reveal"><h3>Carefully Selected</h3><p>A considered assortment focused on culinary character, distinctive flavors, and authentic seafood traditions.</p></div>
+              <div class="fs-value reveal"><h3>Distinctive Character</h3><p>Seafood specialties offering a range of textures, preparations, and flavor expressions.</p></div>
+              <div class="fs-value reveal"><h3>Culinary Versatility</h3><p>Selections suited to antipasti, appetizers, pasta dishes, and professional culinary creativity.</p></div>
+            </div>
+          </section>
+          <section class="fs-close">
+            <div class="fs-close-media reveal" role="img" aria-label="Photography pending: Authentic Mediterranean seafood dining scene with beautifully prepared specialties (seafood-footer)">
+              <span>Photography to be provided<br><strong>images/spots/seafood-footer.jpg</strong></span>
+            </div>
+            <div class="fs-close-copy reveal">
+              <span class="eyebrow fs-eyebrow--light">The Mediterranean Experience</span>
+              <h2>The Sea, Beautifully Served</h2>
+              <p>Explore our selection of fish and seafood specialties and discover distinctive ingredients for inspired culinary creations.</p>
+              <div class="fs-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
+      flour_rice_and_grains: () => {
+        const collections = [
+          {
+            slot: 'flour-category-card',
+            title: 'Premium Flours',
+            description: 'Essential ingredients for artisan baking, traditional doughs, and professional culinary creations.'
+          },
+          {
+            slot: 'rice-category-card',
+            title: 'Specialty Rice',
+            description: 'Distinctive rice selections for traditional recipes, refined textures, and exceptional culinary preparations.'
+          },
+          {
+            slot: 'grains-category-card',
+            title: 'Ancient & Traditional Grains',
+            description: 'Time-honored grains offering character, texture, and versatile possibilities in contemporary cuisine.'
+          }
+        ];
+        const verifiedClassifications = [];
+        return `
+        <div class="frg-page">
+          <section class="frg-title reveal">
+            <span class="eyebrow">Flour, Rice &amp; Grains</span>
+            <h2>The Foundation of Great Cuisine</h2>
+            <span class="frg-title-sub">Exceptional Flours, Rice &amp; Traditional Grains</span>
+          </section>
+          <section class="frg-intro">
+            <div class="frg-intro-photo reveal" role="img" aria-label="Photography pending: Artisan baker working with flour and dough on a natural wooden surface (flour-rice-grains-introduction)">
+              <span>Photography to be provided<br><strong>images/spots/flour-rice-grains-introduction.jpg</strong></span>
+            </div>
+            <div class="frg-intro-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>Extraordinary Cuisine Begins with the Essentials</h2>
+              <p>Behind every exceptional recipe are ingredients chosen with care. From the flour that shapes artisanal dough to the rice and grains that define regional culinary traditions, these essentials form the foundation of countless memorable dishes.</p>
+              <p>Prime Line presents a thoughtfully considered selection of premium flours, specialty rice, and traditional grains for chefs, restaurants, bakeries, and professional kitchens.</p>
+            </div>
+          </section>
+          <section class="frg-feature frg-feature--flour">
+            <div class="frg-feature-copy reveal">
+              <span class="eyebrow">The Art of the Dough</span>
+              <h2>The Art Begins with Flour</h2>
+              <p>Exceptional baking and pasta-making begin with an understanding of flour. Different milling styles and flour characteristics influence the texture, structure, and performance of dough across traditional culinary preparations.</p>
+              <p>From pizza and artisanal breads to fresh pasta and specialty creations, selecting the right flour is an essential part of the craft.</p>
+              <p class="frg-detail">Specific flour types, protein levels, and milling details will be added only after catalog verification.</p>
+              <a href="#frg-collections">Explore Our Flour Selection</a>
+            </div>
+            <div class="frg-feature-media reveal" role="img" aria-label="Photography pending: Italian pizzaiolo or artisan baker working with fresh dough (flour-feature)">
+              <span>Photography to be provided<br><strong>images/spots/flour-feature.jpg</strong></span>
+            </div>
+          </section>
+          <section class="frg-feature frg-feature--rice">
+            <div class="frg-feature-media reveal" role="img" aria-label="Photography pending: Italian risotto in an elegant shallow ceramic plate with natural grain texture (rice-feature)">
+              <span>Photography to be provided<br><strong>images/spots/rice-feature.jpg</strong></span>
+            </div>
+            <div class="frg-feature-copy reveal">
+              <span class="eyebrow">The Italian Rice Tradition</span>
+              <h2>The Tradition of Exceptional Rice</h2>
+              <p>Rice has an important place in Italian culinary heritage, especially in the preparation of risotto, where the choice of grain contributes to the texture and character of the finished dish.</p>
+              <p>Different rice varieties offer distinctive culinary properties, giving chefs the ability to create preparations ranging from classic regional favorites to contemporary interpretations.</p>
+              <p class="frg-detail">Specific varieties will be featured only when confirmed in the current assortment.</p>
+              <a href="#frg-collections">Discover Our Rice Selection</a>
+            </div>
+          </section>
+          <section class="frg-trio" id="frg-collections" aria-label="Provisional Flour, Rice & Grains editorial categories">
+            <p class="frg-provisional-note">Editorial categories · Autumn 2026 inventory verification pending</p>
+            ${collections.map(({ slot, title, description }) => `
+            <article class="frg-card reveal">
+              <div class="frg-card-media" role="img" aria-label="Photography pending: ${title} (${slot})">
+                <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+              </div>
+              <div class="frg-card-copy"><h3>${title}</h3><p>${description}</p></div>
+            </article>`).join('')}
+          </section>
+          <section class="frg-feature frg-feature--grains">
+            <div class="frg-feature-copy reveal">
+              <span class="eyebrow">Ancient Ingredients, Modern Cuisine</span>
+              <h2>Ancient Grains, Timeless Possibilities</h2>
+              <p>Traditional grains have played an important role in culinary cultures for generations, valued for their individual textures, flavors, and versatility.</p>
+              <p>From rustic grain-based dishes to contemporary salads and warm preparations, these ingredients continue to offer chefs an inspiring connection between culinary heritage and modern creativity.</p>
+              <p class="frg-detail">Specific grain varieties are not identified as Prime Line products until catalog verification.</p>
+            </div>
+            <div class="frg-feature-media reveal" role="img" aria-label="Photography pending: Rustic grain preparation with vegetables, herbs, and olive oil (grains-feature)">
+              <span>Photography to be provided<br><strong>images/spots/grains-feature.jpg</strong></span>
+            </div>
+          </section>
+          <section class="frg-origins">
+            <div class="frg-origins-copy reveal">
+              <span class="eyebrow">Rooted in Culinary Heritage</span>
+              <h2>Rooted in Tradition, Selected for Excellence</h2>
+              <p>Across generations and culinary regions, flours, rice, and grains have shaped the foods that define local traditions.</p>
+              <p>Their distinctive properties and applications continue to inspire professional kitchens, connecting authentic ingredients with exceptional culinary results.</p>
+            </div>
+            <div class="frg-origin-list reveal" aria-label="Verified flour, rice, and grain varieties, traditions, or culinary applications">
+              ${verifiedClassifications.length
+                ? verifiedClassifications.map((classification) => `<span>${classification}</span>`).join('')
+                : '<p class="frg-origin-pending">Varieties, regional traditions, and classifications pending catalog verification.</p>'}
+            </div>
+            <p class="frg-origin-note">Simple ingredients. Timeless traditions. Exceptional possibilities.</p>
+          </section>
+          <section class="frg-values">
+            <span class="eyebrow">The Professional Foundation</span>
+            <h2>Essential Ingredients. Exceptional Results.</h2>
+            <div class="frg-values-grid">
+              <div class="frg-value reveal"><h3>Carefully Selected</h3><p>A considered assortment of foundational ingredients chosen for their culinary character and versatility.</p></div>
+              <div class="frg-value reveal"><h3>Culinary Versatility</h3><p>Selections suited to baking, pizza, pasta, risotto, grain-based dishes, and inspired professional preparations.</p></div>
+              <div class="frg-value reveal"><h3>Professional Foundations</h3><p>Essential ingredients for restaurants, bakeries, hospitality, and specialized culinary applications.</p></div>
+            </div>
+          </section>
+          <section class="frg-close">
+            <div class="frg-close-media reveal" role="img" aria-label="Photography pending: Italian culinary scene with artisan bread, risotto, and natural grain ingredients (flour-rice-grains-footer)">
+              <span>Photography to be provided<br><strong>images/spots/flour-rice-grains-footer.jpg</strong></span>
+            </div>
+            <div class="frg-close-copy reveal">
+              <span class="eyebrow frg-eyebrow--light">The Foundation of Exceptional Cuisine</span>
+              <h2>Every Great Creation Starts Here</h2>
+              <p>Explore our selection of premium flours, specialty rice, and traditional grains, chosen for exceptional culinary possibilities.</p>
+              <div class="frg-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
+      pasta: () => {
+        const collections = [
+          {
+            slot: 'italian-pasta-long-card',
+            title: 'Long Pasta',
+            description: 'Timeless Italian shapes celebrated for their elegance, versatility, and distinctive culinary traditions.'
+          },
+          {
+            slot: 'italian-pasta-short-card',
+            title: 'Short & Shaped Pasta',
+            description: 'Distinctive forms and textures designed to complement a wide range of sauces and preparations.'
+          },
+          {
+            slot: 'italian-pasta-specialty-card',
+            title: 'Specialty Pasta',
+            description: 'Unique shapes and culinary expressions that celebrate the remarkable diversity of Italian pasta.'
+          }
+        ];
+        const verifiedTraditions = [];
+        return `
+        <div class="pa-page">
+          <section class="pa-title reveal">
+            <span class="eyebrow">Italian Pasta</span>
+            <h2>The Art of Italian Pasta</h2>
+            <span class="pa-title-sub">Authentic Tradition &amp; Exceptional Varieties</span>
+          </section>
+          <section class="pa-intro">
+            <div class="pa-intro-photo reveal" role="img" aria-label="Photography pending: Authentic dried Italian pasta, naturally arranged to emphasize individual shapes and textures (italian-pasta-introduction)">
+              <span>Photography to be provided<br><strong>images/spots/italian-pasta-introduction.jpg</strong></span>
+            </div>
+            <div class="pa-intro-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>A Tradition Shaped by Generations</h2>
+              <p>Few foods embody Italian culinary heritage as naturally as pasta. Across generations and regions, its remarkable diversity of shapes, textures, and preparations has made it an essential part of Italy's gastronomic identity.</p>
+              <p>Prime Line presents a thoughtfully selected collection of imported Italian pasta for chefs, restaurants, and specialty food professionals who appreciate tradition, distinctive quality, and culinary versatility.</p>
+            </div>
+          </section>
+          <section class="pa-feature pa-feature--craft">
+            <div class="pa-feature-copy reveal">
+              <span class="eyebrow">The Art of Pasta Making</span>
+              <h2>Where Craftsmanship Meets Tradition</h2>
+              <p>The character of exceptional pasta begins with carefully considered ingredients, shaping techniques, and production traditions. Different methods influence the pasta's surface, texture, and culinary performance.</p>
+              <p>From time-honored preparations to distinctive specialty shapes, Italian pasta reflects a rich heritage of craftsmanship and culinary knowledge.</p>
+              <p class="pa-detail">Specific production methods and ingredient claims require verification at the product or brand level.</p>
+              <a href="#pa-collections">Explore Our Pasta Selection</a>
+            </div>
+            <div class="pa-feature-media reveal" role="img" aria-label="Photography pending: Authentic Italian pasta-making or close-up of pasta production (italian-pasta-craftsmanship)">
+              <span>Photography to be provided<br><strong>images/spots/italian-pasta-craftsmanship.jpg</strong></span>
+            </div>
+          </section>
+          <section class="pa-trio" id="pa-collections" aria-label="Provisional Italian pasta editorial categories">
+            <p class="pa-provisional-note">Provisional editorial categories · Current catalog verification pending</p>
+            ${collections.map(({ slot, title, description }) => `
+            <article class="pa-card reveal">
+              <div class="pa-card-media" role="img" aria-label="Photography pending: ${title} from verified pasta assortment (${slot})">
+                <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+              </div>
+              <div class="pa-card-copy"><h3>${title}</h3><p>${description}</p></div>
+            </article>`).join('')}
+          </section>
+          <section class="pa-feature pa-feature--texture">
+            <div class="pa-feature-media reveal" role="img" aria-label="Photography pending: Close-up of authentic dry pasta shapes, natural surface texture, ridges, and semolina tones (italian-pasta-textures)">
+              <span>Photography to be provided<br><strong>images/spots/italian-pasta-textures.jpg</strong></span>
+            </div>
+            <div class="pa-feature-copy reveal">
+              <span class="eyebrow">Shape &amp; Character</span>
+              <h2>Every Shape Has a Story</h2>
+              <p>The extraordinary diversity of Italian pasta goes far beyond appearance. From delicate strands to generously shaped tubes and intricate traditional forms, each style brings a distinctive character to the plate.</p>
+              <p>Surface texture, size, and shape all contribute to how pasta interacts with sauces, ingredients, and cooking techniques, offering chefs remarkable creative possibilities.</p>
+            </div>
+          </section>
+          <section class="pa-feature pa-feature--culinary">
+            <div class="pa-feature-copy reveal">
+              <span class="eyebrow">From Tradition to Table</span>
+              <h2>Made for the Art of Cooking</h2>
+              <p>Pasta brings together exceptional ingredients, culinary technique, and creative expression. From the simplicity of classic Italian preparations to refined restaurant dishes, the right pasta shape contributes to the balance and character of every recipe.</p>
+              <p>Prime Line's pasta selection offers professional kitchens versatile possibilities for traditional menus and contemporary culinary inspiration.</p>
+              <a href="#pa-collections">Discover Culinary Possibilities</a>
+            </div>
+            <div class="pa-feature-media reveal" role="img" aria-label="Photography pending: Authentic, beautifully plated Italian pasta dish in a professional restaurant setting (italian-pasta-culinary)">
+              <span>Photography to be provided<br><strong>images/spots/italian-pasta-culinary.jpg</strong></span>
+            </div>
+          </section>
+          <section class="pa-origins">
+            <div class="pa-origins-copy reveal">
+              <span class="eyebrow">Rooted in Italian Heritage</span>
+              <h2>A World of Italian Pasta Traditions</h2>
+              <p>Across Italy, pasta traditions reflect the ingredients, techniques, and culinary preferences of different regions. Distinctive shapes and preparation styles tell the stories of generations of Italian cooking.</p>
+              <p>Together, these traditions create an extraordinary culinary heritage that continues to inspire professional kitchens around the world.</p>
+            </div>
+            <div class="pa-origin-list reveal" aria-label="Verified pasta product families and traditions">
+              ${verifiedTraditions.length
+                ? verifiedTraditions.map((tradition) => `<span>${tradition}</span>`).join('')
+                : '<p class="pa-origin-pending">Pasta traditions and product families pending catalog verification.</p>'}
+            </div>
+            <p class="pa-origin-note">Distinctive shapes. Timeless traditions. One exceptional culinary heritage.</p>
+          </section>
+          <section class="pa-values">
+            <span class="eyebrow">Selected for Professional Kitchens</span>
+            <h2>Selected for Exceptional Kitchens</h2>
+            <div class="pa-values-grid">
+              <div class="pa-value reveal"><h3>Carefully Selected</h3><p>A considered assortment of imported Italian pasta chosen for its culinary character, variety, and professional appeal.</p></div>
+              <div class="pa-value reveal"><h3>Distinctive Variety</h3><p>Traditional and specialty shapes offering different textures, presentations, and culinary possibilities.</p></div>
+              <div class="pa-value reveal"><h3>Culinary Versatility</h3><p>Selections designed to complement classic Italian preparations and contemporary professional menus.</p></div>
+            </div>
+          </section>
+          <section class="pa-close">
+            <div class="pa-close-media reveal" role="img" aria-label="Photography pending: Authentic Italian restaurant table with a beautifully presented pasta dish (italian-pasta-footer)">
+              <span>Photography to be provided<br><strong>images/spots/italian-pasta-footer.jpg</strong></span>
+            </div>
+            <div class="pa-close-copy reveal">
+              <span class="eyebrow pa-eyebrow--light">The Italian Culinary Tradition</span>
+              <h2>A Timeless Italian Tradition, Beautifully Served</h2>
+              <p>Explore our selection of authentic Italian pasta and discover exceptional possibilities for inspired culinary creations.</p>
+              <div class="pa-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
       baking_and_pastry: () => `
         <div class="bp-page">
           <section class="bp-title reveal"><span class="eyebrow">Baking &amp; Pastry</span><h2>Crafted for the Art of Pastry</h2><span class="bp-title-sub">Ingredients for Bakers, Pastry Chefs &amp; Culinary Creators</span></section>
           <section class="bp-intro" id="baking-collection">
-            <div class="bp-intro-photo reveal"><img src="images/banners/baking_and_pastry.jpeg" alt="Traditional cannoli prepared with pastry cream and pistachio" style="object-position: 34% center;"></div>
+            <div class="bp-intro-photo reveal"><img src="images/spots/baking04.png" alt="Crisp cannoli filled with cream and finished with pistachio"></div>
             <div class="bp-copy reveal"><span class="eyebrow">A Considered Collection</span><h2>Where Craft Meets Ingredient</h2><p>From fine chocolate and aromatic vanilla to delicate pastry shells and traditional Italian specialties, our collection brings together the ingredients professionals trust to create exceptional desserts.</p></div>
           </section>
           <section class="bp-feature bp-feature--essentials">
             <div class="bp-copy reveal"><span class="eyebrow">01 &nbsp; Baking Essentials</span><h2>The Essentials Behind Every Creation</h2><p>Carefully selected ingredients that bring aroma, structure, texture and consistency to every recipe.</p><p class="bp-detail">Vanilla beans, extracts and paste sit alongside almond and coffee extracts, orange blossom water, honey, gelatin, yeast and puff pastry sheets.</p></div>
-            <div class="bp-media bp-media--pending reveal" role="img" aria-label="Pending baking essentials photography"><span>Photography to be placed:<br><strong>images/spots/baking-essentials.jpg</strong></span></div>
+            <div class="bp-media bp-media--image reveal"><img src="images/spots/baking01.png" alt="Baking essentials arranged for professional pastry preparation"></div>
           </section>
           <section class="bp-feature bp-feature--chocolate">
-            <div class="bp-media bp-media--pending reveal" role="img" aria-label="Pending professional chocolate photography"><span>Photography to be placed:<br><strong>images/spots/professional-chocolate.jpg</strong></span></div>
+            <div class="bp-media bp-media--image reveal"><img src="images/spots/baking02.png" alt="Professional chocolate and pastry ingredients arranged for culinary use"></div>
             <div class="bp-copy bp-copy--light reveal"><span class="eyebrow bp-eyebrow-light">02 &nbsp; Professional Chocolate</span><h2>Chocolate Without Compromise</h2><p>Professional couverture, callets, cocoa and pastry fillings created for precision, performance and remarkable flavor.</p><p class="bp-detail">Callebaut chocolate blocks, callets, chocolate chips, cocoa powder and white chocolate for pastry work that demands control and depth.</p></div>
           </section>
           <section class="bp-feature bp-feature--finishing">
             <div class="bp-copy reveal"><span class="eyebrow">03 &nbsp; Amarena &amp; Finishing</span><h2>The Perfect Finishing Touch</h2><p>Distinctive fruit, glazes and finishing ingredients that transform every dessert into a memorable presentation.</p><p class="bp-detail">Toschi Amarena cherries, cherries in syrup and refined finishing ingredients for pastry chefs who understand the final detail.</p></div>
-            <div class="bp-media bp-media--pending reveal" role="img" aria-label="Pending fruit and finishing ingredients photography"><span>Photography to be placed:<br><strong>images/spots/amarena-finishing.jpg</strong></span></div>
+            <div class="bp-media bp-media--image reveal"><img src="images/spots/baking03.png" alt="Amarena cherries and finishing ingredients for pastry presentation"></div>
           </section>
           <section class="bp-cannoli">
             <div class="bp-cannoli-photo reveal"><img src="images/banners/baking_and_pastry.jpeg" alt="Crisp Sicilian cannoli filled with ricotta cream and finished with pistachio" style="object-position: 31% 63%;"></div>
             <div class="bp-cannoli-copy reveal"><span class="eyebrow">04 &nbsp; Cannoli</span><h2>A Sicilian Classic, Ready to Create</h2><p>Crisp traditional shells and rich Sicilian ricotta cream bring authentic flavor, texture and character to every cannolo.</p><p class="bp-detail">Large and mini cannoli shells, ricotta cream and professional ingredients for an unmistakably Sicilian finish.</p></div>
-          </section>
-          <section class="bp-feature bp-feature--specialties">
-            <div class="bp-copy reveal"><span class="eyebrow">05 &nbsp; Italian Pastry Specialties</span><h2>Layers of Italian Tradition</h2><p>Delicate, crisp and unmistakably Italian, our pastry specialties bring authentic craftsmanship to today&apos;s professional kitchen.</p><p class="bp-detail">Sfogliatella and other traditional Italian bakery products selected for pastry shops, hotels, restaurants and chefs.</p></div>
-            <div class="bp-media bp-media--pending reveal" role="img" aria-label="Pending sfogliatella photography"><span>Photography to be placed:<br><strong>images/spots/sfogliatella.jpg</strong></span></div>
-          </section>
-          <section class="bp-close">
-            <div class="bp-media bp-media--pending bp-media--close reveal" role="img" aria-label="Pending Le Delizie cannoli photography"><span>Photography to be placed:<br><strong>images/spots/ledelizie.jpg</strong></span></div>
-            <div class="bp-close-copy reveal"><span class="eyebrow bp-eyebrow-light">Le Delizie</span><h2>Authentic Cannoli, Made Effortless</h2><p>Le Delizie brings together traditional Sicilian cannoli shells and rich ricotta cream, giving professionals everything they need to create an authentic Italian favorite.</p></div>
           </section>
         </div>`,
       parmigiano: () => `
@@ -732,6 +1206,648 @@ document.addEventListener('DOMContentLoaded', () => {
             <p>A distinguished collection shaped by place, tradition and time, selected for chefs and hospitality professionals who understand the value of exceptional ingredients.</p>
           </div>
         </section>`,
+      cured_meats: () => {
+        const verifiedStyles = ['Parma DOP', 'San Daniele DOP', 'Mortadella IGP', 'Prosciutto Cotto', 'Coppa'];
+        return `
+        <div class="cm-page">
+          <section class="cm-title reveal">
+            <span class="eyebrow">Cured Meats</span>
+            <h2>Exceptional Cured Meats, Selected with Care</h2>
+            <span class="cm-title-sub">Traditional Salumi &amp; International Specialties</span>
+          </section>
+          <section class="cm-intro">
+            <div class="cm-intro-photo reveal"><img src="images/banners/cured_meats.jpeg" alt="Traditional cured meats and salumi"></div>
+            <div class="cm-intro-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>A Tradition Worth Preserving</h2>
+              <p>Across generations and regions, the art of curing meats has brought together patience, craftsmanship, and distinctive culinary traditions.</p>
+              <p>Prime Line presents a carefully considered selection of cured meats and traditional specialties, offering exceptional flavors and versatile choices for professional kitchens and hospitality.</p>
+            </div>
+          </section>
+          <section class="cm-feature">
+            <div class="cm-feature-copy reveal">
+              <span class="eyebrow">The Art of Curing</span>
+              <h2>Where Patience Becomes Flavor</h2>
+              <p>Time, technique, and tradition shape the character of exceptional cured meats. From delicate textures to deeply developed aromas, each style offers a distinctive expression of its heritage.</p>
+              <p>These qualities make traditional salumi a valued part of antipasti, specialty sandwiches, charcuterie presentations, and contemporary menus.</p>
+              <a href="#cm-collections">Explore Our Selection</a>
+            </div>
+            <div class="cm-feature-media cm-media-placeholder reveal" role="img" aria-label="Cured meats craftsmanship photograph to be provided"><span>Editorial photograph to be provided</span></div>
+          </section>
+          <section class="cm-trio" id="cm-collections">
+            <article class="cm-card reveal">
+              <div class="cm-card-media cm-media-placeholder" role="img" aria-label="Prosciutto and aged hams editorial photograph to be provided"><span>Photography to be provided</span></div>
+              <div class="cm-card-copy"><h3>Prosciutto &amp; Aged Hams</h3><p>Delicate texture, refined flavor, and traditions shaped by time.</p></div>
+            </article>
+            <article class="cm-card reveal">
+              <div class="cm-card-media cm-media-placeholder" role="img" aria-label="Salami and traditional salumi editorial photograph to be provided"><span>Photography to be provided</span></div>
+              <div class="cm-card-copy"><h3>Salami &amp; Traditional Salumi</h3><p>Regional character, balanced seasoning, and distinctive artisanal styles.</p></div>
+            </article>
+            <article class="cm-card reveal">
+              <div class="cm-card-media cm-media-placeholder" role="img" aria-label="Mortadella and specialties editorial photograph to be provided"><span>Photography to be provided</span></div>
+              <div class="cm-card-copy"><h3>Mortadella &amp; Specialties</h3><p>Classic deli traditions with exceptional culinary versatility.</p></div>
+            </article>
+          </section>
+          <section class="cm-feature cm-feature--specialty">
+            <div class="cm-feature-copy reveal">
+              <span class="eyebrow">Beyond the Classics</span>
+              <h2>Distinctive Traditions, Exceptional Character</h2>
+              <p>Beyond familiar favorites, cured meat traditions offer a remarkable range of textures, aromas, and regional expressions.</p>
+              <p>From delicately seasoned specialties to richer, more intensely flavored cuts, our approach celebrates variety, authenticity, and thoughtful selection.</p>
+            </div>
+            <div class="cm-feature-media cm-media-placeholder reveal" role="img" aria-label="Specialty cured meats editorial photograph to be provided"><span>Editorial photograph to be provided</span></div>
+          </section>
+          <section class="cm-origins">
+            <div class="cm-origins-copy reveal">
+              <span class="eyebrow">Selected with Purpose</span>
+              <h2>A Collection Shaped by Tradition</h2>
+              <p>Different regions and curing traditions bring their own distinctive character to the table. Our collection reflects this diversity through a selection of classic cured meats and specialty salumi.</p>
+            </div>
+            <div class="cm-origin-list reveal" aria-label="Verified cured meat origins and styles">
+              ${verifiedStyles.map((style) => `<span>${style}</span>`).join('')}
+            </div>
+          </section>
+          <section class="cm-close">
+            <div class="cm-close-media" role="img" aria-label="Cured meats and salumi"><img src="images/banners/cured_meats02.jpeg" alt=""></div>
+            <div class="cm-close-copy reveal">
+              <span class="eyebrow cm-eyebrow--light">Cured Meats</span>
+              <h2>Many traditions.<br>Distinctive flavors.</h2>
+              <p>One carefully considered collection.</p>
+            </div>
+          </section>
+        </div>`;
+      },
+      balsamic_vinegars: () => {
+        const collections = [
+          {
+            slot: 'balsamic-classic',
+            image: 'vinegars04.jpg',
+            imageClass: 'classic',
+            title: 'Balsamic Vinegars',
+            description: 'Classic expressions appreciated for their versatility, balanced acidity, and distinctive flavor.'
+          },
+          {
+            slot: 'balsamic-aged',
+            image: 'vinegars05.jpg',
+            imageClass: 'aged',
+            title: 'Aged & Specialty Balsamics',
+            description: 'Selected expressions offering distinctive richness, aroma, and culinary character.'
+          },
+          {
+            slot: 'balsamic-condiments',
+            image: 'vinegars06.jpg',
+            imageClass: 'condiments',
+            title: 'Balsamic Condiments & Glazes',
+            description: 'Versatile finishing specialties that bring contrast, flavor, and visual appeal to creative dishes.'
+          }
+        ];
+        const verifiedCategories = [];
+        const imagePlaceholder = (slot, description) => `
+          <div class="vc-media-pending reveal" role="img" aria-label="Photography pending: ${description} (${slot})">
+            <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+          </div>`;
+        return `
+        <div class="vc-page">
+          <section class="vc-title reveal">
+            <span class="eyebrow">Balsamic Vinegars</span>
+            <h2>Exceptional Balsamic Vinegars, Selected at the Source</h2>
+            <span class="vc-title-sub">Italian Tradition &amp; Distinctive Specialties</span>
+          </section>
+          <section class="vc-intro">
+            <div class="vc-media-image reveal"><img src="images/spots/vinegars03.jpg" alt="Italian balsamic vinegar and specialty condiments"></div>
+            <div class="vc-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>A Heritage of Exceptional Flavor</h2>
+              <p>Rooted in Italian culinary tradition, balsamic vinegar brings a remarkable balance of aroma, acidity, sweetness, and complexity to the table.</p>
+              <p>Prime Line presents a carefully considered selection of balsamic vinegars and specialty condiments for chefs, restaurants, and gourmet food professionals.</p>
+            </div>
+          </section>
+          <section class="vc-feature">
+            <div class="vc-copy reveal">
+              <span class="eyebrow">The Art of Balsamic</span>
+              <h2>Where Time Creates Character</h2>
+              <p>From the careful selection of ingredients to the traditions of maturation and blending, balsamic craftsmanship reflects a deep respect for flavor and balance.</p>
+              <p>Different styles offer distinctive textures, aromas, and levels of intensity, allowing chefs to select the right expression for each culinary application.</p>
+              <a href="#vc-collections">Discover Our Selection</a>
+            </div>
+            <div class="vc-media-image reveal"><img src="images/spots/vinegars01.jpg" alt="Balsamic vinegar craftsmanship"></div>
+          </section>
+          <section class="vc-trio" id="vc-collections" aria-label="Provisional balsamic collections">
+            ${collections.map(({ slot, image, imageClass, title, description }) => `
+            <article class="vc-card reveal">
+              <div class="vc-card-media vc-card-media--${imageClass}">
+                <img src="images/spots/${image}" alt="${title}">
+              </div>
+              <div class="vc-card-copy"><h3>${title}</h3><p>${description}</p></div>
+            </article>`).join('')}
+          </section>
+          <section class="vc-feature vc-feature--texture">
+            <div class="vc-media-image reveal"><img src="images/spots/vinegars07.jpg" alt="Balsamic vinegar showing its natural color and texture"></div>
+            <div class="vc-copy reveal">
+              <span class="eyebrow">Balance &amp; Complexity</span>
+              <h2>The Perfect Balance of Sweetness &amp; Acidity</h2>
+              <p>Each balsamic expression offers its own relationship between acidity, sweetness, aroma, and texture.</p>
+              <p>From everyday culinary preparations to carefully finished dishes, selecting the right profile can bring depth and harmony to a wide range of ingredients.</p>
+            </div>
+          </section>
+          <section class="vc-origins">
+            <div class="vc-origins-copy reveal">
+              <span class="eyebrow">Rooted in Tradition</span>
+              <h2>Rooted in Italian Tradition</h2>
+              <p>The traditions associated with Modena and the surrounding region have shaped some of the world's most recognized balsamic specialties.</p>
+              <p>Understanding their different styles and designations allows culinary professionals to appreciate the distinctive qualities of each selection.</p>
+            </div>
+            <div class="vc-origin-list reveal${verifiedCategories.length ? '' : ' is-pending'}" aria-label="Balsamic catalog classifications">
+              ${verifiedCategories.length
+                ? verifiedCategories.map((category) => `<span>${category}</span>`).join('')
+                : '<p class="vc-origin-pending">Catalog classifications pending verification.</p>'}
+            </div>
+            <p class="vc-origin-note">Distinctive expressions. Timeless traditions. Carefully selected.</p>
+          </section>
+          <section class="vc-values">
+            <span class="eyebrow">A Collection Built for Food Professionals</span>
+            <div class="vc-values-grid">
+              <div class="vc-value reveal"><h3>Culinary Versatility</h3><p>Distinctive flavors for dressings, marinades, sauces, reductions, and finishing.</p></div>
+              <div class="vc-value reveal"><h3>Selected Profiles</h3><p>A range of culinary expressions designed for different flavor preferences and applications.</p></div>
+              <div class="vc-value reveal"><h3>Professional Selection</h3><p>Specialty condiments chosen with the needs of restaurants, hospitality, and gourmet retail in mind.</p></div>
+            </div>
+          </section>
+          <section class="vc-close">
+            <div class="vc-close-media reveal" role="img" aria-label="Balsamic vinegar setting with dark glass and warm natural highlights">
+              <img src="images/spots/vinegars02.jpg" alt="">
+            </div>
+            <div class="vc-close-copy reveal">
+              <span class="eyebrow vc-eyebrow--light">An Italian Legacy</span>
+              <h2>A Tradition Worth Savoring</h2>
+              <p>Explore the distinctive world of balsamic vinegars and specialty condiments selected by Prime Line.</p>
+              <div class="vc-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
+      beans_and_legumes: () => {
+        const verifiedVarieties = [];
+        return `
+        <div class="bl-page">
+          <section class="bl-title reveal">
+            <span class="eyebrow">Beans &amp; Legumes</span>
+            <h2>Exceptional Beans &amp; Legumes, Naturally Selected</h2>
+            <span class="bl-title-sub">Traditional Varieties &amp; Mediterranean Essentials</span>
+          </section>
+          <section class="bl-intro">
+            <div class="bl-intro-photo reveal"><img src="images/spots/beans01.jpg" alt="Beans and legumes selected for the collection"></div>
+            <div class="bl-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>The Beauty of Simple Ingredients</h2>
+              <p>Some of the world's most celebrated dishes begin with the simplest ingredients. Beans and legumes have long been essential to Mediterranean cooking, valued for their distinctive textures, satisfying flavors, and remarkable culinary versatility.</p>
+              <p>Prime Line brings together a considered selection of beans and legumes for chefs, restaurants, and specialty food professionals who appreciate the character and possibilities of exceptional ingredients.</p>
+            </div>
+          </section>
+          <section class="bl-origins">
+            <div class="bl-origins-copy reveal">
+              <span class="eyebrow">A Culinary Heritage</span>
+              <h2>A Tradition Across Generations</h2>
+              <p>Throughout Mediterranean and international cooking traditions, beans and legumes have remained fundamental ingredients, reflecting the tastes, techniques, and culinary identities of different regions.</p>
+              <p>Prime Line's collection celebrates this enduring versatility with a selection designed for today's professional kitchens.</p>
+            </div>
+            <div class="bl-variety-list reveal${verifiedVarieties.length ? '' : ' is-pending'}" aria-label="Verified catalog varieties and styles">
+              ${verifiedVarieties.length
+                ? verifiedVarieties.map((variety) => `<span>${variety}</span>`).join('')
+                : '<p class="bl-variety-pending">Catalog varieties and styles pending verification.</p>'}
+            </div>
+            <p class="bl-origin-note">Simple origins. Distinctive traditions. Endless culinary inspiration.</p>
+          </section>
+          <section class="bl-values">
+            <span class="eyebrow">A Collection Built for Food Professionals</span>
+            <div class="bl-values-grid">
+              <div class="bl-value reveal"><h3>Carefully Selected</h3><p>A considered assortment focused on ingredient character, versatility, and culinary appeal.</p></div>
+              <div class="bl-value reveal"><h3>Culinary Versatility</h3><p>Ingredients suited to traditional recipes, contemporary presentations, and professional menus.</p></div>
+              <div class="bl-value reveal"><h3>Professional Essentials</h3><p>Reliable culinary staples for restaurants, hospitality, and specialty foodservice applications.</p></div>
+            </div>
+          </section>
+          <section class="bl-close">
+            <div class="bl-close-media reveal" role="img" aria-label="A warm Mediterranean table with legume-based dishes">
+              <img src="images/spots/beans02.jpg" alt="">
+            </div>
+            <div class="bl-close-copy reveal">
+              <span class="eyebrow bl-eyebrow--light">From the Earth to the Table</span>
+              <h2>Simple Ingredients. Remarkable Possibilities.</h2>
+              <p>Explore our selection of beans and legumes and discover essential ingredients for inspired professional cooking.</p>
+              <div class="bl-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
+      'olivesand oil': () => {
+        const collections = [
+          {
+            slot: 'olive-oil-extra-virgin-card',
+            title: 'Extra Virgin Olive Oils',
+            description: 'Distinctive olive oils selected for their character, expressive flavors, and culinary versatility.'
+          },
+          {
+            slot: 'olive-oil-regional-card',
+            title: 'Regional & Specialty Oils',
+            description: 'A celebration of different traditions, origins, and carefully selected olive oil expressions.'
+          },
+          {
+            slot: 'olive-oil-professional-card',
+            title: 'Culinary & Professional Formats',
+            description: 'Versatile selections and practical formats designed for the demands of professional kitchens.'
+          }
+        ];
+        const verifiedOrigins = [];
+        const imagePlaceholder = (slot, description) => `
+          <div class="oo-media-pending reveal" role="img" aria-label="Photography pending: ${description} (${slot})">
+            <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+          </div>`;
+        return `
+        <div class="oo-page">
+          <section class="oo-title reveal">
+            <span class="eyebrow">Olive Oil</span>
+            <h2>Exceptional Olive Oils, Selected at the Source</h2>
+            <span class="oo-title-sub">Extra Virgin &amp; Mediterranean Specialties</span>
+          </section>
+          <section class="oo-intro">
+            ${imagePlaceholder('olive-oil-introduction', 'Olive oil tasting bowl, fresh olives, natural stone, and warm light')}
+            <div class="oo-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>The Heart of Mediterranean Cuisine</h2>
+              <p>Few ingredients express the essence of Mediterranean cooking as naturally as olive oil. From its distinctive aromas to its remarkable culinary versatility, olive oil has been central to regional food traditions for generations.</p>
+              <p>Prime Line brings together a carefully considered selection of olive oils for chefs, restaurants, and specialty food professionals who appreciate authenticity, character, and exceptional ingredients.</p>
+            </div>
+          </section>
+          <section class="oo-feature">
+            <div class="oo-copy reveal">
+              <span class="eyebrow">From Grove to Table</span>
+              <h2>From Harvest to Exceptional Flavor</h2>
+              <p>The character of olive oil begins with the fruit itself. Olive varieties, growing conditions, harvest timing, and production techniques contribute to the distinctive aromas and flavors found in different oils.</p>
+              <p>From delicate and balanced to vibrant and intensely expressive, each selection offers its own culinary possibilities.</p>
+              <a href="#oo-collections">Explore Our Olive Oil Selection</a>
+            </div>
+            ${imagePlaceholder('olive-oil-harvest', 'Olive harvest in a Mediterranean grove')}
+          </section>
+          <section class="oo-trio" id="oo-collections" aria-label="Provisional olive oil editorial categories">
+            <p class="oo-provisional-note">Provisional editorial categories · Catalog verification pending</p>
+            ${collections.map(({ slot, title, description }) => `
+            <article class="oo-card reveal">
+              <div class="oo-card-media" role="img" aria-label="Photography pending: ${title} (${slot})">
+                <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+              </div>
+              <div class="oo-card-copy"><h3>${title}</h3><p>${description}</p></div>
+            </article>`).join('')}
+          </section>
+          <section class="oo-feature oo-feature--flavor">
+            <div class="oo-copy reveal">
+              <span class="eyebrow">The Language of Olive Oil</span>
+              <h2>A Spectrum of Flavor and Character</h2>
+              <p>Olive oils reveal a remarkable range of sensory profiles, from delicate and gently fruity to herbaceous, peppery, and intensely expressive.</p>
+              <p>Understanding these differences allows chefs to choose the right olive oil for finishing, seasoning, preparing, and enhancing their culinary creations.</p>
+            </div>
+            ${imagePlaceholder('olive-oil-flavor', 'Natural olive oil color and texture')}
+          </section>
+          <section class="oo-origins">
+            <div class="oo-origins-copy reveal">
+              <span class="eyebrow">Rooted in the Land</span>
+              <h2>A Heritage Rooted in the Land</h2>
+              <p>Across the Mediterranean, olive-growing traditions reflect the landscapes, climates, and culinary cultures of their regions.</p>
+              <p>Each origin brings distinctive influences to the character of olive oil, contributing to a rich diversity of styles and gastronomic traditions.</p>
+            </div>
+            <div class="oo-origin-list reveal${verifiedOrigins.length ? '' : ' is-pending'}" aria-label="Verified olive oil origins and styles">
+              ${verifiedOrigins.length
+                ? verifiedOrigins.map((origin) => `<span>${origin}</span>`).join('')
+                : '<p class="oo-origin-pending">Catalog origins and styles pending verification.</p>'}
+            </div>
+            <p class="oo-origin-note">Distinctive origins. Authentic traditions. One carefully considered collection.</p>
+          </section>
+          <section class="oo-values">
+            <span class="eyebrow">A Collection Built for Food Professionals</span>
+            <div class="oo-values-grid">
+              <div class="oo-value reveal"><h3>Carefully Selected</h3><p>A considered selection focused on authenticity, distinctive character, and culinary quality.</p></div>
+              <div class="oo-value reveal"><h3>Distinctive Profiles</h3><p>Different expressions of flavor and intensity suited to a wide range of culinary preparations.</p></div>
+              <div class="oo-value reveal"><h3>Professional Versatility</h3><p>Olive oil selections suited to finishing, seasoning, cooking, and the creative needs of professional kitchens.</p></div>
+            </div>
+          </section>
+          <section class="oo-close">
+            ${imagePlaceholder('olive-oil-footer', 'Mediterranean table with olive oil, bread, and olives')}
+            <div class="oo-close-copy reveal">
+              <span class="eyebrow oo-eyebrow--light">The Mediterranean Tradition</span>
+              <h2>The Essence of the Mediterranean Table</h2>
+              <p>Explore our carefully selected olive oils and discover distinctive flavors for inspired culinary creations.</p>
+              <div class="oo-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
+      coffee_and_tea: () => {
+        const verifiedClassifications = [];
+        const imagePlaceholder = (slot, description) => `
+          <div class="coffee-media-pending reveal" role="img" aria-label="Photography pending: ${description} (${slot})">
+            <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+          </div>`;
+        return `
+        <div class="coffee-page">
+          <section class="coffee-title reveal">
+            <span class="eyebrow">Coffee &amp; Tea</span>
+            <h2>Exceptional Coffee &amp; Tea, Selected with Care</h2>
+            <span class="coffee-title-sub">Timeless Rituals &amp; Distinctive Flavors</span>
+          </section>
+          <section class="coffee-intro">
+            <div class="coffee-photo reveal"><img src="images/spots/coffee01.jpg" alt="Coffee and tea arranged for a warm hospitality setting"></div>
+            <div class="coffee-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>The Art of Everyday Rituals</h2>
+              <p>Across cultures and generations, coffee and tea have inspired traditions built around aroma, preparation, and the simple pleasure of an exceptional cup.</p>
+              <p>From the unmistakable character of Italian espresso to the delicate expressions of fine tea, Prime Line celebrates these timeless beverages as an essential part of the culinary and hospitality experience.</p>
+            </div>
+          </section>
+          <section class="coffee-feature">
+            <div class="coffee-copy reveal">
+              <span class="eyebrow">The Italian Coffee Tradition</span>
+              <h2>The Soul of Italian Espresso</h2>
+              <p>Few beverages capture the spirit of Italian daily life like espresso. Its concentrated character, rich aroma, and distinctive preparation have made it an enduring symbol of Italian coffee culture.</p>
+              <p>Our coffee presentation celebrates this tradition and the important role of a memorable espresso experience in cafés, restaurants, and hospitality.</p>
+              <a class="catalog-trigger" href="#">Discover Our Coffee Selection</a>
+            </div>
+            <div class="coffee-photo reveal"><img src="images/spots/coffee02.jpg" alt="Italian espresso prepared for a professional café"></div>
+          </section>
+          <section class="coffee-feature coffee-feature--tea">
+            <div class="coffee-photo reveal"><img src="images/spots/coffee03.jpg" alt="Tea service arranged for hospitality"></div>
+            <div class="coffee-copy reveal">
+              <span class="eyebrow">The Art of Tea</span>
+              <h2>A Tradition of Balance &amp; Discovery</h2>
+              <p>Tea offers a world of distinctive aromas, delicate nuances, and preparation rituals. From familiar classics to expressive specialty infusions, each style presents its own character and experience.</p>
+              <p>Elegant in its simplicity and versatile in service, tea remains an important part of hospitality and the enjoyment of everyday moments.</p>
+              <a class="catalog-trigger" href="#">Explore Our Tea Selection</a>
+            </div>
+          </section>
+          <section class="coffee-origins">
+            <div class="coffee-origins-copy reveal">
+              <span class="eyebrow">Traditions Across Cultures</span>
+              <h2>Distinctive Traditions, Thoughtfully Selected</h2>
+              <p>Coffee and tea traditions reflect the cultures, preparation methods, and preferences of communities around the world.</p>
+              <p>Our approach celebrates this diversity through distinctive selections designed to complement different tastes, occasions, and professional hospitality environments.</p>
+            </div>
+            <div class="coffee-origin-list reveal${verifiedClassifications.length ? '' : ' is-pending'}" aria-label="Verified coffee and tea categories and styles">
+              ${verifiedClassifications.length
+                ? verifiedClassifications.map((classification) => `<span>${classification}</span>`).join('')
+                : '<p class="coffee-origin-pending">Catalog categories and styles pending verification.</p>'}
+            </div>
+            <p class="coffee-origin-note">Different traditions. Distinctive aromas. One carefully considered collection.</p>
+          </section>
+          <section class="coffee-values">
+            <span class="eyebrow">A Collection Built for Food Professionals</span>
+            <div class="coffee-values-grid">
+              <div class="coffee-value reveal"><h3>Carefully Selected</h3><p>Distinctive beverage specialties chosen for their character, culinary appeal, and service potential.</p></div>
+              <div class="coffee-value reveal"><h3>Distinctive Experiences</h3><p>Coffee and tea selections that complement different tastes, occasions, and hospitality settings.</p></div>
+              <div class="coffee-value reveal"><h3>Hospitality Essentials</h3><p>Beverage specialties suited to cafés, restaurants, hotels, and gourmet foodservice environments.</p></div>
+            </div>
+          </section>
+          <section class="coffee-close">
+            ${imagePlaceholder('coffee-tea-footer', 'Espresso and tea service on a warm café table')}
+            <div class="coffee-close-copy reveal">
+              <span class="eyebrow coffee-eyebrow--light">The Art of Every Cup</span>
+              <h2>Every Cup, an Exceptional Experience</h2>
+              <p>Explore the coffee and tea selection from Prime Line and discover distinctive beverages for inspired hospitality.</p>
+              <div class="coffee-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
+      condiments_sauces_and_stocks: () => {
+        const collections = [
+          {
+            title: 'Tomato-Based Sauces',
+            image: 'condiments03.jpg',
+            description: 'Classic culinary favorites bringing richness, balance, and the vibrant character of tomatoes to the table.'
+          },
+          {
+            title: 'Pesto & Herb Sauces',
+            image: 'condiments04.jpg',
+            description: 'Distinctive herb-forward preparations inspired by culinary tradition and fresh, expressive flavors.'
+          },
+          {
+            title: 'Specialty Condiments & Spreads',
+            image: 'condiments05.jpg',
+            description: 'Versatile culinary specialties designed to bring depth, contrast, and character to exceptional dishes.'
+          }
+        ];
+        const verifiedStyles = [];
+        const imagePlaceholder = (slot, description) => `
+          <div class="cs-media-pending reveal" role="img" aria-label="Photography pending: ${description} (${slot})">
+            <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+          </div>`;
+        return `
+        <div class="cs-page">
+          <section class="cs-title reveal">
+            <span class="eyebrow">Condiments &amp; Sauces</span>
+            <h2>The Art of Flavor</h2>
+            <span class="cs-title-sub">Exceptional Condiments &amp; Culinary Specialties</span>
+          </section>
+          <section class="cs-intro">
+            <div class="cs-editorial-photo reveal"><img src="images/spots/condiments01.jpg" alt="Condiments and sauce ingredients prepared for the collection"></div>
+            <div class="cs-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>The Ingredients Behind Exceptional Flavor</h2>
+              <p>Behind every memorable dish is a careful balance of ingredients, flavors, and culinary traditions. Sauces and condiments bring character, depth, and individuality to the table, transforming familiar preparations into distinctive experiences.</p>
+              <p>Prime Line presents a thoughtfully considered selection of sauces, condiments, and specialty ingredients for chefs, restaurants, and gourmet food professionals.</p>
+            </div>
+          </section>
+          <section class="cs-feature">
+            <div class="cs-copy reveal">
+              <span class="eyebrow">Crafted with Character</span>
+              <h2>Crafted to Bring Out the Best</h2>
+              <p>From traditional recipes to distinctive regional preparations, the world of sauces and condiments reflects a remarkable variety of ingredients, techniques, and culinary influences.</p>
+              <p>Each style brings its own expression of flavor, offering chefs new ways to complement, enhance, and elevate their creations.</p>
+              <a href="#cs-collections">Explore Our Selection</a>
+            </div>
+            <div class="cs-editorial-photo reveal"><img src="images/spots/condiments02.jpg" alt="Sauce preparation highlighting culinary craftsmanship"></div>
+          </section>
+          <section class="cs-trio" id="cs-collections" aria-label="Provisional sauces and condiments editorial categories">
+            <p class="cs-provisional-note">Provisional editorial categories · Catalog verification pending</p>
+            ${collections.map(({ title, image, description }) => `
+            <article class="cs-card reveal">
+              <div class="cs-card-media">
+                <img src="images/spots/${image}" alt="">
+              </div>
+              <div class="cs-card-copy"><h3>${title}</h3><p>${description}</p></div>
+            </article>`).join('')}
+          </section>
+          <section class="cs-feature cs-feature--specialties">
+            <div class="cs-editorial-photo reveal"><img src="images/spots/condiments06.jpg" alt="Specialty condiments and culinary spreads"></div>
+            <div class="cs-copy reveal">
+              <span class="eyebrow">Beyond the Essentials</span>
+              <h2>Beyond the Everyday Essentials</h2>
+              <p>Exceptional cooking often depends on ingredients that bring something unexpected to the table. From richly flavored preparations to distinctive culinary specialties, sauces and condiments offer a remarkable range of creative possibilities.</p>
+              <p>Our approach celebrates this diversity through carefully considered selections for both traditional dishes and contemporary menus.</p>
+            </div>
+          </section>
+          <section class="cs-origins">
+            <div class="cs-origins-copy reveal">
+              <span class="eyebrow">Inspired by Tradition</span>
+              <h2>Inspired by Culinary Traditions</h2>
+              <p>Across regions and generations, distinctive sauces and condiments have helped define the character of local cuisines.</p>
+              <p>These specialties reflect the ingredients, traditions, and flavor preferences that make regional cooking unique.</p>
+            </div>
+            <div class="cs-origin-list reveal${verifiedStyles.length ? '' : ' is-pending'}" aria-label="Verified condiment styles and culinary traditions">
+              ${verifiedStyles.length
+                ? verifiedStyles.map((style) => `<span>${style}</span>`).join('')
+                : '<p class="cs-origin-pending">Catalog styles and traditions pending verification.</p>'}
+            </div>
+            <p class="cs-origin-note">Distinctive ingredients. Authentic traditions. Endless culinary inspiration.</p>
+          </section>
+          <section class="cs-values">
+            <span class="eyebrow">Made for the Professional Table</span>
+            <h2>Small Details. Extraordinary Results.</h2>
+            <div class="cs-values-grid">
+              <div class="cs-value reveal"><h3>Carefully Selected</h3><p>A considered assortment of condiments and sauces chosen for their culinary character and versatility.</p></div>
+              <div class="cs-value reveal"><h3>Culinary Versatility</h3><p>Distinctive ingredients for sauces, marinades, dressings, antipasti, finishing, and creative preparations.</p></div>
+              <div class="cs-value reveal"><h3>Professional Essentials</h3><p>Specialty food selections suited to restaurants, hotels, gourmet markets, and professional kitchens.</p></div>
+            </div>
+          </section>
+          <section class="cs-close">
+            <div class="cs-close-media" role="img" aria-label="A finished dish with sauce and condiments">
+              <img src="images/spots/condiments08.jpg" alt="">
+            </div>
+            <div class="cs-close-copy reveal">
+              <span class="eyebrow cs-eyebrow--light">The Art of Exceptional Flavor</span>
+              <h2>Every Great Dish Begins with Flavor</h2>
+              <p>Explore our selection of sauces, condiments, and culinary specialties, thoughtfully selected for inspired cooking.</p>
+              <div class="cs-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
+      confections_and_baked_goods: () => {
+        const collections = [
+          {
+            slot: 'confections-biscuits-card',
+            title: 'Cookies & Traditional Biscuits',
+            description: 'Timeless baked specialties celebrated for their distinctive textures, authentic recipes, and everyday enjoyment.'
+          },
+          {
+            slot: 'confections-chocolate-card',
+            title: 'Chocolates & Confections',
+            description: 'Rich, delicate, and distinctive sweet creations inspired by confectionery traditions.'
+          },
+          {
+            slot: 'confections-baked-goods-card',
+            title: 'Specialty Cakes & Baked Goods',
+            description: 'Traditional baked favorites and distinctive sweet specialties for memorable occasions.'
+          }
+        ];
+        const verifiedTraditions = [];
+        return `
+        <div class="cb-page">
+          <section class="cb-title reveal">
+            <span class="eyebrow">Confections &amp; Baked Goods</span>
+            <h2>The Sweet Art of Tradition</h2>
+            <span class="cb-title-sub">Exceptional Confections &amp; Baked Specialties</span>
+          </section>
+          <section class="cb-intro">
+            <div class="cb-intro-photo reveal" role="img" aria-label="Photography pending: Traditional artisan biscuits, confections, and elegant European pastry presentation (confections-introduction)">
+              <span>Photography to be provided<br><strong>images/spots/confections-introduction.jpg</strong></span>
+            </div>
+            <div class="cb-intro-copy reveal">
+              <span class="eyebrow">The Heart of the Collection</span>
+              <h2>A Celebration of Sweet Traditions</h2>
+              <p>Across generations, traditional confections and baked specialties have brought people together through distinctive flavors, cherished recipes, and the simple pleasure of sharing something exceptional.</p>
+              <p>Prime Line presents a thoughtfully selected collection of sweet specialties for restaurants, hotels, cafés, gourmet retailers, and food professionals who appreciate authenticity and culinary tradition.</p>
+            </div>
+          </section>
+          <section class="cb-feature cb-feature--craft">
+            <div class="cb-feature-copy reveal">
+              <span class="eyebrow">Made with Tradition</span>
+              <h2>Crafted with Passion, Shared with Joy</h2>
+              <p>From time-honored recipes to carefully prepared specialty sweets, the world of confectionery reflects a remarkable heritage of craftsmanship, creativity, and regional traditions.</p>
+              <p>Each style brings its own personality, offering distinctive textures, aromas, and flavors that make everyday occasions and special celebrations memorable.</p>
+              <a href="#cb-collections">Explore Our Collection</a>
+            </div>
+            <div class="cb-feature-media reveal" role="img" aria-label="Photography pending: Authentic artisanal pastry or confectionery preparation (confections-craftsmanship)">
+              <span>Photography to be provided<br><strong>images/spots/confections-craftsmanship.jpg</strong></span>
+            </div>
+          </section>
+          <section class="cb-trio" id="cb-collections" aria-label="Provisional confections and baked goods editorial categories">
+            <p class="cb-provisional-note">Provisional editorial categories · Catalog verification pending</p>
+            ${collections.map(({ slot, title, description }) => `
+            <article class="cb-card reveal">
+              <div class="cb-card-media" role="img" aria-label="Photography pending: ${title} (${slot})">
+                <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
+              </div>
+              <div class="cb-card-copy"><h3>${title}</h3><p>${description}</p></div>
+            </article>`).join('')}
+          </section>
+          <section class="cb-feature cb-feature--seasonal">
+            <div class="cb-feature-media reveal" role="img" aria-label="Photography pending: Verified traditional seasonal Italian baked specialty (confections-seasonal)">
+              <span>Photography to be provided<br><strong>images/spots/confections-seasonal.jpg</strong></span>
+            </div>
+            <div class="cb-feature-copy reveal">
+              <span class="eyebrow">Traditions of Celebration</span>
+              <h2>Traditions for Every Celebration</h2>
+              <p>Some sweet traditions are inseparable from the moments we celebrate. From treasured holiday recipes to iconic seasonal baked specialties, these creations bring flavor, heritage, and a sense of occasion to the table.</p>
+              <p>Selected seasonal collections offer distinctive choices for gifting, hospitality, gourmet retail, and the celebration of meaningful moments.</p>
+              <p class="cb-detail">Seasonal product families and availability are pending catalog verification.</p>
+            </div>
+          </section>
+          <section class="cb-feature cb-feature--texture">
+            <div class="cb-feature-copy reveal">
+              <span class="eyebrow">A World of Sweet Expression</span>
+              <h2>A World of Texture &amp; Indulgence</h2>
+              <p>From the delicate crunch of traditional biscuits to the rich character of fine chocolate and the tender texture of specialty baked goods, confectionery offers an extraordinary variety of sensory experiences.</p>
+              <p>Each preparation has its own character, bringing together taste, texture, and tradition in ways that complement different occasions and preferences.</p>
+            </div>
+            <div class="cb-feature-media reveal" role="img" aria-label="Photography pending: Authentic confectionery textures, biscuit crumb, chocolate surfaces, and delicate baked structures (confections-textures)">
+              <span>Photography to be provided<br><strong>images/spots/confections-textures.jpg</strong></span>
+            </div>
+          </section>
+          <section class="cb-origins">
+            <div class="cb-origins-copy reveal">
+              <span class="eyebrow">Timeless Sweet Heritage</span>
+              <h2>A World of Sweet Traditions</h2>
+              <p>Across Europe and beyond, generations of confectioners and bakers have developed distinctive regional specialties that reflect local ingredients, culinary customs, and traditions.</p>
+              <p>These sweet creations bring a remarkable variety of flavors and styles to the contemporary culinary experience.</p>
+            </div>
+            <div class="cb-origin-list reveal" aria-label="Verified sweet traditions and category families">
+              ${verifiedTraditions.length
+                ? verifiedTraditions.map((tradition) => `<span>${tradition}</span>`).join('')
+                : '<p class="cb-origin-pending">Sweet traditions and category families pending catalog verification.</p>'}
+            </div>
+            <p class="cb-origin-note">Distinctive traditions. Memorable flavors. Carefully selected.</p>
+          </section>
+          <section class="cb-values">
+            <span class="eyebrow">Selected for Special Occasions</span>
+            <h2>Selected for Memorable Moments</h2>
+            <div class="cb-values-grid">
+              <div class="cb-value reveal"><h3>Carefully Selected</h3><p>A distinctive assortment chosen for authentic character, culinary appeal, and traditional flavor.</p></div>
+              <div class="cb-value reveal"><h3>Sweet Traditions</h3><p>Timeless confectionery and baked specialties that bring character to everyday enjoyment and special occasions.</p></div>
+              <div class="cb-value reveal"><h3>Hospitality &amp; Retail</h3><p>Selections suited to cafés, hotels, restaurants, gourmet markets, and specialty retail presentations.</p></div>
+            </div>
+          </section>
+          <section class="cb-close">
+            <div class="cb-close-media reveal" role="img" aria-label="Photography pending: Elegant European dessert table with traditional baked sweets and artisan confections (confections-footer)">
+              <span>Photography to be provided<br><strong>images/spots/confections-footer.jpg</strong></span>
+            </div>
+            <div class="cb-close-copy reveal">
+              <span class="eyebrow cb-eyebrow--light">The Joy of Sweet Traditions</span>
+              <h2>Sweet Traditions, Exceptional Moments</h2>
+              <p>Discover distinctive confections and baked specialties, thoughtfully selected to bring flavor, tradition, and enjoyment to every occasion.</p>
+              <div class="cb-close-actions">
+                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
+              </div>
+            </div>
+          </section>
+        </div>`;
+      },
       antipasto_and_vegetables: () => `
         <section class="cv-title reveal">
           <span class="eyebrow">Antipasto &amp; Vegetables</span>
@@ -743,7 +1859,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="cv-intro-copy reveal">
             <span class="eyebrow">Curated for Professional Kitchens</span>
             <h2>Exceptional Ingredients. Endless Possibilities.</h2>
-            <p>Prime Line Distributors sources a distinctive selection of preserved vegetables and Mediterranean specialties chosen for their flavor, consistency, and presentation.</p>
+            <p>Prime Line sources a distinctive selection of preserved vegetables and Mediterranean specialties chosen for their flavor, consistency, and presentation.</p>
             <p>From everyday essentials to harder-to-find delicacies, our portfolio helps chefs create memorable dishes without compromising quality.</p>
           </div>
         </section>
@@ -823,6 +1939,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const categoryDetail = document.getElementById('categoryDetail');
+    let categoryDetailTimer;
 
     function updateCategoryDetail(slideEl) {
       if (!categoryDetail) return;
@@ -830,8 +1947,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const key = slideEl.dataset.category || decodeURIComponent((media?.getAttribute('src') || '').split('/').pop() || '').replace(/\.[^.]+$/, '');
       const data = bannerCopy[key] || { eyebrow: 'Prime Line', title: media?.getAttribute('alt') || 'Category', text: 'Reference text coming soon.' };
       const render = categoryDetailTemplates[key] || (() => defaultDetailTemplate(data));
+      clearTimeout(categoryDetailTimer);
       categoryDetail.classList.add('is-fading');
-      setTimeout(() => {
+      categoryDetailTimer = setTimeout(() => {
         categoryDetail.innerHTML = `
           <div class="category-detail-nav" aria-label="Slide navigation">
             <button type="button" class="detail-slider-arrow detail-slider-arrow--prev" aria-label="Previous slide"></button>
@@ -857,8 +1975,13 @@ document.addEventListener('DOMContentLoaded', () => {
       let current = requestedIndex >= 0
         ? requestedIndex
         : Math.max(0, slides.findIndex((s) => s.classList.contains('is-active')));
+      slides.forEach((slide, index) => slide.classList.toggle('is-active', index === current));
       let timer;
       let autoplayAllowed = true;
+      let pointerOverCategoryDetail = false;
+      const videoLoopFadeLead = 0.55;
+      const keyboardToast = document.getElementById('sliderKeyboardToast');
+      let keyboardToastTimer;
 
       dotsWrap.textContent = '';
       slides.forEach((_, i) => {
@@ -874,8 +1997,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const video = slide.querySelector('video');
         if (!video) return;
         video.loop = false;
+        video.addEventListener('timeupdate', () => {
+          if (Number.isFinite(video.duration) && video.duration - video.currentTime <= videoLoopFadeLead) {
+            video.classList.add('is-loop-fading');
+          }
+        });
         video.addEventListener('ended', () => {
-          if (slides[current] === slide) goTo(current + 1);
+          if (slides[current] !== slide) return;
+          video.classList.add('is-loop-fading');
+          video.addEventListener('seeked', () => {
+            video.classList.remove('is-loop-fading');
+            if (slides[current] === slide) video.play().catch(() => {});
+          }, { once: true });
+          video.currentTime = 0;
         });
       });
       updateCategoryDetail(slides[current]);
@@ -889,7 +2023,6 @@ document.addEventListener('DOMContentLoaded', () => {
           video.pause();
         }
       });
-
       function goTo(index) {
         const previousVideo = slides[current].querySelector('video');
         previousVideo?.pause();
@@ -900,20 +2033,43 @@ document.addEventListener('DOMContentLoaded', () => {
         dots[current].classList.add('is-active');
         const nextVideo = slides[current].querySelector('video');
         if (nextVideo) {
+          nextVideo.classList.remove('is-loop-fading');
           nextVideo.currentTime = 0;
           nextVideo.play().catch(() => {});
         }
         updateCategoryDetail(slides[current]);
         resetTimer();
       }
+      function showKeyboardToast() {
+        if (!keyboardToast) return;
+        const slide = slides[current];
+        const media = slide.querySelector('img, video');
+        const source = media?.getAttribute('src') || media?.querySelector('source')?.getAttribute('src') || '';
+        const key = slide.dataset.category || decodeURIComponent(source.split('/').pop() || '').replace(/\.[^.]+$/, '');
+        const category = bannerCopy[key]?.eyebrow || media?.getAttribute('alt') || 'Featured categories';
+        keyboardToast.querySelector('.slider-keyboard-toast-name').textContent = category;
+        keyboardToast.setAttribute('aria-hidden', 'false');
+        keyboardToast.classList.add('is-visible');
+        clearTimeout(keyboardToastTimer);
+        keyboardToastTimer = setTimeout(() => {
+          keyboardToast.classList.remove('is-visible');
+          keyboardToast.setAttribute('aria-hidden', 'true');
+        }, 1800);
+      }
       categoryDetail?.addEventListener('click', (e) => {
+        const catalogLink = e.target.closest('.catalog-trigger');
+        if (catalogLink) {
+          e.preventDefault();
+          catalogTriggers[0]?.click();
+          return;
+        }
         const button = e.target.closest('.detail-slider-arrow');
         if (!button) return;
         goTo(button.classList.contains('detail-slider-arrow--prev') ? current - 1 : current + 1);
       });
       function resetTimer() {
         clearTimeout(timer);
-        if (!autoplayAllowed) return;
+        if (!autoplayAllowed || pointerOverCategoryDetail) return;
         const slide = slides[current];
         const video = slide.querySelector('video');
         if (video) return;
@@ -922,14 +2078,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       slider.setAttribute('tabindex', '0');
       slider.setAttribute('aria-label', 'Featured categories slider');
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+        const target = e.target;
+        if (target instanceof Element && (
+          target.isContentEditable ||
+          target.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]')
+        )) return;
+        if (document.querySelector('.spot-lightbox.is-open, .nav-overlay.is-open, .side-drawers .is-open, .contact-panel.is-open, .about-panel.is-open, .catalog-panel.is-open, .masterlink-panel.is-open, .order-entry-panel.is-open, .account-forms-panel.is-open, .locations-panel.is-open')) return;
+        e.preventDefault();
+        goTo(current + (e.key === 'ArrowLeft' ? -1 : 1));
+        showKeyboardToast();
+      });
       slider.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          goTo(current - 1);
-        } else if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          goTo(current + 1);
-        } else if (e.key === 'Home') {
+        if (e.key === 'Home') {
           e.preventDefault();
           goTo(0);
         } else if (e.key === 'End') {
@@ -942,6 +2105,14 @@ document.addEventListener('DOMContentLoaded', () => {
       slider.addEventListener('focusin', () => clearTimeout(timer));
       slider.addEventListener('focusout', (e) => {
         if (!slider.contains(e.relatedTarget)) resetTimer();
+      });
+      categoryDetail?.addEventListener('mouseenter', () => {
+        pointerOverCategoryDetail = true;
+        clearTimeout(timer);
+      });
+      categoryDetail?.addEventListener('mouseleave', () => {
+        pointerOverCategoryDetail = false;
+        resetTimer();
       });
 
       // Pause autoplay as soon as the banner starts leaving the viewport (user reading the category detail below); resume only once it's fully back on screen.
