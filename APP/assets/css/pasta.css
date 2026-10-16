@@ -44,6 +44,8 @@
 }
 .pa-intro-photo,
 .pa-feature-media{
+  position:relative;
+  position:relative;
   display:flex;
   min-width:0;
   aspect-ratio:4 / 3;
@@ -52,6 +54,21 @@
   overflow:hidden;
   background:var(--pl-cream-dark);
   color:var(--pl-ink-soft);
+}
+.pa-card-media img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.pa-intro-photo img,
+.pa-feature-media img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
 }
 .pa-intro-photo span,
 .pa-feature-media span,

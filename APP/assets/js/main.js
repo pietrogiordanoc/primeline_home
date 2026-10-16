@@ -935,16 +935,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const collections = [
           {
             slot: 'italian-pasta-long-card',
+            image: 'pasta06.png',
             title: 'Long Pasta',
             description: 'Timeless Italian shapes celebrated for their elegance, versatility, and distinctive culinary traditions.'
           },
           {
             slot: 'italian-pasta-short-card',
+            image: 'pasta02.png',
             title: 'Short & Shaped Pasta',
             description: 'Distinctive forms and textures designed to complement a wide range of sauces and preparations.'
           },
           {
             slot: 'italian-pasta-specialty-card',
+            image: 'pasta05.jpg',
             title: 'Specialty Pasta',
             description: 'Unique shapes and culinary expressions that celebrate the remarkable diversity of Italian pasta.'
           }
@@ -958,8 +961,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="pa-title-sub">Authentic Tradition &amp; Exceptional Varieties</span>
           </section>
           <section class="pa-intro">
-            <div class="pa-intro-photo reveal" role="img" aria-label="Photography pending: Authentic dried Italian pasta, naturally arranged to emphasize individual shapes and textures (italian-pasta-introduction)">
-              <span>Photography to be provided<br><strong>images/spots/italian-pasta-introduction.jpg</strong></span>
+            <div class="pa-intro-photo reveal">
+              <img src="images/spots/pasta02.jpg" alt="Italian pasta arranged to show its shapes and textures">
             </div>
             <div class="pa-intro-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
@@ -977,22 +980,20 @@ document.addEventListener('DOMContentLoaded', () => {
               <p class="pa-detail">Specific production methods and ingredient claims require verification at the product or brand level.</p>
               <a href="#pa-collections">Explore Our Pasta Selection</a>
             </div>
-            <div class="pa-feature-media reveal" role="img" aria-label="Photography pending: Authentic Italian pasta-making or close-up of pasta production (italian-pasta-craftsmanship)">
-              <span>Photography to be provided<br><strong>images/spots/italian-pasta-craftsmanship.jpg</strong></span>
+            <div class="pa-feature-media reveal">
+              <img src="images/spots/pasta01.png" alt="Italian pasta craftsmanship and traditional pasta making">
             </div>
           </section>
           <section class="pa-trio" id="pa-collections" aria-label="Italian pasta editorial categories">
-            ${collections.map(({ slot, title, description }) => `
+            ${collections.map(({ image, title, description }) => `
             <article class="pa-card reveal">
-              <div class="pa-card-media" role="img" aria-label="Photography pending: ${title} from verified pasta assortment (${slot})">
-                <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
-              </div>
+              <div class="pa-card-media"><img src="images/spots/${image}" alt="${title}"></div>
               <div class="pa-card-copy"><h3>${title}</h3><p>${description}</p></div>
             </article>`).join('')}
           </section>
           <section class="pa-feature pa-feature--texture">
-            <div class="pa-feature-media reveal" role="img" aria-label="Photography pending: Close-up of authentic dry pasta shapes, natural surface texture, ridges, and semolina tones (italian-pasta-textures)">
-              <span>Photography to be provided<br><strong>images/spots/italian-pasta-textures.jpg</strong></span>
+            <div class="pa-feature-media reveal">
+              <img src="images/spots/pasta09.png" alt="A variety of Italian pasta shapes and textures">
             </div>
             <div class="pa-feature-copy reveal">
               <span class="eyebrow">Shape &amp; Character</span>
@@ -1009,8 +1010,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Prime Line's pasta selection offers professional kitchens versatile possibilities for traditional menus and contemporary culinary inspiration.</p>
               <a href="#pa-collections">Discover Culinary Possibilities</a>
             </div>
-            <div class="pa-feature-media reveal" role="img" aria-label="Photography pending: Authentic, beautifully plated Italian pasta dish in a professional restaurant setting (italian-pasta-culinary)">
-              <span>Photography to be provided<br><strong>images/spots/italian-pasta-culinary.jpg</strong></span>
+            <div class="pa-feature-media reveal">
+              <img src="images/spots/pasta06.jpg" alt="Fresh pasta being handled by hand in a traditional kitchen">
             </div>
           </section>
           <section class="pa-origins">
