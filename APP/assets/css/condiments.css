@@ -103,15 +103,6 @@
   margin:0 auto;
   padding:90px var(--gutter) 112px;
 }
-.cs-provisional-note{
-  grid-column:1 / -1;
-  margin:0;
-  color:var(--pl-ink-soft);
-  font:500 11px var(--font-sans);
-  letter-spacing:.16em;
-  text-align:center;
-  text-transform:uppercase;
-}
 .cs-card{
   position:relative;
   aspect-ratio:3 / 4;
@@ -268,8 +259,6 @@
   .cs-intro,
   .cs-feature{grid-template-columns:1fr;gap:38px;padding-top:76px;padding-bottom:76px}
   .cs-trio{grid-template-columns:1fr;padding-top:76px;padding-bottom:76px}
-  .cs-provisional-note{margin-bottom:8px}
-
   .cs-values-grid{grid-template-columns:1fr;gap:34px}
 }
 @media (max-width:640px){

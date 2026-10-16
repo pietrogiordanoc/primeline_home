@@ -74,16 +74,6 @@
   margin:0 auto;
   padding:0 var(--gutter) 112px;
 }
-.bl-provisional-note{
-  grid-column:1/-1;
-  margin:0;
-  color:var(--pl-gold);
-  font-size:10px;
-  font-weight:600;
-  letter-spacing:.18em;
-  text-align:center;
-  text-transform:uppercase;
-}
 .bl-card{
   position:relative;
   aspect-ratio:3 / 4;

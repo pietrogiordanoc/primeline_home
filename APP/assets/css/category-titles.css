@@ -42,3 +42,24 @@
 .banner-caption-inner{padding:34px var(--gutter) 26px !important;min-height:0 !important;margin:0 auto}
 .banner-caption-title{margin-top:0}
 .banner-caption-text{display:block;max-width:720px;margin:12px auto 0;color:var(--pl-ink-soft);font-family:var(--font-sans);font-size:12px;font-weight:600;line-height:1.4;letter-spacing:.3em;text-transform:uppercase}
+
+section[class*="-intro"],
+section[class*="-feature"],
+section[class*="-story"],
+section[class*="-trio"],
+section[class*="-cannoli"],
+section[class*="-origins"],
+section[class*="-values"]{
+  padding-block:64px;
+}
+@media (max-width:900px){
+  section[class*="-intro"],
+  section[class*="-feature"],
+  section[class*="-story"],
+  section[class*="-trio"],
+  section[class*="-cannoli"],
+  section[class*="-origins"],
+  section[class*="-values"]{
+    padding-block:48px;
+  }
+}
