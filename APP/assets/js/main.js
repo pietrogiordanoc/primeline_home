@@ -1732,16 +1732,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const collections = [
           {
             slot: 'confections-biscuits-card',
+            image: 'confections03.jpg',
             title: 'Cookies & Traditional Biscuits',
             description: 'Timeless baked specialties celebrated for their distinctive textures, authentic recipes, and everyday enjoyment.'
           },
           {
             slot: 'confections-chocolate-card',
+            image: 'confections04.jpg',
             title: 'Chocolates & Confections',
             description: 'Rich, delicate, and distinctive sweet creations inspired by confectionery traditions.'
           },
           {
             slot: 'confections-baked-goods-card',
+            image: 'confections05.jpg',
             title: 'Specialty Cakes & Baked Goods',
             description: 'Traditional baked favorites and distinctive sweet specialties for memorable occasions.'
           }
@@ -1755,9 +1758,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="cb-title-sub">Exceptional Confections &amp; Baked Specialties</span>
           </section>
           <section class="cb-intro">
-            <div class="cb-intro-photo reveal" role="img" aria-label="Photography pending: Traditional artisan biscuits, confections, and elegant European pastry presentation (confections-introduction)">
-              <span>Photography to be provided<br><strong>images/spots/confections-introduction.jpg</strong></span>
-            </div>
+            <img class="cb-intro-photo reveal" src="images/spots/confections01.png" alt="Traditional artisan biscuits and confections">
             <div class="cb-intro-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>A Celebration of Sweet Traditions</h2>
@@ -1773,17 +1774,13 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Each style brings its own personality, offering distinctive textures, aromas, and flavors that make everyday occasions and special celebrations memorable.</p>
               <a href="#cb-collections">Explore Our Collection</a>
             </div>
-            <div class="cb-feature-media reveal" role="img" aria-label="Photography pending: Authentic artisanal pastry or confectionery preparation (confections-craftsmanship)">
-              <span>Photography to be provided<br><strong>images/spots/confections-craftsmanship.jpg</strong></span>
-            </div>
+            <img class="cb-feature-media cb-feature-media--image reveal" src="images/spots/confections02.jpg" alt="Artisanal confectionery">
           </section>
           <section class="cb-trio" id="cb-collections" aria-label="Provisional confections and baked goods editorial categories">
             <p class="cb-provisional-note">Provisional editorial categories · Catalog verification pending</p>
-            ${collections.map(({ slot, title, description }) => `
+            ${collections.map(({ slot, image, title, description }) => `
             <article class="cb-card reveal">
-              <div class="cb-card-media" role="img" aria-label="Photography pending: ${title} (${slot})">
-                <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
-              </div>
+              <img class="cb-card-media" src="images/spots/${image}" alt="${title}">
               <div class="cb-card-copy"><h3>${title}</h3><p>${description}</p></div>
             </article>`).join('')}
           </section>
