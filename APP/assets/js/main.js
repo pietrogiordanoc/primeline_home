@@ -1895,7 +1895,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let pointerOverCategoryDetail = false;
       const videoLoopFadeLead = 0.55;
       const keyboardToast = document.getElementById('sliderKeyboardToast');
-      let keyboardToastTimer;
+      const keyboardToastCountKey = 'primeLineSliderPointerHintCount';
 
       dotsWrap.textContent = '';
       slides.forEach((_, i) => {
@@ -1954,22 +1954,42 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCategoryDetail(slides[current]);
         resetTimer();
       }
-      function showKeyboardToast() {
-        if (!keyboardToast) return;
-        const slide = slides[current];
-        const media = slide.querySelector('img, video');
-        const source = media?.getAttribute('src') || media?.querySelector('source')?.getAttribute('src') || '';
-        const key = slide.dataset.category || decodeURIComponent(source.split('/').pop() || '').replace(/\.[^.]+$/, '');
-        const category = bannerCopy[key]?.eyebrow || media?.getAttribute('alt') || 'Featured categories';
-        keyboardToast.querySelector('.slider-keyboard-toast-name').textContent = category;
+      function showKeyboardToast(target) {
+        if (!keyboardToast || !(target instanceof Element)) return;
+        const isAlreadyVisible = keyboardToast.classList.contains('is-visible');
+        if (!isAlreadyVisible) {
+          const storedCount = Number.parseInt(localStorage.getItem(keyboardToastCountKey) || '0', 10);
+          const appearanceCount = Number.isFinite(storedCount) ? storedCount : 0;
+          if (appearanceCount >= 10) return;
+          localStorage.setItem(keyboardToastCountKey, String(appearanceCount + 1));
+        }
+        const sliderRect = slider.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const toastWidth = keyboardToast.getBoundingClientRect().width;
+        const targetCenter = targetRect.left - sliderRect.left + targetRect.width / 2;
+        const minLeft = toastWidth / 2 + 12;
+        const maxLeft = sliderRect.width - toastWidth / 2 - 12;
+        const left = Math.max(minLeft, Math.min(targetCenter, maxLeft));
+        const top = Math.max(8, targetRect.top - sliderRect.top - 10);
+        keyboardToast.style.left = `${left}px`;
+        keyboardToast.style.top = `${top}px`;
         keyboardToast.setAttribute('aria-hidden', 'false');
         keyboardToast.classList.add('is-visible');
-        clearTimeout(keyboardToastTimer);
-        keyboardToastTimer = setTimeout(() => {
-          keyboardToast.classList.remove('is-visible');
-          keyboardToast.setAttribute('aria-hidden', 'true');
-        }, 1800);
       }
+      const hideKeyboardToast = () => {
+        keyboardToast?.classList.remove('is-visible');
+        keyboardToast?.setAttribute('aria-hidden', 'true');
+      };
+      slider.addEventListener('pointerover', (event) => {
+        if (event.pointerType !== 'mouse' || !(event.target instanceof Element)) return;
+        const control = event.target.closest('.slider-arrow, .slider-dots .dot');
+        if (control) showKeyboardToast(control);
+      });
+      slider.addEventListener('pointerout', (event) => {
+        if (!(event.target instanceof Element) || !event.target.closest('.slider-arrow, .slider-dots .dot')) return;
+        if (event.relatedTarget instanceof Element && event.relatedTarget.closest('.slider-arrow, .slider-dots .dot')) return;
+        hideKeyboardToast();
+      });
       categoryDetail?.addEventListener('click', (e) => {
         const catalogLink = e.target.closest('.catalog-trigger');
         if (catalogLink) {
@@ -2008,7 +2028,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         e.preventDefault();
         goTo(current + (e.key === 'ArrowLeft' ? -1 : 1));
-        showKeyboardToast();
       });
       slider.addEventListener('keydown', (e) => {
         if (e.key === 'Home') {
