@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     spotLightboxImage.removeAttribute('src');
   };
   document.addEventListener('click', (e) => {
-    if (e.target.closest('.banner-slider, .slider-arrow, .detail-slider-arrow')) return;
+    if (e.target.closest('.banner-slider, .slider-arrow')) return;
     const image = e.target.closest('img');
     if (!image) return;
     if (e.target.closest('a')) e.preventDefault();
@@ -1865,10 +1865,6 @@ document.addEventListener('DOMContentLoaded', () => {
       categoryDetail.classList.add('is-fading');
       categoryDetailTimer = setTimeout(() => {
         categoryDetail.innerHTML = `
-          <div class="category-detail-nav" aria-label="Slide navigation">
-            <button type="button" class="detail-slider-arrow detail-slider-arrow--prev" aria-label="Previous slide"></button>
-            <button type="button" class="detail-slider-arrow detail-slider-arrow--next" aria-label="Next slide"></button>
-          </div>
           ${render()}`;
         categoryDetail.classList.remove('is-fading');
         categoryDetail.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-visible'));
@@ -1895,7 +1891,8 @@ document.addEventListener('DOMContentLoaded', () => {
       let pointerOverCategoryDetail = false;
       const videoLoopFadeLead = 0.55;
       const keyboardToast = document.getElementById('sliderKeyboardToast');
-      const keyboardToastCountKey = 'primeLineSliderPointerHintCount';
+      const keyboardToastCountKey = 'primeLineSliderPointerHintVisitsV3';
+      let keyboardToastCountedThisVisit = false;
 
       dotsWrap.textContent = '';
       slides.forEach((_, i) => {
@@ -1956,12 +1953,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       function showKeyboardToast(target) {
         if (!keyboardToast || !(target instanceof Element)) return;
-        const isAlreadyVisible = keyboardToast.classList.contains('is-visible');
-        if (!isAlreadyVisible) {
-          const storedCount = Number.parseInt(localStorage.getItem(keyboardToastCountKey) || '0', 10);
-          const appearanceCount = Number.isFinite(storedCount) ? storedCount : 0;
-          if (appearanceCount >= 10) return;
-          localStorage.setItem(keyboardToastCountKey, String(appearanceCount + 1));
+        // The hint is shown during the first 10 visits; each visit counts once, however many times the pointer hovers.
+        if (!keyboardToastCountedThisVisit) {
+          let visits = 0;
+          try {
+            visits = Number.parseInt(localStorage.getItem(keyboardToastCountKey) || '0', 10) || 0;
+          } catch (error) {
+            visits = 0;
+          }
+          if (visits >= 10) return;
+          keyboardToastCountedThisVisit = true;
+          try {
+            localStorage.setItem(keyboardToastCountKey, String(visits + 1));
+          } catch (error) {
+            // Storage unavailable: still show the hint for this visit.
+          }
         }
         const sliderRect = slider.getBoundingClientRect();
         const targetRect = target.getBoundingClientRect();
@@ -1981,7 +1987,7 @@ document.addEventListener('DOMContentLoaded', () => {
         keyboardToast?.setAttribute('aria-hidden', 'true');
       };
       slider.addEventListener('pointerover', (event) => {
-        if (event.pointerType !== 'mouse' || !(event.target instanceof Element)) return;
+        if ((event.pointerType && event.pointerType !== 'mouse') || !(event.target instanceof Element)) return;
         const control = event.target.closest('.slider-arrow, .slider-dots .dot');
         if (control) showKeyboardToast(control);
       });
@@ -1997,9 +2003,6 @@ document.addEventListener('DOMContentLoaded', () => {
           catalogTriggers[0]?.click();
           return;
         }
-        const button = e.target.closest('.detail-slider-arrow');
-        if (!button) return;
-        goTo(button.classList.contains('detail-slider-arrow--prev') ? current - 1 : current + 1);
       });
       function resetTimer() {
         clearTimeout(timer);
