@@ -51,6 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
     revealEls.forEach((el) => io.observe(el));
   }
 
+  const backToTop = document.querySelector('.back-to-top');
+  if (backToTop) {
+    const updateBackToTop = () => backToTop.classList.toggle('is-visible', window.scrollY > 400);
+    updateBackToTop();
+    window.addEventListener('scroll', updateBackToTop, { passive: true });
+    backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
+
   const toggle = document.querySelector('.nav-toggle');
   const links = document.querySelector('.nav-links');
   if (toggle && links) {
@@ -1993,6 +2001,11 @@ document.addEventListener('DOMContentLoaded', () => {
           target.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]')
         )) return;
         if (document.querySelector('.spot-lightbox.is-open, .nav-overlay.is-open, .side-drawers .is-open, .contact-panel.is-open, .about-panel.is-open, .catalog-panel.is-open, .masterlink-panel.is-open, .order-entry-panel.is-open, .account-forms-panel.is-open, .locations-panel.is-open')) return;
+        if (window.scrollY > 0) {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
         e.preventDefault();
         goTo(current + (e.key === 'ArrowLeft' ? -1 : 1));
         showKeyboardToast();
