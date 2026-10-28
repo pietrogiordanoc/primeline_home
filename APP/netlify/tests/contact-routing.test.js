@@ -11,7 +11,7 @@ import {
   validateRoutingConfig
 } from '../shared/contact-routing.js';
 import { handler as contactHandler } from '../functions/send-contact.js';
-import { handler as adminRoutingHandler } from '../functions/contact-routing-admin.js';
+import adminRoutingHandler from '../functions/contact-routing-admin.js';
 
 const validSubmission = {
   inquiryType: 'Product Inquiry',
@@ -253,17 +253,19 @@ test('reports provider failure rather than a false success', async () => {
 });
 
 test('admin routing API rejects unauthorized and cross-origin updates', async () => {
-  const unauthorized = await adminRoutingHandler({
-    httpMethod: 'GET',
-    headers: {},
-    body: ''
-  });
-  assert.equal(unauthorized.statusCode, 401);
+  const unauthorized = await adminRoutingHandler(new Request(
+    'https://primelinedist.com/api/admin/contact-routing',
+    { method: 'GET' }
+  ));
+  assert.equal(unauthorized.status, 401);
 
-  const csrf = await adminRoutingHandler({
-    httpMethod: 'PUT',
-    headers: { origin: 'https://attacker.example', host: 'primelinedist.com' },
-    body: '{}'
-  });
-  assert.equal(csrf.statusCode, 403);
+  const csrf = await adminRoutingHandler(new Request(
+    'https://primelinedist.com/api/admin/contact-routing',
+    {
+      method: 'PUT',
+      headers: { origin: 'https://attacker.example' },
+      body: '{}'
+    }
+  ));
+  assert.equal(csrf.status, 403);
 });

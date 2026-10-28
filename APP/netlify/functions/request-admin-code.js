@@ -1,4 +1,5 @@
 import { randomInt, randomUUID } from 'node:crypto';
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import {
   ADMIN_CHALLENGE_COOKIE,
   ADMIN_EMAIL,
@@ -130,4 +131,4 @@ export const createRequestAdminCodeHandler = (sendVerificationCode = sendCode) =
   }
 };
 
-export const handler = createRequestAdminCodeHandler();
+export default adaptNetlifyHandler(createRequestAdminCodeHandler());

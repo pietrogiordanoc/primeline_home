@@ -9,18 +9,15 @@ import {
   hashOtp,
   hashValue
 } from '../shared/admin-auth.js';
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import { createRequestAdminCodeHandler } from '../functions/request-admin-code.js';
-import { handler as verifyAdminCode } from '../functions/verify-admin-code.js';
-import { handler as adminSession } from '../functions/admin-session.js';
-import { handler as logoutAdmin } from '../functions/logout-admin.js';
+import verifyAdminCode from '../functions/verify-admin-code.js';
+import adminSession from '../functions/admin-session.js';
+import logoutAdmin from '../functions/logout-admin.js';
+import contactRoutingAdmin from '../functions/contact-routing-admin.js';
 
 const STORE_NAME = 'site:prime-line-admin-auth';
 const SITE_ID = 'mock-site';
-const ORIGIN_HEADERS = {
-  origin: 'https://primelinedist.com',
-  host: 'primelinedist.com'
-};
-
 const response = (body, status = 200) =>
   new Response(body, { status, headers: { 'content-type': 'application/json' } });
 
@@ -39,7 +36,7 @@ const withMockBlobs = async (run) => {
     const url = new URL(typeof input === 'string' ? input : input.url);
     const method = (options.method || 'GET').toUpperCase();
     const headers = new Headers(options.headers || {});
-    requests.push({ url: url.toString(), method, authorization: headers.get('authorization') });
+    requests.push({ url: url.toString(), method, hasAuthorization: Boolean(headers.get('authorization')) });
 
     if (url.hostname === 'blobs.test') {
       const parts = url.pathname.split('/').filter(Boolean).map(decodeURIComponent);
@@ -110,48 +107,52 @@ const cookieValue = (setCookieHeaders, cookieName) => {
   return cookie.slice(cookieName.length + 1).split(';')[0];
 };
 
-const requestCodeEvent = () => ({
-  httpMethod: 'POST',
-  headers: ORIGIN_HEADERS,
-  body: JSON.stringify({ email: ADMIN_EMAIL }),
-  isBase64Encoded: false
-});
+const netlifyRequest = (method, headers = {}, body) =>
+  new Request('https://primelinedist.com/.netlify/functions/admin-test', {
+    method,
+    headers: { origin: 'https://primelinedist.com', ...headers },
+    ...(body === undefined ? {} : { body })
+  });
+
+const responseCookies = (response) =>
+  response.headers.getSetCookie?.() ??
+  (response.headers.get('set-cookie') || '').split(/, (?=__Host-pl-admin-)/).filter(Boolean);
 
 test('Admin OTP generation, rate limiting, verification, session and logout use runtime Blobs credentials', async () => {
   await withMockBlobs(async ({ blobs, requests }) => {
     const sentCodes = [];
-    const requestAdminCode = createRequestAdminCodeHandler(async (code) => {
+    const requestAdminCode = adaptNetlifyHandler(createRequestAdminCodeHandler(async (code) => {
       sentCodes.push(code);
       return true;
-    });
+    }));
 
     const requestResponses = [];
     for (let attempt = 0; attempt < 4; attempt += 1) {
-      requestResponses.push(await requestAdminCode(requestCodeEvent()));
+      requestResponses.push(await requestAdminCode(netlifyRequest(
+        'POST',
+        {},
+        JSON.stringify({ email: ADMIN_EMAIL })
+      )));
     }
 
-    assert.ok(requestResponses.every((result) => result.statusCode === 202));
+    assert.ok(requestResponses.every((result) => result.status === 202));
     assert.equal(sentCodes.length, 3);
     assert.ok(sentCodes.every((code) => /^\d{6}$/.test(code)));
-    assert.ok(requests.some((request) => request.authorization === 'Bearer mock-runtime-token'));
+    assert.ok(requests.some((request) => request.hasAuthorization));
 
     const challengeId = cookieValue(
-      requestResponses[2].multiValueHeaders['Set-Cookie'],
+      responseCookies(requestResponses[2]),
       ADMIN_CHALLENGE_COOKIE
     );
-    const verifyResponse = await verifyAdminCode({
-      httpMethod: 'POST',
-      headers: {
-        ...ORIGIN_HEADERS,
-        cookie: `${ADMIN_CHALLENGE_COOKIE}=${challengeId}`
-      },
-      body: JSON.stringify({ code: sentCodes[2] }),
-      isBase64Encoded: false
-    });
+    const verifyResponse = await verifyAdminCode(netlifyRequest(
+      'POST',
+      { cookie: `${ADMIN_CHALLENGE_COOKIE}=${challengeId}` },
+      JSON.stringify({ code: sentCodes[2] })
+    ));
 
-    assert.equal(verifyResponse.statusCode, 200);
-    assert.equal(JSON.parse(verifyResponse.body).authenticated, true);
-    const cookies = verifyResponse.multiValueHeaders['Set-Cookie'];
+    assert.equal(verifyResponse.status, 200);
+    assert.equal((await verifyResponse.json()).authenticated, true);
+    const cookies = responseCookies(verifyResponse);
     const sessionId = cookieValue(cookies, ADMIN_SESSION_COOKIE);
     const sessionKey = `${SITE_ID}/${STORE_NAME}/admin:session:${sessionId}`;
     const session = JSON.parse(blobs.get(sessionKey));
@@ -161,40 +162,39 @@ test('Admin OTP generation, rate limiting, verification, session and logout use 
     assert.match(cookies.find((value) => value.startsWith(`${ADMIN_SESSION_COOKIE}=`)), /HttpOnly; Secure; SameSite=Strict/);
     assert.ok(cookies.some((value) => value.startsWith(`${ADMIN_CHALLENGE_COOKIE}=`) && value.includes('Max-Age=0')));
 
-    const statusResponse = await adminSession({
-      httpMethod: 'GET',
-      headers: { cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}` }
-    });
-    assert.equal(JSON.parse(statusResponse.body).authenticated, true);
+    const statusResponse = await adminSession(netlifyRequest(
+      'GET',
+      { cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}` }
+    ));
+    assert.equal((await statusResponse.json()).authenticated, true);
 
-    const csrfResponse = await logoutAdmin({
-      httpMethod: 'POST',
-      headers: {
+    const csrfResponse = await logoutAdmin(netlifyRequest(
+      'POST',
+      {
         origin: 'https://attacker.example',
-        host: 'primelinedist.com',
         cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}`
       },
-      body: '{}'
-    });
-    assert.equal(csrfResponse.statusCode, 403);
+      '{}'
+    ));
+    assert.equal(csrfResponse.status, 403);
     assert.equal(blobs.has(sessionKey), true);
 
-    const logoutResponse = await logoutAdmin({
-      httpMethod: 'POST',
-      headers: { ...ORIGIN_HEADERS, cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}` },
-      body: '{}'
-    });
-    assert.equal(logoutResponse.statusCode, 200);
+    const logoutResponse = await logoutAdmin(netlifyRequest(
+      'POST',
+      { cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}` },
+      '{}'
+    ));
+    assert.equal(logoutResponse.status, 200);
     assert.equal(blobs.has(sessionKey), false);
-    assert.ok(logoutResponse.multiValueHeaders['Set-Cookie'].some((value) =>
+    assert.ok(responseCookies(logoutResponse).some((value) =>
       value.startsWith(`${ADMIN_SESSION_COOKIE}=`) && value.includes('Max-Age=0')
     ));
 
-    const revokedStatus = await adminSession({
-      httpMethod: 'GET',
-      headers: { cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}` }
-    });
-    assert.equal(JSON.parse(revokedStatus.body).authenticated, false);
+    const revokedStatus = await adminSession(netlifyRequest(
+      'GET',
+      { cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}` }
+    ));
+    assert.equal((await revokedStatus.json()).authenticated, false);
   });
 });
 
@@ -209,13 +209,13 @@ test('Admin session endpoint rejects expired sessions and removes them from Blob
       expiresAt: Date.now() - 1
     }));
 
-    const result = await adminSession({
-      httpMethod: 'GET',
-      headers: { cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}` }
-    });
+    const result = await adminSession(netlifyRequest(
+      'GET',
+      { cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}` }
+    ));
 
-    assert.equal(result.statusCode, 200);
-    assert.equal(JSON.parse(result.body).authenticated, false);
+    assert.equal(result.status, 200);
+    assert.equal((await result.json()).authenticated, false);
     assert.equal(blobs.has(key), false);
   });
 });
@@ -223,17 +223,18 @@ test('Admin session endpoint rejects expired sessions and removes them from Blob
 test('unauthorized email receives the generic response without generating or sending an OTP', async () => {
   await withMockBlobs(async ({ requests }) => {
     let sendCount = 0;
-    const requestAdminCode = createRequestAdminCodeHandler(async () => {
+    const requestAdminCode = adaptNetlifyHandler(createRequestAdminCodeHandler(async () => {
       sendCount += 1;
       return true;
-    });
-    const result = await requestAdminCode({
-      ...requestCodeEvent(),
-      body: JSON.stringify({ email: 'not-authorized@example.com' })
-    });
+    }));
+    const result = await requestAdminCode(netlifyRequest(
+      'POST',
+      {},
+      JSON.stringify({ email: 'not-authorized@example.com' })
+    ));
 
-    assert.equal(result.statusCode, 202);
-    assert.match(result.body, /If this address is authorized/);
+    assert.equal(result.status, 202);
+    assert.match(await result.text(), /If this address is authorized/);
     assert.equal(sendCount, 0);
     assert.equal(requests.length, 0);
   });
@@ -255,15 +256,12 @@ test('invalid and expired OTP challenges are rejected', async () => {
     }));
     blobs.set(activeKey, invalidChallengeId);
 
-    const invalidResult = await verifyAdminCode({
-      httpMethod: 'POST',
-      headers: {
-        ...ORIGIN_HEADERS,
-        cookie: `${ADMIN_CHALLENGE_COOKIE}=${invalidChallengeId}`
-      },
-      body: JSON.stringify({ code: '654321' })
-    });
-    assert.equal(invalidResult.statusCode, 401);
+    const invalidResult = await verifyAdminCode(netlifyRequest(
+      'POST',
+      { cookie: `${ADMIN_CHALLENGE_COOKIE}=${invalidChallengeId}` },
+      JSON.stringify({ code: '654321' })
+    ));
+    assert.equal(invalidResult.status, 401);
     assert.equal(JSON.parse(blobs.get(invalidChallengeKey)).attempts, 1);
 
     const expiredChallengeId = 'b7f51c7a-18da-4a3e-b353-05822c094c61';
@@ -278,15 +276,28 @@ test('invalid and expired OTP challenges are rejected', async () => {
     }));
     blobs.set(activeKey, expiredChallengeId);
 
-    const expiredResult = await verifyAdminCode({
-      httpMethod: 'POST',
-      headers: {
-        ...ORIGIN_HEADERS,
-        cookie: `${ADMIN_CHALLENGE_COOKIE}=${expiredChallengeId}`
-      },
-      body: JSON.stringify({ code: '123456' })
-    });
-    assert.equal(expiredResult.statusCode, 401);
+    const expiredResult = await verifyAdminCode(netlifyRequest(
+      'POST',
+      { cookie: `${ADMIN_CHALLENGE_COOKIE}=${expiredChallengeId}` },
+      JSON.stringify({ code: '123456' })
+    ));
+    assert.equal(expiredResult.status, 401);
     assert.equal(blobs.has(expiredChallengeKey), false);
+  });
+});
+
+test('contact routing Admin endpoint uses the modern runtime Blobs context before authorization checks', async () => {
+  await withMockBlobs(async ({ requests }) => {
+    const sessionId = 'c0d04f42-8d94-4a56-94df-7d7e3fd45852';
+    const result = await contactRoutingAdmin(netlifyRequest(
+      'GET',
+      { cookie: `${ADMIN_SESSION_COOKIE}=${sessionId}` }
+    ));
+
+    assert.equal(result.status, 401);
+    assert.ok(requests.some((request) => request.url.includes('prime-line-admin-auth')));
+    assert.ok(requests
+      .filter((request) => new URL(request.url).hostname === 'blobs.test')
+      .every((request) => request.hasAuthorization));
   });
 });

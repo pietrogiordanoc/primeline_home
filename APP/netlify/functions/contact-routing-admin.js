@@ -1,3 +1,4 @@
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import {
   jsonResponse,
   parseJsonBody,
@@ -12,7 +13,7 @@ import {
 
 const MAX_CONFIG_BYTES = 1024 * 1024;
 
-export const handler = async (event) => {
+const handler = async (event) => {
   if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT') {
     return jsonResponse({ error: 'Method not allowed.' }, 405);
   }
@@ -61,3 +62,5 @@ export const handler = async (event) => {
     return jsonResponse({ error: 'Contact routing configuration could not be saved.' }, 503);
   }
 };
+
+export default adaptNetlifyHandler(handler);

@@ -1,4 +1,5 @@
 import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import {
   ADMIN_CHALLENGE_COOKIE,
   ADMIN_EMAIL,
@@ -28,7 +29,7 @@ const matchesHash = (submitted, expected) => {
   return submittedBuffer.length === expectedBuffer.length && timingSafeEqual(submittedBuffer, expectedBuffer);
 };
 
-export const handler = async (event) => {
+const handler = async (event) => {
   if (event.httpMethod !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405);
   if (!isSameOrigin(event)) return jsonResponse({ error: 'Request could not be completed.' }, 403);
 
@@ -103,3 +104,5 @@ export const handler = async (event) => {
     return jsonResponse({ error: 'Verification is temporarily unavailable.' }, 503);
   }
 };
+
+export default adaptNetlifyHandler(handler);

@@ -1,3 +1,4 @@
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import {
   ADMIN_SESSION_COOKIE,
   clearAdminCookies,
@@ -7,7 +8,7 @@ import {
   readCookie
 } from '../shared/admin-auth.js';
 
-export const handler = async (event) => {
+const handler = async (event) => {
   if (event.httpMethod !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405);
   if (!isSameOrigin(event)) return jsonResponse({ error: 'Request could not be completed.' }, 403);
 
@@ -21,3 +22,5 @@ export const handler = async (event) => {
     return jsonResponse({ error: 'Sign out is temporarily unavailable.' }, 503);
   }
 };
+
+export default adaptNetlifyHandler(handler);

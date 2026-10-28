@@ -1,3 +1,4 @@
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import {
   ADMIN_EMAIL,
   clearAdminCookies,
@@ -5,7 +6,7 @@ import {
   jsonResponse
 } from '../shared/admin-auth.js';
 
-export const handler = async (event) => {
+const handler = async (event) => {
   if (event.httpMethod !== 'GET') return jsonResponse({ error: 'Method not allowed.' }, 405);
 
   try {
@@ -17,3 +18,5 @@ export const handler = async (event) => {
     return jsonResponse({ error: 'Session status is temporarily unavailable.' }, 503);
   }
 };
+
+export default adaptNetlifyHandler(handler);
