@@ -116,7 +116,7 @@ img[src*="images/spots/"], .cheese-card img, .cv-hero img, .cv-intro-photo img, 
   border: 1px solid currentColor;
   transition: background .35s var(--ease), color .35s var(--ease);
 }
-.btn--dark{ color: var(--pl-cream); }
+.btn--dark{ background: var(--pl-navy); color: var(--pl-cream); }
 .btn--dark:hover{ background: var(--pl-cream); color: var(--pl-navy); }
 .btn--light{ color: var(--pl-navy); }
 .btn--light:hover{ background: var(--pl-navy); color: var(--pl-cream); }

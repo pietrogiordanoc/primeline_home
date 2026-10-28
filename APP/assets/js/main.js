@@ -15,7 +15,19 @@ document.addEventListener('DOMContentLoaded', () => {
     spotLightboxImage.removeAttribute('src');
   };
   document.addEventListener('click', (e) => {
-    if (e.target.closest('.banner-slider, .slider-arrow')) return;
+    const trioSection = e.target.closest('section[class*="-trio"]');
+    const trioCard = e.target.closest('article, a');
+    if (trioSection && trioCard && trioSection.contains(trioCard)) {
+      e.preventDefault();
+      const image = trioCard.querySelector('img');
+      if (!image) return;
+      spotLightboxImage.src = image.currentSrc || image.src;
+      spotLightboxImage.alt = image.alt;
+      spotLightbox.classList.add('is-open');
+      spotLightbox.setAttribute('aria-hidden', 'false');
+      return;
+    }
+    if (e.target.closest('.banner-slider, .slider-arrow, .catalog-choice-card, .brand-logo')) return;
     const image = e.target.closest('img');
     if (!image) return;
     if (e.target.closest('a')) e.preventDefault();
@@ -86,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const catalogPanel = document.querySelector('.catalog-panel');
   const catalogPanelClose = document.querySelector('.catalog-panel-close');
   const catalogTriggers = document.querySelectorAll('.catalog-trigger');
+  const catalogChooser = document.querySelector('.catalog-chooser');
+  const catalogChooserTriggers = document.querySelectorAll('.catalog-chooser-trigger');
   const masterlinkPanel = document.querySelector('.masterlink-panel');
   const masterlinkPanelClose = document.querySelector('.masterlink-panel-close');
   const masterlinkTriggers = document.querySelectorAll('.masterlink-trigger');
@@ -123,7 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
   };
 
+  const setCatalogChooser = (isOpen) => {
+    catalogPanel?.classList.toggle('is-chooser', isOpen);
+    catalogChooser?.setAttribute('aria-hidden', String(!isOpen));
+    catalogPanel?.querySelector('.catalog-panel-inner')?.setAttribute('aria-hidden', String(isOpen));
+  };
+
   const closeCatalog = (onClosed) => {
+    setCatalogChooser(false);
     catalogPanel?.classList.remove('is-open');
     catalogPanel?.setAttribute('aria-hidden', 'true');
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
@@ -360,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       };
       if (catalogPanel.classList.contains('is-open')) {
+        setCatalogChooser(false);
         catalogPanel.querySelector('.catalog-login')?.setAttribute('data-destination', destination || '');
         catalogPanel.querySelector('.catalog-register')?.setAttribute('data-destination', destination || '');
       } else {
@@ -377,6 +399,25 @@ document.addEventListener('DOMContentLoaded', () => {
     catalogRegister?.addEventListener('mouseleave', hideCatalogNotice);
     catalogRegister?.addEventListener('focus', showCatalogNotice);
     catalogRegister?.addEventListener('blur', hideCatalogNotice);
+  }
+
+  if (catalogPanel && catalogChooser && catalogChooserTriggers.length) {
+    const catalogWebChoice = catalogChooser.querySelector('.catalog-choice-web');
+    if (catalogWebChoice) {
+      catalogChooserTriggers.forEach((trigger) => {
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (catalogPanel.classList.contains('is-open') && catalogPanel.classList.contains('is-chooser')) {
+            closeCatalog();
+          } else if (catalogPanel.classList.contains('is-open')) {
+            setCatalogChooser(true);
+          } else {
+            setCatalogChooser(true);
+            catalogWebChoice.click();
+          }
+        });
+      });
+    }
   }
 
   const setupEmailCodeAccess = (panel, resourceName) => {
@@ -779,16 +820,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </section>
           <section class="dg-close">
-            <div class="dg-close-media reveal" role="img" aria-label="Photography pending: Elegant restaurant dessert scene featuring gelato and traditional desserts (desserts-gelato-footer)">
-              <span>Photography to be provided<br><strong>images/spots/desserts-gelato-footer.jpg</strong></span>
-            </div>
+            <div class="dg-close-media reveal"></div>
             <div class="dg-close-copy reveal">
               <span class="eyebrow dg-eyebrow--light">The Art of Sweet Moments</span>
               <h2>Every Sweet Moment, Made Exceptional</h2>
               <p>Explore our selection of desserts and gelato and discover distinctive sweet specialties for memorable culinary experiences.</p>
-              <div class="dg-close-actions">
-                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
-              </div>
             </div>
           </section>
         </div>`;
@@ -883,16 +919,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </section>
           <section class="fs-close">
-            <div class="fs-close-media reveal" role="img" aria-label="Photography pending: Authentic Mediterranean seafood dining scene with beautifully prepared specialties (seafood-footer)">
-              <span>Photography to be provided<br><strong>images/spots/seafood-footer.jpg</strong></span>
-            </div>
+            <div class="fs-close-media reveal"></div>
             <div class="fs-close-copy reveal">
               <span class="eyebrow fs-eyebrow--light">The Mediterranean Experience</span>
               <h2>The Sea, Beautifully Served</h2>
               <p>Explore our selection of fish and seafood specialties and discover distinctive ingredients for inspired culinary creations.</p>
-              <div class="fs-close-actions">
-                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
-              </div>
             </div>
           </section>
         </div>`;
@@ -922,7 +953,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Exceptional baking and pasta-making begin with an understanding of flour. Different milling styles and flour characteristics influence the texture, structure, and performance of dough across traditional culinary preparations.</p>
               <p>From pizza and artisanal breads to fresh pasta and specialty creations, selecting the right flour is an essential part of the craft.</p>
               <p class="frg-detail">Specific flour types, protein levels, and milling details will be added only after catalog verification.</p>
-              <a class="catalog-trigger" href="#">Explore Our Flour Selection</a>
             </div>
             <div class="frg-feature-media frg-feature-media--image reveal"><img src="images/spots/flour02.jpg" alt="Artisan flour and dough"></div>
           </section>
@@ -934,7 +964,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Rice has an important place in Italian culinary heritage, especially in the preparation of risotto, where the choice of grain contributes to the texture and character of the finished dish.</p>
               <p>Different rice varieties offer distinctive culinary properties, giving chefs the ability to create preparations ranging from classic regional favorites to contemporary interpretations.</p>
               <p class="frg-detail">Specific varieties will be featured only when confirmed in the current assortment.</p>
-              <a class="catalog-trigger" href="#">Discover Our Rice Selection</a>
             </div>
           </section>
           <section class="frg-feature frg-feature--grains">
@@ -971,16 +1000,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </section>
           <section class="frg-close">
-            <div class="frg-close-media reveal" role="img" aria-label="Photography pending: Italian culinary scene with artisan bread, risotto, and natural grain ingredients (flour-rice-grains-footer)">
-              <span>Photography to be provided<br><strong>images/spots/flour-rice-grains-footer.jpg</strong></span>
-            </div>
+            <div class="frg-close-media reveal"></div>
             <div class="frg-close-copy reveal">
               <span class="eyebrow frg-eyebrow--light">The Foundation of Exceptional Cuisine</span>
               <h2>Every Great Creation Starts Here</h2>
               <p>Explore our selection of premium flours, specialty rice, and traditional grains, chosen for exceptional culinary possibilities.</p>
-              <div class="frg-close-actions">
-                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
-              </div>
             </div>
           </section>
         </div>`;
@@ -1092,16 +1116,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </section>
           <section class="pa-close">
-            <div class="pa-close-media reveal" role="img" aria-label="Photography pending: Authentic Italian restaurant table with a beautifully presented pasta dish (italian-pasta-footer)">
-              <span>Photography to be provided<br><strong>images/spots/italian-pasta-footer.jpg</strong></span>
-            </div>
+            <div class="pa-close-media reveal"></div>
             <div class="pa-close-copy reveal">
               <span class="eyebrow pa-eyebrow--light">The Italian Culinary Tradition</span>
               <h2>A Timeless Italian Tradition, Beautifully Served</h2>
               <p>Explore our selection of authentic Italian pasta and discover exceptional possibilities for inspired culinary creations.</p>
-              <div class="pa-close-actions">
-                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
-              </div>
             </div>
           </section>
         </div>`;
@@ -1303,10 +1322,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         ];
         const verifiedCategories = [];
-        const imagePlaceholder = (slot, description) => `
-          <div class="vc-media-pending reveal" role="img" aria-label="Photography pending: ${description} (${slot})">
-            <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
-          </div>`;
         return `
         <div class="vc-page">
           <section class="vc-title reveal">
@@ -1381,9 +1396,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="eyebrow vc-eyebrow--light">An Italian Legacy</span>
               <h2>A Tradition Worth Savoring</h2>
               <p>Explore the distinctive world of balsamic vinegars and specialty condiments selected by Prime Line.</p>
-              <div class="vc-close-actions">
-                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
-              </div>
             </div>
           </section>
         </div>`;
@@ -1436,9 +1448,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="eyebrow bl-eyebrow--light">From the Earth to the Table</span>
               <h2>Simple Ingredients. Remarkable Possibilities.</h2>
               <p>Explore our selection of beans and legumes and discover essential ingredients for inspired professional cooking.</p>
-              <div class="bl-close-actions">
-                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
-              </div>
             </div>
           </section>
         </div>`;
@@ -1465,10 +1474,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         ];
         const verifiedOrigins = [];
-        const imagePlaceholder = (slot, description) => `
-          <div class="oo-media-pending reveal" role="img" aria-label="Photography pending: ${description} (${slot})">
-            <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
-          </div>`;
         return `
         <div class="oo-page">
           <section class="oo-title reveal">
@@ -1539,19 +1544,12 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="eyebrow oo-eyebrow--light">The Mediterranean Tradition</span>
               <h2>The Essence of the Mediterranean Table</h2>
               <p>Explore our carefully selected olive oils and discover distinctive flavors for inspired culinary creations.</p>
-              <div class="oo-close-actions">
-                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
-              </div>
             </div>
           </section>
         </div>`;
       },
       coffee_and_tea: () => {
         const verifiedClassifications = [];
-        const imagePlaceholder = (slot, description) => `
-          <div class="coffee-media-pending reveal" role="img" aria-label="Photography pending: ${description} (${slot})">
-            <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
-          </div>`;
         return `
         <div class="coffee-page">
           <section class="coffee-title reveal">
@@ -1574,7 +1572,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <h2>The Soul of Italian Espresso</h2>
               <p>Few beverages capture the spirit of Italian daily life like espresso. Its concentrated character, rich aroma, and distinctive preparation have made it an enduring symbol of Italian coffee culture.</p>
               <p>Our coffee presentation celebrates this tradition and the important role of a memorable espresso experience in cafés, restaurants, and hospitality.</p>
-              <a class="catalog-trigger" href="#">Discover Our Coffee Selection</a>
             </div>
             <div class="coffee-photo reveal"><img src="images/spots/coffee02.jpg" alt="Italian espresso prepared for a professional café"></div>
           </section>
@@ -1585,7 +1582,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <h2>A Tradition of Balance &amp; Discovery</h2>
               <p>Tea offers a world of distinctive aromas, delicate nuances, and preparation rituals. From familiar classics to expressive specialty infusions, each style presents its own character and experience.</p>
               <p>Elegant in its simplicity and versatile in service, tea remains an important part of hospitality and the enjoyment of everyday moments.</p>
-              <a class="catalog-trigger" href="#">Explore Our Tea Selection</a>
             </div>
           </section>
           <section class="coffee-origins">
@@ -1611,14 +1607,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </section>
           <section class="coffee-close">
-            ${imagePlaceholder('coffee-tea-footer', 'Espresso and tea service on a warm café table')}
             <div class="coffee-close-copy reveal">
               <span class="eyebrow coffee-eyebrow--light">The Art of Every Cup</span>
               <h2>Every Cup, an Exceptional Experience</h2>
               <p>Explore the coffee and tea selection from Prime Line and discover distinctive beverages for inspired hospitality.</p>
-              <div class="coffee-close-actions">
-                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
-              </div>
             </div>
           </section>
         </div>`;
@@ -1642,10 +1634,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         ];
         const verifiedStyles = [];
-        const imagePlaceholder = (slot, description) => `
-          <div class="cs-media-pending reveal" role="img" aria-label="Photography pending: ${description} (${slot})">
-            <span>Photography to be provided<br><strong>images/spots/${slot}.jpg</strong></span>
-          </div>`;
         return `
         <div class="cs-page">
           <section class="cs-title reveal">
@@ -1676,7 +1664,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${collections.map(({ title, image, description }) => `
             <article class="cs-card reveal">
               <div class="cs-card-media">
-                <img src="images/spots/${image}" alt="">
+                <img src="images/spots/${image}" alt="${title}">
               </div>
               <div class="cs-card-copy"><h3>${title}</h3><p>${description}</p></div>
             </article>`).join('')}
@@ -1721,9 +1709,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="eyebrow cs-eyebrow--light">The Art of Exceptional Flavor</span>
               <h2>Every Great Dish Begins with Flavor</h2>
               <p>Explore our selection of sauces, condiments, and culinary specialties, thoughtfully selected for inspired cooking.</p>
-              <div class="cs-close-actions">
-                <a class="btn btn--light catalog-trigger" href="#">Explore Our Catalog</a>
-              </div>
             </div>
           </section>
         </div>`;

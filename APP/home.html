@@ -5,9 +5,10 @@
 <title>Prime Line - Importers of Selected Specialty Foods (V2)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Prime Line - Importers of Selected Specialty Foods.">
-<link rel="stylesheet" href="assets/css/base.css">
-<link rel="stylesheet" href="assets/css/home.css?v=20261028-3">
-<link rel="stylesheet" href="assets/css/category-vegetables.css">
+<link rel="icon" type="image/gif" href="images/favicon.gif">
+<link rel="stylesheet" href="assets/css/base.css?v=20261028-1">
+<link rel="stylesheet" href="assets/css/home.css?v=20261028-9">
+<link rel="stylesheet" href="assets/css/category-vegetables.css?v=20261028-1">
 <link rel="stylesheet" href="assets/css/cheese.css">
 <link rel="stylesheet" href="assets/css/cured-meats.css?v=20261016-1">
 <link rel="stylesheet" href="assets/css/vinegars.css?v=20261015-2">
@@ -31,7 +32,7 @@
     <button type="button" class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="siteMenu">
       <svg class="menu-dots" viewBox="0 0 24 24"><circle cx="4" cy="4" r="1.8"/><circle cx="12" cy="4" r="1.8"/><circle cx="20" cy="4" r="1.8"/><circle cx="4" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="20" cy="12" r="1.8"/><circle cx="4" cy="20" r="1.8"/><circle cx="12" cy="20" r="1.8"/><circle cx="20" cy="20" r="1.8"/></svg>
     </button>
-    <a href="index.html" class="brand-logo">
+    <a href="home.html" class="brand-logo">
       <img src="images/Logo1500.png" alt="Prime Line - Importers of Selected Specialty Foods">
     </a>
   </div>
@@ -45,14 +46,13 @@
       <li><a href="home.html">Home</a></li>
       <li><a href="#" class="contact-trigger">Contact Us</a></li>
       <li><a href="#" class="about-trigger">About Us</a></li>
-      <li><a href="#" class="catalog-trigger">Catalog Web</a></li>
-      <li><a href="#" class="catalog-pdf-trigger">Catalog PDF</a></li>
+      <li><a href="#" class="catalog-chooser-trigger">Catalog</a></li>
       <li><a href="#">Brochures</a></li>
       <li><a href="#" class="order-entry-trigger">Order Entry</a></li>
       <li><a href="#" class="careers-trigger">Careers</a></li>
       <li><a href="https://www.primelinecoffee.com/" target="_blank" rel="noopener noreferrer">Coffee Division</a></li>
       <li><a href="#" class="account-forms-trigger">New Account Setup Forms</a></li>
-      <li><a href="#" class="masterlink-trigger">Masterlink</a></li>
+      <li hidden><a href="#" class="masterlink-trigger">Masterlink</a></li>
     </ul>
     <div class="contact-info">
       <h3>Questions or Comments?</h3>
@@ -142,6 +142,28 @@
 
   <aside class="catalog-panel" id="catalogPanel" aria-hidden="true">
     <button type="button" class="catalog-panel-close" aria-label="Close catalog access">&times;</button>
+    <div class="catalog-chooser" aria-hidden="true">
+      <span class="eyebrow">Prime Line Catalogs</span>
+      <h2>Choose a catalog</h2>
+      <div class="catalog-choice-grid">
+        <a href="#" class="catalog-choice-card catalog-choice-web catalog-trigger">
+          <img src="images/spots/catalogpreview.png" alt="Preview of the online product catalog">
+          <span class="catalog-choice-copy">
+            <strong>Catalog Web</strong>
+            <span>Browse our full selection of specialty foods and ingredients.</span>
+            <span class="catalog-choice-link">Explore Catalog Web</span>
+          </span>
+        </a>
+        <a href="#" class="catalog-choice-card catalog-choice-pdf catalog-pdf-trigger">
+          <img src="images/spots/book-catalog-thumb.png" alt="Preview of the Prime Line product catalog book">
+          <span class="catalog-choice-copy">
+            <strong>Catalog PDF</strong>
+            <span>View the product catalog as a digital book.</span>
+            <span class="catalog-choice-link">Explore Catalog PDF</span>
+          </span>
+        </a>
+      </div>
+    </div>
     <div class="catalog-panel-inner">
       <img class="catalog-preview" src="images/spots/catalogpreview.png" alt="Preview of the Prime Line online product catalog">
       <div class="catalog-content">
@@ -336,11 +358,9 @@
     <div class="footer-col">
       <h4>CATALOG</h4>
       <ul>
-        <li><a href="#">Products</a></li>
-        <li><a href="#">Register</a></li>
-        <li><a href="#">Log In</a></li>
+        <li><a href="https://catalog.primelinedist.com/" target="_blank" rel="noopener noreferrer">Products</a></li>
+        <li><a href="https://catalog.primelinedist.com/?register=true" target="_blank" rel="noopener noreferrer">Register</a></li>
       </ul>
-      <a href="#" class="footer-highlight">NEC CAT</a>
     </div>
     <div class="footer-col">
       <h4>ORDER ENTRY</h4>
@@ -370,6 +390,6 @@
   </section>
 </div>
 
-<script src="assets/js/main.js?v=20261028-3"></script>
+<script src="assets/js/main.js?v=20261028-14"></script>
 </body>
 </html>
