@@ -302,9 +302,62 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeContact();
     });
-    contactPanel.querySelector('.contact-form')?.addEventListener('submit', (e) => {
+    const contactForm = contactPanel.querySelector('.contact-form');
+    const contactFormStatus = contactForm?.querySelector('.contact-form-status');
+    const contactSubmitButton = contactForm?.querySelector('button[type="submit"]');
+    contactForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      closeContact();
+      if (contactForm.dataset.submitting === 'true') return;
+      if (!contactForm.reportValidity()) return;
+
+      contactForm.dataset.submitting = 'true';
+      contactForm.setAttribute('aria-busy', 'true');
+      if (contactSubmitButton) {
+        contactSubmitButton.disabled = true;
+        contactSubmitButton.textContent = 'Sending...';
+      }
+      if (contactFormStatus) {
+        contactFormStatus.hidden = true;
+        contactFormStatus.textContent = '';
+        contactFormStatus.classList.remove('is-success', 'is-error');
+      }
+
+      try {
+        const response = await fetch('/api/contact/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(new FormData(contactForm).entries()))
+        });
+        const result = await response.json();
+        if (!response.ok || result.sent !== true) {
+          if (contactFormStatus) {
+            contactFormStatus.textContent = result.error || 'Your message could not be sent. Please try again.';
+            contactFormStatus.classList.add('is-error');
+            contactFormStatus.hidden = false;
+          }
+          return;
+        }
+
+        contactForm.reset();
+        if (contactFormStatus) {
+          contactFormStatus.textContent = result.message;
+          contactFormStatus.classList.add('is-success');
+          contactFormStatus.hidden = false;
+        }
+      } catch {
+        if (contactFormStatus) {
+          contactFormStatus.textContent = 'Your message could not be sent. Please check your connection and try again.';
+          contactFormStatus.classList.add('is-error');
+          contactFormStatus.hidden = false;
+        }
+      } finally {
+        delete contactForm.dataset.submitting;
+        contactForm.removeAttribute('aria-busy');
+        if (contactSubmitButton) {
+          contactSubmitButton.disabled = false;
+          contactSubmitButton.textContent = 'Send Message';
+        }
+      }
     });
   }
 

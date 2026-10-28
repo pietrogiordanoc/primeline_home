@@ -12,3 +12,13 @@
   from = "/api/access/verify-code"
   to = "/.netlify/functions/verify-code"
   status = 200
+
+[[redirects]]
+  from = "/api/contact/send"
+  to = "/.netlify/functions/send-contact"
+  status = 200
+
+[[redirects]]
+  from = "/api/careers/submit-application"
+  to = "/.netlify/functions/submit-application"
+  status = 200

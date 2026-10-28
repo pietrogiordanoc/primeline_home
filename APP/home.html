@@ -7,7 +7,7 @@
 <meta name="description" content="Prime Line - Importers of Selected Specialty Foods.">
 <link rel="icon" type="image/gif" href="images/favicon.gif">
 <link rel="stylesheet" href="assets/css/base.css?v=20261028-1">
-<link rel="stylesheet" href="assets/css/home.css?v=20261028-9">
+<link rel="stylesheet" href="assets/css/home.css?v=20261028-10">
 <link rel="stylesheet" href="assets/css/category-vegetables.css?v=20261028-1">
 <link rel="stylesheet" href="assets/css/cheese.css">
 <link rel="stylesheet" href="assets/css/cured-meats.css?v=20261016-1">
@@ -67,12 +67,16 @@
       <span class="eyebrow">Get In Touch</span>
       <h2>Let's Talk</h2>
       <p>Tell us a bit about your business and our team will follow up shortly.</p>
-      <form class="contact-form" onsubmit="return false;">
-        <label>Name<input type="text" name="name" autocomplete="name" required></label>
-        <label>Email<input type="email" name="email" autocomplete="email" required></label>
-        <label>Phone<input type="tel" name="phone" autocomplete="tel"></label>
-        <label>Message<textarea name="message" rows="4" required></textarea></label>
+      <form class="contact-form">
+        <div class="contact-form-honeypot" aria-hidden="true">
+          <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <label>Name<input type="text" name="name" autocomplete="name" maxlength="120" required></label>
+        <label>Email<input type="email" name="email" autocomplete="email" maxlength="254" required></label>
+        <label>Phone<input type="tel" name="phone" autocomplete="tel" maxlength="50"></label>
+        <label>Message<textarea name="message" rows="4" maxlength="5000" required></textarea></label>
         <button type="submit" class="btn btn--dark">Send Message</button>
+        <p class="contact-form-status" role="status" aria-live="polite" hidden></p>
       </form>
     </div>
   </aside>
@@ -390,6 +394,6 @@
   </section>
 </div>
 
-<script src="assets/js/main.js?v=20261028-14"></script>
+<script src="assets/js/main.js?v=20261028-15"></script>
 </body>
 </html>

@@ -307,6 +307,21 @@
   align-self: flex-start;
   padding: 15px 34px;
 }
+.contact-form button:disabled{ opacity: .65; cursor: wait; }
+.contact-form-honeypot{
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.contact-form-status{
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.contact-form-status.is-success{ color: #286347; }
+.contact-form-status.is-error{ color: #a33a32; }
 
 /* ---------- Locations panel - third curtain, revealed alongside the contact form ---------- */
 .locations-panel{
