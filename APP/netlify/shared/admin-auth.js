@@ -15,9 +15,7 @@ export const getAdminStore = async () => {
   const { getStore } = await import('@netlify/blobs');
   return getStore({
     name: 'prime-line-admin-auth',
-    consistency: 'strong',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_AUTH_TOKEN
+    consistency: 'strong'
   });
 };
 

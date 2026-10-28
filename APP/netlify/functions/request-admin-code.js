@@ -77,7 +77,7 @@ const sendCode = async (code) => {
   return true;
 };
 
-export const handler = async (event) => {
+export const createRequestAdminCodeHandler = (sendVerificationCode = sendCode) => async (event) => {
   if (event.httpMethod !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405);
   if (!isSameOrigin(event)) return jsonResponse({ error: 'Request could not be completed.' }, 403);
 
@@ -117,7 +117,7 @@ export const handler = async (event) => {
     });
     await store.set(activeChallengeKey, challengeId);
 
-    if (!(await sendCode(code))) {
+    if (!(await sendVerificationCode(code))) {
       await store.delete(`admin:challenge:${challengeId}`);
       await store.delete(activeChallengeKey);
       return genericResponse(event);
@@ -129,3 +129,5 @@ export const handler = async (event) => {
     return genericResponse(event);
   }
 };
+
+export const handler = createRequestAdminCodeHandler();
