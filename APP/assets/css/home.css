@@ -285,7 +285,8 @@
   color: var(--pl-ink-soft);
 }
 .contact-form input,
-.contact-form textarea{
+.contact-form textarea,
+.contact-form select{
   font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 400;
@@ -298,10 +299,14 @@
   transition: border-color .25s var(--ease);
 }
 .contact-form input:focus,
-.contact-form textarea:focus{
+.contact-form textarea:focus,
+.contact-form select:focus{
   outline: none;
   border-color: var(--pl-navy);
 }
+.contact-form select{ cursor:pointer; }
+.contact-form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.contact-form-hint{ font-size:10px; font-weight:400; letter-spacing:normal; line-height:1.5; text-transform:none; }
 .contact-form button{
   margin-top: 10px;
   align-self: flex-start;
@@ -1040,6 +1045,8 @@
 }
 
 @media (max-width: 640px){
+  .contact-form-grid{ grid-template-columns:1fr; }
+  .contact-panel-inner{ padding-right:28px; padding-left:28px; }
   .clients-head h2{ white-space: normal; }
   .clients-grid{ gap: 18px; }
   .clients-logo{ width: 120px; height: 68px; }

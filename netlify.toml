@@ -22,3 +22,28 @@
   from = "/api/careers/submit-application"
   to = "/.netlify/functions/submit-application"
   status = 200
+
+[[redirects]]
+  from = "/api/admin/request-code"
+  to = "/.netlify/functions/request-admin-code"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/verify-code"
+  to = "/.netlify/functions/verify-admin-code"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/session"
+  to = "/.netlify/functions/admin-session"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/logout"
+  to = "/.netlify/functions/logout-admin"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/contact-routing"
+  to = "/.netlify/functions/contact-routing-admin"
+  status = 200

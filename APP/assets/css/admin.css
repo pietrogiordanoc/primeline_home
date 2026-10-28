@@ -1,0 +1,72 @@
+.admin-page{ min-height:100vh; background:var(--pl-cream); color:var(--pl-ink); }
+.admin-header{ display:flex; align-items:center; justify-content:space-between; padding:22px var(--gutter); background:var(--pl-navy-deep); color:#fff; }
+.admin-brand img{ width:150px; filter:brightness(0) invert(1); }
+.admin-header .eyebrow{ color:var(--pl-gold-soft); }
+.admin-main{ width:min(100%,1040px); margin:0 auto; padding:clamp(42px,8vw,92px) var(--gutter); }
+.admin-dashboard[hidden],.admin-auth-form[hidden],.admin-config[hidden]{ display:none; }
+.admin-dashboard-heading{ display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:30px; }
+.admin-dashboard h1{ margin-top:8px; color:var(--pl-navy); font-size:clamp(34px,6vw,52px); }
+.admin-module{ display:flex; align-items:center; justify-content:space-between; gap:24px; padding:28px 30px; border-top:3px solid var(--pl-gold); background:#fff; box-shadow:0 12px 36px rgba(13,24,48,.06); }
+.admin-module h2{ margin-top:6px; color:var(--pl-navy); font-size:clamp(22px,4vw,30px); }
+.admin-module p,.admin-config-block>p,.admin-config-heading p{ margin-top:8px; color:var(--pl-ink-soft); font-size:13px; line-height:1.55; }
+.admin-coming-soon{ padding:7px 12px; background:var(--pl-cream-dark); color:var(--pl-navy); font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
+.admin-config{ display:grid; gap:24px; margin-top:24px; }
+.admin-config-heading{ display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.admin-config-heading h2{ margin-top:5px; color:var(--pl-navy); font-size:28px; }
+.admin-config-block{ padding:26px 30px; background:#fff; box-shadow:0 12px 36px rgba(13,24,48,.06); }
+.admin-config-block h3{ color:var(--pl-navy); font-size:20px; }
+.admin-config-block h4{ margin:0; color:var(--pl-navy); font-size:16px; }
+.admin-recipient-list,.admin-rule-list{ display:grid; }
+.admin-recipient-row,.admin-rule-row{ display:flex; align-items:center; justify-content:space-between; gap:18px; padding:16px 0; border-top:1px solid var(--pl-line); }
+.admin-recipient-email{ min-width:0; overflow-wrap:anywhere; color:var(--pl-navy); font-size:14px; }
+.admin-toggle-label{ display:flex; align-items:center; gap:7px; color:var(--pl-ink-soft); font-size:11px; white-space:nowrap; }
+.admin-toggle-label input{ accent-color:var(--pl-navy); }
+.admin-inline-form,.admin-rule-form{ display:grid; gap:10px; margin-top:18px; }
+.admin-inline-form>label,.admin-rule-form>label{ color:var(--pl-ink-soft); font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+.admin-inline-controls{ display:flex; align-items:center; gap:12px; }
+.admin-inline-controls input,.admin-rule-form input,.admin-rule-form select,.admin-rule-form textarea{ width:100%; min-width:0; min-height:44px; padding:10px 12px; border:1px solid var(--pl-line); background:#fff; color:var(--pl-ink); font:inherit; }
+.admin-rule-form textarea{ resize:vertical; }
+.admin-inline-controls .admin-secondary-button{ flex:0 0 auto; }
+.admin-secondary-button{ min-height:42px; padding:10px 16px; border:1px solid var(--pl-navy); background:#fff; color:var(--pl-navy); font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+.admin-secondary-button:hover{ background:var(--pl-navy); color:#fff; }
+.admin-secondary-button:disabled,.admin-primary-button:disabled{ opacity:.6; cursor:wait; }
+.admin-rule-form{ padding-top:20px; border-top:1px solid var(--pl-line); }
+.admin-rule-form label span{ font-weight:400; letter-spacing:normal; text-transform:none; }
+.admin-rule-row{ align-items:flex-start; }
+.admin-rule-location{ display:grid; gap:6px; min-width:0; }
+.admin-rule-location strong{ color:var(--pl-navy); font-size:13px; }
+.admin-rule-location span{ overflow-wrap:anywhere; color:var(--pl-ink-soft); font-size:12px; line-height:1.5; }
+.admin-rule-actions{ display:flex; align-items:center; gap:12px; flex:0 0 auto; }
+.admin-config-footer{ display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.admin-config-status{ min-height:1.5em; margin:0; color:var(--pl-ink-soft); font-size:12px; }
+.admin-config-status.is-error{ color:#9f372e; }
+.admin-config-footer .admin-primary-button{ min-height:46px; padding:10px 18px; }
+.admin-signout,.admin-text-button{ border:0; background:transparent; color:var(--pl-navy); font-size:12px; font-weight:600; text-decoration:underline; text-underline-offset:4px; }
+.admin-auth{ width:min(440px,calc(100% - 32px)); max-width:none; padding:0; border:0; border-top:4px solid var(--pl-gold); background:#fff; color:var(--pl-ink); box-shadow:0 24px 80px rgba(13,24,48,.25); }
+.admin-auth::backdrop{ background:rgba(13,24,48,.72); backdrop-filter:blur(3px); }
+.admin-auth-brand{ padding:26px 30px; border-bottom:1px solid var(--pl-line); }
+.admin-auth-brand img{ width:156px; }
+.admin-auth-content{ padding:30px; }
+.admin-auth-content h1{ margin:7px 0 8px; color:var(--pl-navy); font-size:34px; }
+.admin-auth-content>p:not(.admin-status){ margin-bottom:24px; color:var(--pl-ink-soft); font-size:13px; }
+.admin-auth-form{ display:grid; gap:12px; }
+.admin-auth-form label{ color:var(--pl-ink-soft); font-size:12px; font-weight:500; }
+.admin-auth-form input{ width:100%; min-height:46px; padding:10px 12px; border:1px solid var(--pl-line); border-radius:0; background:#fff; color:var(--pl-ink); font:inherit; }
+.admin-auth-form input:focus{ outline:2px solid var(--pl-gold); outline-offset:2px; }
+.admin-primary-button{ min-height:46px; margin-top:6px; border:1px solid var(--pl-navy); background:var(--pl-navy); color:#fff; font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
+.admin-primary-button:disabled{ opacity:.65; cursor:wait; }
+.admin-text-button{ justify-self:start; padding:6px 0; }
+.admin-status{ min-height:1.5em; margin-top:16px; color:var(--pl-ink-soft); font-size:12px; }
+.admin-status.is-error{ color:#9f372e; }
+@media(max-width:560px){
+  .admin-header{ gap:16px; }
+  .admin-brand img{ width:126px; }
+  .admin-header .eyebrow{ font-size:9px; text-align:right; }
+  .admin-dashboard-heading{ align-items:flex-start; }
+  .admin-module{ align-items:flex-start; flex-direction:column; padding:22px; }
+  .admin-config-block{ padding:22px; }
+  .admin-recipient-row,.admin-rule-row{ align-items:flex-start; flex-wrap:wrap; }
+  .admin-rule-actions{ flex-wrap:wrap; }
+  .admin-config-footer{ align-items:flex-start; flex-direction:column-reverse; }
+  .admin-auth-content{ padding:24px; }
+}

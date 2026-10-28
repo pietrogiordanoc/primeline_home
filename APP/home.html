@@ -7,7 +7,7 @@
 <meta name="description" content="Prime Line - Importers of Selected Specialty Foods.">
 <link rel="icon" type="image/gif" href="images/favicon.gif">
 <link rel="stylesheet" href="assets/css/base.css?v=20261028-1">
-<link rel="stylesheet" href="assets/css/home.css?v=20261028-10">
+<link rel="stylesheet" href="assets/css/home.css?v=20261028-11">
 <link rel="stylesheet" href="assets/css/category-vegetables.css?v=20261028-1">
 <link rel="stylesheet" href="assets/css/cheese.css">
 <link rel="stylesheet" href="assets/css/cured-meats.css?v=20261016-1">
@@ -69,12 +69,43 @@
       <p>Tell us a bit about your business and our team will follow up shortly.</p>
       <form class="contact-form">
         <div class="contact-form-honeypot" aria-hidden="true">
-          <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+          <label>Leave this field empty<input type="text" name="contact_website" tabindex="-1" autocomplete="off"></label>
         </div>
-        <label>Name<input type="text" name="name" autocomplete="name" maxlength="120" required></label>
-        <label>Email<input type="email" name="email" autocomplete="email" maxlength="254" required></label>
-        <label>Phone<input type="tel" name="phone" autocomplete="tel" maxlength="50"></label>
-        <label>Message<textarea name="message" rows="4" maxlength="5000" required></textarea></label>
+        <label for="contactInquiryType">Inquiry Type
+          <select id="contactInquiryType" name="inquiryType" required>
+            <option value="" selected disabled>Choose an inquiry type</option>
+          </select>
+        </label>
+        <div class="contact-form-grid contact-form-name-row">
+          <label for="contactFirstName">First Name<input id="contactFirstName" type="text" name="firstName" autocomplete="given-name" maxlength="80" required></label>
+          <label for="contactLastName">Last Name<input id="contactLastName" type="text" name="lastName" autocomplete="family-name" maxlength="80" required></label>
+        </div>
+        <label for="contactEmail">Email<input id="contactEmail" type="email" name="email" autocomplete="email" maxlength="254" required></label>
+        <label for="contactCompanyName">Company Name<input id="contactCompanyName" type="text" name="companyName" autocomplete="organization" maxlength="160" required></label>
+        <label for="contactBusinessType">Business Type
+          <select id="contactBusinessType" name="businessType" required>
+            <option value="" selected disabled>Choose a business type</option>
+          </select>
+        </label>
+        <label for="contactPhone">Phone Number<input id="contactPhone" type="tel" name="phone" autocomplete="tel" maxlength="50" required></label>
+        <label for="contactWebsite">Website (Optional)<input id="contactWebsite" type="url" name="website" autocomplete="url" maxlength="2048" placeholder="https://"></label>
+        <label for="contactAddress1">Address Line 1<input id="contactAddress1" type="text" name="address1" autocomplete="address-line1" maxlength="160" required></label>
+        <label for="contactAddress2">Address Line 2 (Optional)<input id="contactAddress2" type="text" name="address2" autocomplete="address-line2" maxlength="160"></label>
+        <label for="contactCity">City<input id="contactCity" type="text" name="city" autocomplete="address-level2" maxlength="100" required></label>
+        <label for="contactStateSelect"><span id="contactStateLabel">State</span>
+          <select id="contactStateSelect" name="state" autocomplete="address-level1" required>
+            <option value="" selected disabled>Choose a state</option>
+          </select>
+          <input id="contactProvince" name="state" type="text" autocomplete="address-level1" maxlength="100" hidden disabled>
+          <span class="contact-form-hint" id="contactStateHint">Required for United States. Select a state or DC.</span>
+        </label>
+        <label for="contactPostalCode">ZIP / Postal Code<input id="contactPostalCode" type="text" name="postalCode" autocomplete="postal-code" maxlength="20" required></label>
+        <label for="contactCountry">Country
+          <select id="contactCountry" name="country" autocomplete="country" required>
+            <option value="US" selected>United States</option>
+          </select>
+        </label>
+        <label for="contactMessage">Message<textarea id="contactMessage" name="message" rows="4" maxlength="5000" required></textarea></label>
         <button type="submit" class="btn btn--dark">Send Message</button>
         <p class="contact-form-status" role="status" aria-live="polite" hidden></p>
       </form>
@@ -394,6 +425,8 @@
   </section>
 </div>
 
+<script src="assets/js/contact-form-data.js?v=20261028-1"></script>
+<script src="assets/js/contact-form.js?v=20261028-1"></script>
 <script src="assets/js/main.js?v=20261028-15"></script>
 </body>
 </html>
