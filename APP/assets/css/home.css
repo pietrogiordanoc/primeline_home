@@ -132,6 +132,48 @@
   transition: opacity .35s var(--ease);
 }
 .nav-overlay.is-open{ opacity: 1; pointer-events: auto; }
+.careers-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(13,24,48,.6);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .25s var(--ease), visibility .25s var(--ease);
+}
+.careers-modal.is-open{ opacity: 1; visibility: visible; pointer-events: auto; }
+.careers-modal-content{
+  position: relative;
+  width: min(880px, 100%);
+  max-height: min(90vh, 900px);
+  overflow: auto;
+  padding: 32px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(13,24,48,.2);
+}
+.careers-modal-content h2{ margin: 0 0 18px; color: var(--pl-navy); }
+.careers-form-fallback{ padding: 28px; background: var(--pl-cream); color: var(--pl-ink-soft); text-align: center; }
+.careers-form-fallback a{ display: inline-block; margin-top: 12px; color: var(--pl-navy); font-weight: 600; text-decoration: underline; }
+.careers-form-container iframe{ display: block; width: 100%; min-height: min(72vh, 760px); border: 0; }
+.careers-modal-close{
+  position: sticky;
+  top: 0;
+  float: right;
+  z-index: 2;
+  border: 0;
+  padding: 0 0 8px 12px;
+  background: #fff;
+  color: var(--pl-ink-soft);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+.careers-modal-close:hover{ color: var(--pl-navy); }
 .nav-panel{
   position: relative;
   z-index: 2;

@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Prime Line - Importers of Selected Specialty Foods.">
 <link rel="stylesheet" href="assets/css/base.css">
-<link rel="stylesheet" href="assets/css/home.css?v=20261016-4">
+<link rel="stylesheet" href="assets/css/home.css?v=20261028-3">
 <link rel="stylesheet" href="assets/css/category-vegetables.css">
 <link rel="stylesheet" href="assets/css/cheese.css">
 <link rel="stylesheet" href="assets/css/cured-meats.css?v=20261016-1">
@@ -49,8 +49,8 @@
       <li><a href="#" class="catalog-pdf-trigger">Catalog PDF</a></li>
       <li><a href="#">Brochures</a></li>
       <li><a href="#" class="order-entry-trigger">Order Entry</a></li>
-      <li><a href="#">Careers</a></li>
-      <li><a href="#">Coffee Division</a></li>
+      <li><a href="#" class="careers-trigger">Careers</a></li>
+      <li><a href="https://www.primelinecoffee.com/" target="_blank" rel="noopener noreferrer">Coffee Division</a></li>
       <li><a href="#" class="account-forms-trigger">New Account Setup Forms</a></li>
       <li><a href="#" class="masterlink-trigger">Masterlink</a></li>
     </ul>
@@ -327,10 +327,10 @@
     <div class="footer-col">
       <h4>COMPANY</h4>
       <ul>
-        <li><a href="#">About Us</a></li>
-        <li><a href="#">Coffee Division</a></li>
+        <li><a href="#" class="about-trigger">About Us</a></li>
+        <li><a href="https://www.primelinecoffee.com/" target="_blank" rel="noopener noreferrer">Coffee Division</a></li>
         <li><a href="#" class="account-forms-trigger">New Account Setup Forms</a></li>
-        <li><a href="#">Careers</a></li>
+        <li><a href="#" class="careers-trigger">Careers</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -362,6 +362,14 @@
   <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 14 7-7 7 7M12 8v12"/></svg>
 </button>
 
-<script src="assets/js/main.js?v=20261016-13"></script>
+<div class="careers-modal" aria-hidden="true">
+  <section class="careers-modal-content" role="dialog" aria-modal="true" aria-labelledby="careers-title">
+    <button type="button" class="careers-modal-close" aria-label="Close Careers form">&times;</button>
+    <h2 id="careers-title">Careers</h2>
+    <div class="careers-form-container"></div>
+  </section>
+</div>
+
+<script src="assets/js/main.js?v=20261028-3"></script>
 </body>
 </html>
