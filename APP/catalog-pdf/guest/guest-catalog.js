@@ -1,3 +1,4 @@
+const ISSUU_URL = 'https://e.issuu.com/embed.html?d=florida_spring_2021_compressed&hideIssuuLogo=true&hideShareButton=true&u=primelinedist';
 const linkPanel = document.querySelector('#guestLinkPanel');
 const linkDescription = document.querySelector('#guestLinkDescription');
 const openButton = document.querySelector('#openGuestCatalog');
@@ -7,8 +8,10 @@ const guestFormStatus = document.querySelector('#guestFormStatus');
 const guestStatus = document.querySelector('#guestStatus');
 const guestAccessNote = document.querySelector('#guestAccessNote');
 const guestViewer = document.querySelector('#guestViewer');
+const guestViewerStatus = document.querySelector('#guestViewerStatus');
+const guestViewerError = document.querySelector('#guestViewerError');
+const guestViewerRetry = document.querySelector('#guestViewerRetry');
 const pdfFrame = document.querySelector('#guestPdfFrame');
-const reloadButton = document.querySelector('#reloadGuestCatalog');
 
 const hashParameters = new URLSearchParams(location.hash.slice(1));
 const invitationToken = hashParameters.get('invite') || '';
@@ -38,43 +41,51 @@ const showRenewal = (message = '') => {
   setStatus(message);
 };
 
-const loadCatalogPdf = async () => {
-  reloadButton.disabled = true;
-  setStatus('Loading the catalog...');
+const showViewerError = () => {
+  clearTimeout(viewerLoadTimeout);
+  guestViewerStatus.hidden = true;
+  guestViewerError.hidden = false;
+};
+
+const loadCatalogViewer = async () => {
+  linkPanel.hidden = true;
+  renewPanel.hidden = true;
+  setStatus('');
+  guestViewer.hidden = false;
+  guestViewerError.hidden = true;
+  guestViewerStatus.hidden = false;
+  clearTimeout(viewerLoadTimeout);
+  guestViewerStatus.textContent = 'Verifying your catalog access...';
+
   try {
     const response = await fetch('/api/catalog/guest/pdf', {
       credentials: 'same-origin',
       cache: 'no-store',
       headers: { Accept: 'application/json' }
     });
-    const result = await response.json();
     if (response.status === 401) {
       showRenewal('Your browser session has expired. Request a fresh verification link to continue.');
       return;
     }
-    if (!response.ok || typeof result.url !== 'string') {
-      throw new Error(result.error || 'The catalog could not be loaded.');
-    }
-    pdfFrame.src = result.url;
-    guestViewer.hidden = false;
-    renewPanel.hidden = true;
-    linkPanel.hidden = true;
-    setStatus('');
-    clearTimeout(viewerLoadTimeout);
-    viewerLoadTimeout = setTimeout(() => setStatus('The PDF may still be loading. Use Reload catalog to try again.'), 20000);
+    if (!response.ok) throw new Error('Catalog access could not be verified. Please try again.');
+
+    guestViewerStatus.textContent = 'Loading the catalog...';
+    pdfFrame.src = ISSUU_URL;
+    viewerLoadTimeout = setTimeout(showViewerError, 20000);
   } catch (error) {
-    setStatus(error.message || 'The catalog could not be loaded.', true);
-  } finally {
-    reloadButton.disabled = false;
+    guestViewerStatus.hidden = true;
+    guestViewerError.hidden = false;
+    guestViewerError.querySelector('p').textContent = error.message || 'The catalog could not be loaded.';
   }
 };
 
 pdfFrame.addEventListener('load', () => {
   clearTimeout(viewerLoadTimeout);
-  setStatus('');
+  guestViewerStatus.hidden = true;
 });
 
-reloadButton.addEventListener('click', loadCatalogPdf);
+pdfFrame.addEventListener('error', showViewerError);
+guestViewerRetry.addEventListener('click', loadCatalogViewer);
 
 openButton.addEventListener('click', async () => {
   if (!magicToken || !linkPurpose) return;
@@ -93,7 +104,7 @@ openButton.addEventListener('click', async () => {
     }
     magicToken = '';
     setAccessNote(result.expiresAt);
-    await loadCatalogPdf();
+    loadCatalogViewer();
   } catch (error) {
     setStatus(error.message || 'This catalog link could not be verified.', true);
     openButton.disabled = false;
@@ -147,7 +158,7 @@ const initialize = async () => {
       return;
     }
     setAccessNote(result.expiresAt);
-    await loadCatalogPdf();
+    loadCatalogViewer();
   } catch {
     showRenewal('We could not verify your access. Please try again or request a fresh verification link.');
   }

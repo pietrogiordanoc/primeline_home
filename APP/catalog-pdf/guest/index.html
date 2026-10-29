@@ -45,12 +45,19 @@
     </section>
 
     <section class="guest-viewer" id="guestViewer" hidden aria-label="Catalog viewer">
-      <div class="guest-viewer-toolbar">
-        <span>Catalog access</span>
-        <button class="guest-reload-button" id="reloadGuestCatalog" type="button">Reload catalog</button>
-      </div>
-      <div class="guest-viewer-frame">
-        <iframe id="guestPdfFrame" title="Prime Line Specialty Foods Catalog" referrerpolicy="no-referrer"></iframe>
+      <p class="guest-viewer-status" id="guestViewerStatus" role="status" aria-live="polite">
+        Loading the catalog...
+      </p>
+      <iframe
+        id="guestPdfFrame"
+        title="Prime Line Catalog — Autumn 2026"
+        allow="clipboard-write; autoplay; encrypted-media; fullscreen; picture-in-picture"
+        sandbox="allow-top-navigation allow-top-navigation-by-user-activation allow-downloads allow-scripts allow-same-origin allow-popups allow-modals allow-popups-to-escape-sandbox allow-forms"
+        allowfullscreen="true">
+      </iframe>
+      <div class="guest-viewer-error" id="guestViewerError" role="alert" hidden>
+        <p>The catalog viewer did not finish loading.</p>
+        <button class="guest-primary-button" id="guestViewerRetry" type="button">Retry viewer</button>
       </div>
     </section>
   </main>
