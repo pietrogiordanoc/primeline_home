@@ -1,9 +1,13 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 
 const CODE_LIFETIME_MS = 10 * 60 * 1000;
 const SESSION_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
 const LOCKOUT_MS = 60 * 60 * 1000;
 const allowedDomain = '@primelinedist.com';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isAllowedEmail = (email) => EMAIL_PATTERN.test(email) && email.endsWith(allowedDomain);
 
 const json = (body, statusCode = 200, headers = {}, multiValueHeaders = {}) => ({
   statusCode,
@@ -18,19 +22,17 @@ const getAccessStore = async () => {
   const { getStore } = await import('@netlify/blobs');
   return getStore({
     name: 'prime-line-access',
-    consistency: 'strong',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_AUTH_TOKEN
+    consistency: 'strong'
   });
 };
 
 const getCookie = (event, name) => {
-  const cookies = event.headers.cookie || event.headers.Cookie || '';
+  const cookies = event.headers?.cookie || event.headers?.Cookie || '';
   const entry = cookies.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${name}=`));
   return entry ? entry.slice(name.length + 1) : '';
 };
 
-export const handler = async (event) => {
+const handler = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405);
 
   let payload;
@@ -40,11 +42,11 @@ export const handler = async (event) => {
     return json({ error: 'Invalid request.' }, 400);
   }
 
-  const email = String(payload.email || '').trim().toLowerCase();
-  const code = String(payload.code || '').trim();
-  const resource = String(payload.resource || '').trim();
+  const email = String(payload?.email || '').trim().toLowerCase();
+  const code = String(payload?.code || '').trim();
+  const resource = String(payload?.resource || '').trim();
   const challengeId = getCookie(event, 'access_challenge');
-  if (!email.endsWith(allowedDomain) || !/^\d{3}$/.test(code) || !resource || !challengeId) {
+  if (!isAllowedEmail(email) || !/^\d{3}$/.test(code) || !resource || !challengeId) {
     return json({ error: 'Invalid code.' }, 401);
   }
 
@@ -88,3 +90,5 @@ export const handler = async (event) => {
     }
   );
 };
+
+export default adaptNetlifyHandler(handler);

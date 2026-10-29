@@ -1,8 +1,12 @@
 import { createHash, randomInt, randomUUID } from 'node:crypto';
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 
 const CODE_LIFETIME_MS = 10 * 60 * 1000;
 const COOKIE_LIFETIME_SECONDS = 10 * 60;
 const allowedDomain = '@primelinedist.com';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isAllowedEmail = (email) => EMAIL_PATTERN.test(email) && email.endsWith(allowedDomain);
 
 const json = (body, statusCode = 200, headers = {}) => ({
   statusCode,
@@ -16,13 +20,11 @@ const getAccessStore = async () => {
   const { getStore } = await import('@netlify/blobs');
   return getStore({
     name: 'prime-line-access',
-    consistency: 'strong',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_AUTH_TOKEN
+    consistency: 'strong'
   });
 };
 
-export const handler = async (event) => {
+const handler = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405);
 
   let payload;
@@ -32,9 +34,9 @@ export const handler = async (event) => {
     return json({ error: 'Invalid request.' }, 400);
   }
 
-  const email = String(payload.email || '').trim().toLowerCase();
-  const resource = String(payload.resource || '').trim();
-  if (!email.endsWith(allowedDomain) || !resource) {
+  const email = String(payload?.email || '').trim().toLowerCase();
+  const resource = String(payload?.resource || '').trim();
+  if (!isAllowedEmail(email) || !resource) {
     return json({ error: 'Invalid request.' }, 400);
   }
 
@@ -92,3 +94,5 @@ export const handler = async (event) => {
     { 'Set-Cookie': cookie('access_challenge', challengeId, COOKIE_LIFETIME_SECONDS) }
   );
 };
+
+export default adaptNetlifyHandler(handler);
