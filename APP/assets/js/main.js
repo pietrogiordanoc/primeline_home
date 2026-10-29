@@ -45,7 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const header = document.querySelector('.site-header');
   if (header) {
-    const onScroll = () => header.classList.toggle('is-solid', window.scrollY > 60);
+    const onScroll = () => {
+      if (document.body.classList.contains('mobile-curtain-open')) return;
+      header.classList.toggle('is-solid', window.scrollY > 60);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
   }
@@ -65,7 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const backToTop = document.querySelector('.back-to-top');
   if (backToTop) {
-    const updateBackToTop = () => backToTop.classList.toggle('is-visible', window.scrollY > 400);
+    const updateBackToTop = () => {
+      if (document.body.classList.contains('mobile-curtain-open')) return;
+      backToTop.classList.toggle('is-visible', window.scrollY > 400);
+    };
     updateBackToTop();
     window.addEventListener('scroll', updateBackToTop, { passive: true });
     backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
@@ -79,7 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const simpleHeader = document.querySelector('.site-header-simple');
   if (simpleHeader) {
-    const onScrollSimple = () => simpleHeader.classList.toggle('is-scrolled', window.scrollY > 10);
+    const onScrollSimple = () => {
+      if (document.body.classList.contains('mobile-curtain-open')) return;
+      simpleHeader.classList.toggle('is-scrolled', window.scrollY > 10);
+    };
     onScrollSimple();
     window.addEventListener('scroll', onScrollSimple, { passive: true });
   }
@@ -88,10 +97,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const navPanel = document.querySelector('.nav-panel');
   const navOverlay = document.querySelector('.nav-overlay');
   const navPanelClose = document.querySelector('.nav-panel-close');
+  const sideDrawers = document.querySelector('.side-drawers');
   const contactPanel = document.querySelector('.contact-panel');
   const contactPanelClose = document.querySelector('.contact-panel-close');
   const contactTriggers = document.querySelectorAll('.contact-trigger');
   const locationsPanel = document.querySelector('.locations-panel');
+  const contactMobileHeader = document.querySelector('.contact-mobile-header');
+  const contactMobileClose = contactMobileHeader?.querySelector('.contact-mobile-close');
+  const contactMobileTabList = contactMobileHeader?.querySelector('.contact-mobile-tabs');
+  const contactMobileTabs = Array.from(document.querySelectorAll('.contact-mobile-tab'));
   const aboutPanel = document.querySelector('.about-panel');
   const aboutPanelClose = document.querySelector('.about-panel-close');
   const aboutTriggers = document.querySelectorAll('.about-trigger');
@@ -116,25 +130,164 @@ document.addEventListener('DOMContentLoaded', () => {
   const careersModalClose = careersModal?.querySelector('.careers-modal-close');
   const careersTriggers = document.querySelectorAll('.careers-trigger');
   const curtainTransitionMs = 500;
+  const mobileCurtainQuery = window.matchMedia('(max-width: 767px)');
+  const curtainPanels = [
+    contactPanel,
+    locationsPanel,
+    aboutPanel,
+    catalogPanel,
+    catalogPdfPanel,
+    orderEntryPanel,
+    accountFormsPanel
+  ].filter(Boolean);
 
   const contactInfo = document.querySelector('.contact-info');
+  let mobileContactView = 'contact';
+  let menuReturnFocus = null;
+  let scrollLocked = false;
+  let savedScrollY = 0;
+
+  const syncCurtainState = () => {
+    const isMobile = mobileCurtainQuery.matches;
+    const menuIsOpen = navPanel?.classList.contains('is-open') === true;
+    const openPanels = curtainPanels.filter((panel) => panel.classList.contains('is-open'));
+    const contactPairOpen = contactPanel?.classList.contains('is-open')
+      && locationsPanel?.classList.contains('is-open');
+    let activeMobilePanel = openPanels[0] || null;
+
+    if (isMobile && contactPairOpen) {
+      activeMobilePanel = mobileContactView === 'locations' ? locationsPanel : contactPanel;
+    }
+
+    curtainPanels.forEach((panel) => {
+      const isOpen = panel.classList.contains('is-open');
+      panel.setAttribute('aria-hidden', String(!isOpen || (isMobile && panel !== activeMobilePanel)));
+    });
+
+    const showContactTabs = isMobile && Boolean(contactPairOpen);
+    if (contactMobileHeader) {
+      contactMobileHeader.hidden = !showContactTabs;
+      contactMobileHeader.setAttribute('aria-hidden', String(!showContactTabs));
+    }
+    if (showContactTabs) {
+      contactPanel.setAttribute('role', 'tabpanel');
+      contactPanel.setAttribute('aria-labelledby', 'contactMobileTab');
+      locationsPanel.setAttribute('role', 'tabpanel');
+      locationsPanel.setAttribute('aria-labelledby', 'locationsMobileTab');
+    } else {
+      contactPanel?.removeAttribute('role');
+      contactPanel?.removeAttribute('aria-labelledby');
+      locationsPanel?.removeAttribute('role');
+      locationsPanel?.removeAttribute('aria-labelledby');
+    }
+    sideDrawers?.classList.toggle(
+      'is-contact-locations-active',
+      showContactTabs && mobileContactView === 'locations'
+    );
+    contactMobileTabs.forEach((tab) => {
+      const selected = tab.dataset.contactView === mobileContactView;
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+    });
+
+    navPanel?.setAttribute('aria-hidden', String(!menuIsOpen || (isMobile && Boolean(activeMobilePanel))));
+    menuToggle?.setAttribute(
+      'aria-expanded',
+      String(menuIsOpen && !(isMobile && Boolean(activeMobilePanel)))
+    );
+    sideDrawers?.classList.toggle('is-contact-mobile', showContactTabs);
+
+    const shouldLockScroll = isMobile && menuIsOpen;
+    if (shouldLockScroll && !scrollLocked) {
+      savedScrollY = window.scrollY;
+      document.body.style.setProperty('--mobile-curtain-scroll-top', `${-savedScrollY}px`);
+      document.body.classList.add('mobile-curtain-open');
+      scrollLocked = true;
+    } else if (!shouldLockScroll && scrollLocked) {
+      const restoreScrollY = savedScrollY;
+      document.body.classList.remove('mobile-curtain-open');
+      document.body.style.removeProperty('--mobile-curtain-scroll-top');
+      scrollLocked = false;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const previousScrollBehavior = document.documentElement.style.scrollBehavior;
+          document.documentElement.style.scrollBehavior = 'auto';
+          window.scrollTo({ top: restoreScrollY, behavior: 'auto' });
+          document.documentElement.style.scrollBehavior = previousScrollBehavior;
+        });
+      });
+    }
+  };
+
+  const openNavigation = () => {
+    navPanel?.classList.add('is-open');
+    navOverlay?.classList.add('is-open');
+    syncCurtainState();
+  };
+
+  const openContentCurtain = (panel, trigger, additionalPanels = []) => {
+    if (trigger && navPanel?.contains(trigger)) menuReturnFocus = trigger;
+    openNavigation();
+    [panel, ...additionalPanels].forEach((item) => {
+      item?.classList.add('is-open');
+      item?.setAttribute('aria-hidden', 'false');
+    });
+    syncCurtainState();
+
+    if (mobileCurtainQuery.matches) {
+      const closeButton = panel === contactPanel
+        ? contactMobileClose
+        : panel?.querySelector('button[aria-label^="Close"]');
+      closeButton?.focus({ preventScroll: true });
+    }
+  };
+
+  const restoreMenuFocus = (delay = curtainTransitionMs) => {
+    if (!mobileCurtainQuery.matches) return;
+    setTimeout(() => {
+      if (!navPanel?.classList.contains('is-open')) return;
+      if (curtainPanels.some((panel) => panel.classList.contains('is-open'))) return;
+      const target = menuReturnFocus && navPanel.contains(menuReturnFocus)
+        ? menuReturnFocus
+        : navPanelClose;
+      target?.focus({ preventScroll: true });
+    }, delay);
+  };
+
+  const setMobileContactView = (view, focusTab = false) => {
+    mobileContactView = view;
+    syncCurtainState();
+    if (focusTab) {
+      contactMobileTabs.find((tab) => tab.dataset.contactView === view)?.focus({ preventScroll: true });
+    }
+  };
+
+  const onCurtainBreakpointChange = () => syncCurtainState();
+  if (typeof mobileCurtainQuery.addEventListener === 'function') {
+    mobileCurtainQuery.addEventListener('change', onCurtainBreakpointChange);
+  } else {
+    mobileCurtainQuery.addListener(onCurtainBreakpointChange);
+  }
 
   // Collapses locations, then contact, one step at a time - never all at once.
   const closeContact = (onClosed) => {
     locationsPanel?.classList.remove('is-open');
-    locationsPanel?.setAttribute('aria-hidden', 'true');
+    mobileContactView = 'contact';
+    syncCurtainState();
     setTimeout(() => {
       contactPanel?.classList.remove('is-open');
-      contactPanel?.setAttribute('aria-hidden', 'true');
       contactInfo?.classList.remove('is-open');
+      syncCurtainState();
       if (onClosed) setTimeout(onClosed, curtainTransitionMs);
+      else restoreMenuFocus();
     }, 200);
   };
 
   const closeAbout = (onClosed) => {
     aboutPanel?.classList.remove('is-open');
-    aboutPanel?.setAttribute('aria-hidden', 'true');
+    syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
+    else restoreMenuFocus();
   };
 
   const setCatalogChooser = (isOpen) => {
@@ -146,8 +299,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeCatalog = (onClosed) => {
     setCatalogChooser(false);
     catalogPanel?.classList.remove('is-open');
-    catalogPanel?.setAttribute('aria-hidden', 'true');
+    syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
+    else restoreMenuFocus();
   };
 
   const closeMasterlink = (onClosed) => {
@@ -158,28 +312,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const closeCatalogPdf = (onClosed) => {
     catalogPdfPanel?.classList.remove('is-open');
-    catalogPdfPanel?.setAttribute('aria-hidden', 'true');
+    syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
+    else restoreMenuFocus();
   };
 
   const closeOrderEntry = (onClosed) => {
     orderEntryPanel?.classList.remove('is-open');
-    orderEntryPanel?.setAttribute('aria-hidden', 'true');
+    syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
+    else restoreMenuFocus();
   };
 
   const closeAccountForms = (onClosed) => {
     accountFormsPanel?.classList.remove('is-open');
-    accountFormsPanel?.setAttribute('aria-hidden', 'true');
+    syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
+    else restoreMenuFocus();
   };
 
   if (menuToggle && navPanel && navOverlay) {
     const openMenu = () => {
-      navPanel.classList.add('is-open');
-      navOverlay.classList.add('is-open');
-      navPanel.setAttribute('aria-hidden', 'false');
-      menuToggle.setAttribute('aria-expanded', 'true');
+      openNavigation();
+      if (mobileCurtainQuery.matches) navPanelClose?.focus({ preventScroll: true });
     };
     // Staggered close: any inner curtain first, then the menu itself.
     const closeMenu = () => {
@@ -200,8 +355,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         navPanel.classList.remove('is-open');
         navOverlay.classList.remove('is-open');
-        navPanel.setAttribute('aria-hidden', 'true');
-        menuToggle.setAttribute('aria-expanded', 'false');
+        syncCurtainState();
+        if (mobileCurtainQuery.matches) menuToggle.focus({ preventScroll: true });
       }, (hadContactOpen || hadAboutOpen || hadCatalogOpen || hadMasterlinkOpen || hadCatalogPdfOpen || hadOrderEntryOpen || hadAccountFormsOpen) ? 420 : 0);
     };
     menuToggle.addEventListener('click', openMenu);
@@ -267,19 +422,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (contactPanel && contactTriggers.length) {
     const openContact = (e) => {
       e.preventDefault();
+      const trigger = e.currentTarget;
       if (contactPanel.classList.contains('is-open')) {
         closeContact();
         return;
       }
       const showContact = () => {
-        navPanel?.classList.add('is-open');
-        navOverlay?.classList.add('is-open');
-        navPanel?.setAttribute('aria-hidden', 'false');
-        contactPanel.classList.add('is-open');
-        contactPanel.setAttribute('aria-hidden', 'false');
+        mobileContactView = 'contact';
+        openContentCurtain(contactPanel, trigger, [locationsPanel]);
         contactInfo?.classList.add('is-open');
-        locationsPanel?.classList.add('is-open');
-        locationsPanel?.setAttribute('aria-hidden', 'false');
       };
       if (aboutPanel?.classList.contains('is-open')) {
         closeAbout(showContact);
@@ -299,6 +450,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     contactTriggers.forEach((trigger) => trigger.addEventListener('click', openContact));
     contactPanelClose?.addEventListener('click', closeContact);
+    contactMobileClose?.addEventListener('click', () => closeContact());
+    contactMobileTabList?.addEventListener('click', (e) => {
+      const tab = e.target instanceof Element ? e.target.closest('.contact-mobile-tab') : null;
+      if (tab instanceof HTMLButtonElement) {
+        setMobileContactView(tab.dataset.contactView === 'locations' ? 'locations' : 'contact');
+      }
+    });
+    contactMobileTabList?.addEventListener('keydown', (e) => {
+      const currentIndex = contactMobileTabs.indexOf(document.activeElement);
+      if (currentIndex < 0 || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+      e.preventDefault();
+      const nextIndex = e.key === 'Home'
+        ? 0
+        : e.key === 'End'
+          ? contactMobileTabs.length - 1
+          : (currentIndex + (e.key === 'ArrowRight' ? 1 : -1) + contactMobileTabs.length) % contactMobileTabs.length;
+      const nextTab = contactMobileTabs[nextIndex];
+      setMobileContactView(nextTab.dataset.contactView === 'locations' ? 'locations' : 'contact', true);
+    });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeContact();
     });
@@ -368,16 +538,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (aboutPanel && aboutTriggers.length) {
     const openAbout = (e) => {
       e.preventDefault();
+      const trigger = e.currentTarget;
       if (aboutPanel.classList.contains('is-open')) {
         closeAbout();
         return;
       }
       const showAbout = () => {
-        navPanel?.classList.add('is-open');
-        navOverlay?.classList.add('is-open');
-        navPanel?.setAttribute('aria-hidden', 'false');
-        aboutPanel.classList.add('is-open');
-        aboutPanel.setAttribute('aria-hidden', 'false');
+        openContentCurtain(aboutPanel, trigger);
       };
       if (contactPanel?.classList.contains('is-open')) {
         closeContact(showAbout);
@@ -406,13 +573,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (catalogPanel && catalogTriggers.length) {
     const openCatalog = (e) => {
       e.preventDefault();
-      const destination = e.currentTarget.dataset.catalogUrl;
+      const trigger = e.currentTarget;
+      const destination = trigger.dataset.catalogUrl;
       const showCatalog = () => {
-        navPanel?.classList.add('is-open');
-        navOverlay?.classList.add('is-open');
-        navPanel?.setAttribute('aria-hidden', 'false');
-        catalogPanel.classList.add('is-open');
-        catalogPanel.setAttribute('aria-hidden', 'false');
+        openContentCurtain(catalogPanel, trigger);
         catalogPanel.querySelector('.catalog-login')?.setAttribute('data-destination', destination || '');
         catalogPanel.querySelector('.catalog-register')?.setAttribute('data-destination', destination || '');
       };
@@ -624,12 +788,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (catalogPdfPanel && catalogPdfTriggers.length) {
     const openCatalogPdf = (e) => {
       e.preventDefault();
+      const trigger = e.currentTarget;
       const showCatalogPdf = () => {
-        navPanel?.classList.add('is-open');
-        navOverlay?.classList.add('is-open');
-        navPanel?.setAttribute('aria-hidden', 'false');
-        catalogPdfPanel.classList.add('is-open');
-        catalogPdfPanel.setAttribute('aria-hidden', 'false');
+        openContentCurtain(catalogPdfPanel, trigger);
       };
       if (catalogPdfPanel.classList.contains('is-open')) {
         closeCatalogPdf();
@@ -661,12 +822,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (orderEntryPanel && orderEntryTriggers.length) {
     const openOrderEntry = (e) => {
       e.preventDefault();
+      const trigger = e.currentTarget;
       const showOrderEntry = () => {
-        navPanel?.classList.add('is-open');
-        navOverlay?.classList.add('is-open');
-        navPanel?.setAttribute('aria-hidden', 'false');
-        orderEntryPanel.classList.add('is-open');
-        orderEntryPanel.setAttribute('aria-hidden', 'false');
+        openContentCurtain(orderEntryPanel, trigger);
       };
       if (orderEntryPanel.classList.contains('is-open')) {
         closeOrderEntry();
@@ -693,12 +851,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (accountFormsPanel && accountFormsTriggers.length) {
     const openAccountForms = (e) => {
       e.preventDefault();
+      const trigger = e.currentTarget;
       const showAccountForms = () => {
-        navPanel?.classList.add('is-open');
-        navOverlay?.classList.add('is-open');
-        navPanel?.setAttribute('aria-hidden', 'false');
-        accountFormsPanel.classList.add('is-open');
-        accountFormsPanel.setAttribute('aria-hidden', 'false');
+        openContentCurtain(accountFormsPanel, trigger);
       };
       if (accountFormsPanel.classList.contains('is-open')) {
         closeAccountForms();
