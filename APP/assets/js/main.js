@@ -116,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const careersModalClose = careersModal?.querySelector('.careers-modal-close');
   const careersTriggers = document.querySelectorAll('.careers-trigger');
   const curtainTransitionMs = 500;
-  let resetCatalogPdfState = () => {};
 
   const contactInfo = document.querySelector('.contact-info');
 
@@ -158,7 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeCatalogPdf = (onClosed) => {
-    resetCatalogPdfState();
     catalogPdfPanel?.classList.remove('is-open');
     catalogPdfPanel?.setAttribute('aria-hidden', 'true');
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
@@ -584,7 +582,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    return () => resetAccessForm(false);
   };
 
   if (masterlinkPanel && masterlinkTriggers.length) {
@@ -625,97 +622,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (catalogPdfPanel && catalogPdfTriggers.length) {
-    const catalogLogin = catalogPdfPanel.querySelector('.catalog-pdf-login');
-    const catalogViewer = catalogPdfPanel.querySelector('.catalog-pdf-viewer');
-    const catalogStatus = catalogPdfPanel.querySelector('.catalog-pdf-status');
-    const catalogFrame = catalogPdfPanel.querySelector('#catalogPdfViewer');
-    const catalogLoading = catalogPdfPanel.querySelector('.catalog-pdf-loading');
-    const catalogFallback = catalogPdfPanel.querySelector('.catalog-pdf-fallback');
-    let catalogSessionCheck = 0;
-    let catalogLoadTimer;
-    let catalogFrameLoading = false;
-    let resetCatalogAccessForm = () => {};
-
-    const showCatalogFallback = () => {
-      if (!catalogViewer) return;
-      catalogFrameLoading = false;
-      clearTimeout(catalogLoadTimer);
-      if (catalogFrame) catalogFrame.hidden = true;
-      if (catalogLoading) catalogLoading.hidden = true;
-      if (catalogFallback) catalogFallback.hidden = false;
-    };
-
-    const showCatalogViewer = () => {
-      if (!catalogViewer || !catalogLogin || !catalogFrame) return;
-      catalogLogin.hidden = true;
-      catalogViewer.hidden = false;
-      catalogViewer.focus();
-      if (catalogFallback) catalogFallback.hidden = true;
-      catalogFrame.hidden = false;
-      if (catalogLoading) catalogLoading.hidden = false;
-      catalogFrameLoading = true;
-      catalogFrame.src = catalogFrame.dataset.src;
-      clearTimeout(catalogLoadTimer);
-      catalogLoadTimer = setTimeout(() => {
-        if (catalogFrameLoading) showCatalogFallback();
-      }, 18000);
-    };
-
-    const validateCatalogSession = async () => {
-      const checkId = ++catalogSessionCheck;
-      try {
-        const response = await fetch('/api/access/catalog-session', {
-          method: 'GET',
-          credentials: 'include',
-          headers: { Accept: 'application/json' }
-        });
-        if (checkId !== catalogSessionCheck) return false;
-        if (response.status === 401) return false;
-        if (!response.ok) return null;
-        const result = await response.json();
-        if (checkId !== catalogSessionCheck) return false;
-        return result.authenticated === true && result.resource === 'catalog-pdf';
-      } catch {
-        return null;
-      }
-    };
-
-    const restoreCatalogSession = async () => {
-      if (catalogStatus) catalogStatus.textContent = 'Checking your existing catalog access...';
-      const authenticated = await validateCatalogSession();
-      if (!catalogPdfPanel.classList.contains('is-open')) return;
-      if (authenticated === true) {
-        showCatalogViewer();
-      } else if (catalogStatus) {
-        catalogStatus.textContent = authenticated === false
-          ? ''
-          : 'Catalog access could not be checked. Please try again.';
-      }
-    };
-
-    catalogFrame?.addEventListener('load', () => {
-      if (!catalogFrameLoading) return;
-      catalogFrameLoading = false;
-      clearTimeout(catalogLoadTimer);
-      if (catalogLoading) catalogLoading.hidden = true;
-    });
-    catalogFrame?.addEventListener('error', showCatalogFallback);
-    catalogPdfPanel.querySelector('.catalog-pdf-retry')?.addEventListener('click', showCatalogViewer);
-
-    resetCatalogPdfState = () => {
-      catalogSessionCheck += 1;
-      catalogFrameLoading = false;
-      clearTimeout(catalogLoadTimer);
-      catalogFrame?.removeAttribute('src');
-      if (catalogFrame) catalogFrame.hidden = false;
-      if (catalogLoading) catalogLoading.hidden = false;
-      if (catalogFallback) catalogFallback.hidden = true;
-      if (catalogViewer) catalogViewer.hidden = true;
-      if (catalogLogin) catalogLogin.hidden = false;
-      if (catalogStatus) catalogStatus.textContent = '';
-      resetCatalogAccessForm();
-    };
-
     const openCatalogPdf = (e) => {
       e.preventDefault();
       const showCatalogPdf = () => {
@@ -724,7 +630,6 @@ document.addEventListener('DOMContentLoaded', () => {
         navPanel?.setAttribute('aria-hidden', 'false');
         catalogPdfPanel.classList.add('is-open');
         catalogPdfPanel.setAttribute('aria-hidden', 'false');
-        void restoreCatalogSession();
       };
       if (catalogPdfPanel.classList.contains('is-open')) {
         closeCatalogPdf();
@@ -747,10 +652,8 @@ document.addEventListener('DOMContentLoaded', () => {
     catalogPdfTriggers.forEach((trigger) => trigger.addEventListener('click', openCatalogPdf));
     catalogPdfPanelClose?.addEventListener('click', closeCatalogPdf);
 
-    resetCatalogAccessForm = setupEmailCodeAccess(catalogPdfPanel, 'catalog-pdf', async () => {
-      const authenticated = await validateCatalogSession();
-      if (authenticated !== true) return false;
-      showCatalogViewer();
+    setupEmailCodeAccess(catalogPdfPanel, 'catalog-pdf', () => {
+      window.location.assign('/catalog-pdf/');
       return true;
     });
   }

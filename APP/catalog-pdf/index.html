@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Prime Line Autumn 2026 product catalog.">
+  <title>Prime Line Catalog — Autumn 2026</title>
+  <link rel="icon" type="image/gif" href="/images/favicon.gif">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="./catalog-pdf.css">
+</head>
+<body>
+  <header class="catalog-header">
+    <a class="catalog-back" href="/" aria-label="Back to Home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"></path></svg>
+      <span>Back to Home</span>
+    </a>
+    <a class="catalog-brand" href="/" aria-label="Prime Line home">
+      <img src="/images/Logo1500.png" alt="Prime Line">
+    </a>
+    <span class="catalog-header-spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="catalog-main">
+    <div class="catalog-heading">
+      <span class="catalog-eyebrow">Product Catalog</span>
+      <h1>Prime Line Catalog — Autumn 2026</h1>
+    </div>
+
+    <p class="catalog-access-status" id="catalogAccessStatus" role="status" aria-live="polite">
+      Verifying your Catalog PDF access...
+    </p>
+    <button class="catalog-action" id="catalogAccessRetry" type="button" hidden>Try again</button>
+
+    <section class="catalog-viewer" id="catalogViewer" aria-label="Catalog viewer" hidden>
+      <p class="catalog-viewer-status" id="catalogViewerStatus" role="status" aria-live="polite">
+        Loading the catalog...
+      </p>
+      <iframe
+        id="catalogFrame"
+        title="Prime Line Catalog — Autumn 2026"
+        allow="clipboard-write; autoplay; encrypted-media; fullscreen; picture-in-picture"
+        sandbox="allow-top-navigation allow-top-navigation-by-user-activation allow-downloads allow-scripts allow-same-origin allow-popups allow-modals allow-popups-to-escape-sandbox allow-forms"
+        allowfullscreen="true"
+        data-src="https://e.issuu.com/embed.html?d=florida_spring_2021_compressed&amp;u=primelinedist">
+      </iframe>
+      <div class="catalog-viewer-error" id="catalogViewerError" role="alert" hidden>
+        <p>The catalog viewer did not finish loading.</p>
+        <button class="catalog-action" id="catalogViewerRetry" type="button">Retry viewer</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./catalog-pdf.js"></script>
+</body>
+</html>
