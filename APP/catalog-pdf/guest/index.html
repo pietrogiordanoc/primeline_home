@@ -15,20 +15,25 @@
     <a class="guest-brand" href="/" aria-label="Prime Line home">
       <img src="/images/Logo1500.png" alt="Prime Line">
     </a>
-    <a class="guest-home-link" href="/">Back to Home</a>
+    <div class="guest-header-right">
+      <div class="guest-inviter-note" id="guestInviterNote" hidden aria-label="Invitation details">
+        <span class="guest-inviter-label">INVITED BY</span>
+        <div class="guest-inviter-identity">
+          <p id="guestInviterName" hidden></p>
+          <a id="guestInviterEmail"></a>
+        </div>
+      </div>
+      <a class="guest-home-link" href="/">Back to Home</a>
+    </div>
   </header>
 
   <main class="guest-main">
     <div class="guest-heading">
-      <span class="guest-eyebrow">CATALOG ACCESS</span>
-      <h1>Prime Line Catalog — Autumn 2026</h1>
-      <p class="guest-access-note" id="guestAccessNote" hidden></p>
-      <div class="guest-inviter-note" id="guestInviterNote" hidden aria-label="Invitation details">
-        <span class="guest-inviter-label">INVITED BY</span>
-        <p id="guestInviterName" hidden></p>
-        <p class="guest-inviter-company" id="guestInviterCompany" hidden>Prime Line Distributors</p>
-        <a id="guestInviterEmail"></a>
+      <div class="guest-heading-title">
+        <span class="guest-eyebrow">CATALOG ACCESS</span>
+        <h1>Prime Line Catalog — Autumn 2026</h1>
       </div>
+      <p class="guest-access-note" id="guestAccessNote" hidden></p>
     </div>
 
     <p class="guest-status" id="guestStatus" role="status" aria-live="polite"></p>

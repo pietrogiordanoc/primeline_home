@@ -9,7 +9,6 @@ const guestStatus = document.querySelector('#guestStatus');
 const guestAccessNote = document.querySelector('#guestAccessNote');
 const guestInviterNote = document.querySelector('#guestInviterNote');
 const guestInviterName = document.querySelector('#guestInviterName');
-const guestInviterCompany = document.querySelector('#guestInviterCompany');
 const guestInviterEmail = document.querySelector('#guestInviterEmail');
 const guestViewer = document.querySelector('#guestViewer');
 const guestViewerStatus = document.querySelector('#guestViewerStatus');
@@ -53,7 +52,6 @@ const setInviterDetails = (name, email) => {
     : '';
   guestInviterName.textContent = fullName;
   guestInviterName.hidden = !fullName;
-  guestInviterCompany.hidden = !fullName;
   guestInviterEmail.textContent = verifiedEmail;
   guestInviterEmail.href = `mailto:${verifiedEmail}`;
   guestInviterNote.hidden = false;
