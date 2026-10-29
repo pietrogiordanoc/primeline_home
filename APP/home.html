@@ -254,24 +254,45 @@
   <aside class="masterlink-panel catalog-pdf-panel" id="catalogPdfPanel" aria-hidden="true">
     <button type="button" class="masterlink-panel-close" aria-label="Close Catalog PDF">&times;</button>
     <div class="masterlink-panel-inner">
-      <div class="masterlink-access">
-        <img class="access-brand" src="images/Logo1500.png" alt="Prime Line">
-        <img class="catalog-pdf-book" src="images/spots/book.png" alt="Prime Line product catalog book">
-        <span class="access-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="16" cy="16" r="8"></circle><path d="M22 22 40 40M33 33l5-5M28 28l5-5"></path></svg></span>
-        <span class="eyebrow">Private Access</span>
-        <h2 class="masterlink-title">Catalog PDF</h2>
-        <p class="masterlink-lead">Enter your company email to receive a 3-digit access code.</p>
-        <form class="masterlink-form access-email-form catalog-pdf-form">
-          <input type="email" name="access-email" placeholder="Email address" autocomplete="email" required>
-          <button type="submit" class="btn">Send access code</button>
-        </form>
-        <form class="masterlink-form access-code-form" hidden>
-          <input type="text" name="access-code" placeholder="000" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" autocomplete="one-time-code" required>
-          <button type="submit" class="btn">Access Catalog PDF</button>
-        </form>
-        <p class="masterlink-status catalog-pdf-status" aria-live="polite"></p>
-        <button type="button" class="masterlink-back" hidden>Use a different email</button>
+      <div class="catalog-pdf-login">
+        <div class="masterlink-access">
+          <img class="access-brand" src="images/Logo1500.png" alt="Prime Line">
+          <img class="catalog-pdf-book" src="images/spots/book.png" alt="Prime Line product catalog book">
+          <span class="access-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="16" cy="16" r="8"></circle><path d="M22 22 40 40M33 33l5-5M28 28l5-5"></path></svg></span>
+          <span class="eyebrow">Private Access</span>
+          <h2 class="masterlink-title">Catalog PDF</h2>
+          <p class="masterlink-lead">Enter your company email to receive a 3-digit access code.</p>
+          <form class="masterlink-form access-email-form catalog-pdf-form">
+            <input type="email" name="access-email" placeholder="Email address" autocomplete="email" required>
+            <button type="submit" class="btn">Send access code</button>
+          </form>
+          <form class="masterlink-form access-code-form" hidden>
+            <input type="text" name="access-code" placeholder="000" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" autocomplete="one-time-code" required>
+            <button type="submit" class="btn">Access Catalog PDF</button>
+          </form>
+          <p class="masterlink-status catalog-pdf-status" aria-live="polite"></p>
+          <button type="button" class="masterlink-back" hidden>Use a different email</button>
+        </div>
       </div>
+      <section class="catalog-pdf-viewer" aria-label="Prime Line Catalog" tabindex="-1" hidden>
+        <p class="catalog-pdf-loading" role="status" aria-live="polite">Loading the Prime Line catalog…</p>
+        <div class="catalog-pdf-embed" style="position:relative;padding-top:max(60%,326px);height:0;width:100%">
+          <iframe
+            id="catalogPdfViewer"
+            name="catalogPdfViewer"
+            title="Prime Line Catalog Autumn 2026"
+            allow="clipboard-write; autoplay; encrypted-media; fullscreen; picture-in-picture"
+            sandbox="allow-top-navigation allow-top-navigation-by-user-activation allow-downloads allow-scripts allow-same-origin allow-popups allow-modals allow-popups-to-escape-sandbox allow-forms"
+            allowfullscreen="true"
+            style="position:absolute;border:none;width:100%;height:100%;left:0;right:0;top:0;bottom:0;"
+            data-src="https://e.issuu.com/embed.html?d=florida_spring_2021_compressed&amp;u=primelinedist">
+          </iframe>
+        </div>
+        <div class="catalog-pdf-fallback" role="alert" hidden>
+          <p>The catalog could not be loaded. Please check your connection and try again.</p>
+          <button type="button" class="btn catalog-pdf-retry">Retry catalog</button>
+        </div>
+      </section>
     </div>
   </aside>
 

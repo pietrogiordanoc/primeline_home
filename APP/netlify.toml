@@ -19,6 +19,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/access/catalog-session"
+  to = "/.netlify/functions/catalog-session"
+  status = 200
+
+[[redirects]]
   from = "/api/careers/submit-application"
   to = "/.netlify/functions/submit-application"
   status = 200

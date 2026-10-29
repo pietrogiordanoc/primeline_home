@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import requestCode from '../functions/request-code.js';
 import verifyCode from '../functions/verify-code.js';
+import catalogSession from '../functions/catalog-session.js';
 
 const SITE_ID = 'mock-site';
 const STORE_NAME = 'site:prime-line-access';
@@ -126,6 +127,11 @@ const verifyAccessCode = (email, resource, code, challengeId) => verifyCode(json
   { cookie: `access_challenge=${challengeId}` }
 ));
 
+const requestCatalogSession = (sessionId) => catalogSession(new Request(
+  'https://primelinedist.com/api/access/catalog-session',
+  { headers: sessionId ? { cookie: `access_session=${sessionId}` } : {} }
+));
+
 const getChallenge = (blobs, challengeId) => {
   const value = blobs.get(`${SITE_STORE_PREFIX}challenge:${challengeId}`);
   assert.ok(value, 'Expected stored OTP challenge');
@@ -192,6 +198,39 @@ test('modern OTP handlers use runtime Blobs credentials and verify Catalog and M
     assert.ok(blobRequests.length > 0);
     assert.ok(blobRequests.every((request) => request.hasRuntimeAuthorization));
     assert.equal(emails.length, 2);
+  });
+});
+
+test('Catalog viewer session endpoint accepts only an unexpired Catalog PDF session', async () => {
+  await withMockRuntime(async ({ blobs, blobRequests }) => {
+    const validId = 'c0a80123-4567-4abc-8def-0123456789ab';
+    const expiredId = 'c0a80123-4567-4abc-8def-0123456789ac';
+    const masterlinkId = 'c0a80123-4567-4abc-8def-0123456789ad';
+    const now = Date.now();
+    const saveSession = (id, resource, expiresAt) => blobs.set(
+      `${SITE_STORE_PREFIX}session:${id}`,
+      JSON.stringify({ email: ACCESS_EMAIL, resource, createdAt: now, expiresAt })
+    );
+    saveSession(validId, 'catalog-pdf', now + 60_000);
+    saveSession(expiredId, 'catalog-pdf', now - 1);
+    saveSession(masterlinkId, 'masterlink', now + 60_000);
+
+    const validResponse = await requestCatalogSession(validId);
+    assert.equal(validResponse.status, 200);
+    assert.deepEqual(await validResponse.json(), { authenticated: true, resource: 'catalog-pdf' });
+
+    for (const id of [expiredId, masterlinkId]) {
+      const response = await requestCatalogSession(id);
+      assert.equal(response.status, 401);
+      assert.deepEqual(await response.json(), { authenticated: false });
+      assert.match(response.headers.get('set-cookie'), /access_session=.*Max-Age=0/);
+    }
+
+    const missingResponse = await requestCatalogSession(null);
+    assert.equal(missingResponse.status, 401);
+    assert.equal(blobs.has(`${SITE_STORE_PREFIX}session:${expiredId}`), false);
+    assert.ok(blobRequests.length > 0);
+    assert.ok(blobRequests.every((request) => request.hasRuntimeAuthorization));
   });
 });
 

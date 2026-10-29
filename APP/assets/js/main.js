@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const careersModalClose = careersModal?.querySelector('.careers-modal-close');
   const careersTriggers = document.querySelectorAll('.careers-trigger');
   const curtainTransitionMs = 500;
+  let resetCatalogPdfState = () => {};
 
   const contactInfo = document.querySelector('.contact-info');
 
@@ -157,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeCatalogPdf = (onClosed) => {
+    resetCatalogPdfState();
     catalogPdfPanel?.classList.remove('is-open');
     catalogPdfPanel?.setAttribute('aria-hidden', 'true');
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
@@ -476,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  const setupEmailCodeAccess = (panel, resourceName) => {
+  const setupEmailCodeAccess = (panel, resourceName, onAuthorized) => {
     const emailForm = panel.querySelector('.access-email-form');
     const codeForm = panel.querySelector('.access-code-form');
     const emailInput = emailForm?.querySelector('[name="access-email"]');
@@ -524,6 +526,25 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    codeInput?.addEventListener('input', () => {
+      codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 3);
+    });
+
+    const resetAccessForm = (focusEmail = true) => {
+      email = '';
+      emailForm.hidden = false;
+      codeForm.hidden = true;
+      backButton.hidden = true;
+      codeInput.value = '';
+      if (lead) lead.textContent = 'Enter your company email to receive a 3-digit access code.';
+      showStatus('');
+      if (focusEmail) emailInput?.focus();
+    };
+
+    backButton?.addEventListener('click', () => {
+      resetAccessForm();
+    });
+
     codeForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const code = codeInput?.value.trim() || '';
@@ -548,6 +569,13 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         codeInput.value = '';
+        if (onAuthorized) {
+          if (!(await onAuthorized())) {
+            showStatus('Your code was accepted, but Catalog access could not be confirmed. Close and reopen the Catalog PDF to retry.', true);
+            return;
+          }
+          return;
+        }
         showStatus('Access granted.');
       } catch {
         showStatus('We could not verify the code. Please try again.', true);
@@ -556,20 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    codeInput?.addEventListener('input', () => {
-      codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 3);
-    });
-
-    backButton?.addEventListener('click', () => {
-      email = '';
-      emailForm.hidden = false;
-      codeForm.hidden = true;
-      backButton.hidden = true;
-      codeInput.value = '';
-      if (lead) lead.textContent = 'Enter your company email to receive a 3-digit access code.';
-      showStatus('');
-      emailInput?.focus();
-    });
+    return () => resetAccessForm(false);
   };
 
   if (masterlinkPanel && masterlinkTriggers.length) {
@@ -610,6 +625,97 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (catalogPdfPanel && catalogPdfTriggers.length) {
+    const catalogLogin = catalogPdfPanel.querySelector('.catalog-pdf-login');
+    const catalogViewer = catalogPdfPanel.querySelector('.catalog-pdf-viewer');
+    const catalogStatus = catalogPdfPanel.querySelector('.catalog-pdf-status');
+    const catalogFrame = catalogPdfPanel.querySelector('#catalogPdfViewer');
+    const catalogLoading = catalogPdfPanel.querySelector('.catalog-pdf-loading');
+    const catalogFallback = catalogPdfPanel.querySelector('.catalog-pdf-fallback');
+    let catalogSessionCheck = 0;
+    let catalogLoadTimer;
+    let catalogFrameLoading = false;
+    let resetCatalogAccessForm = () => {};
+
+    const showCatalogFallback = () => {
+      if (!catalogViewer) return;
+      catalogFrameLoading = false;
+      clearTimeout(catalogLoadTimer);
+      if (catalogFrame) catalogFrame.hidden = true;
+      if (catalogLoading) catalogLoading.hidden = true;
+      if (catalogFallback) catalogFallback.hidden = false;
+    };
+
+    const showCatalogViewer = () => {
+      if (!catalogViewer || !catalogLogin || !catalogFrame) return;
+      catalogLogin.hidden = true;
+      catalogViewer.hidden = false;
+      catalogViewer.focus();
+      if (catalogFallback) catalogFallback.hidden = true;
+      catalogFrame.hidden = false;
+      if (catalogLoading) catalogLoading.hidden = false;
+      catalogFrameLoading = true;
+      catalogFrame.src = catalogFrame.dataset.src;
+      clearTimeout(catalogLoadTimer);
+      catalogLoadTimer = setTimeout(() => {
+        if (catalogFrameLoading) showCatalogFallback();
+      }, 18000);
+    };
+
+    const validateCatalogSession = async () => {
+      const checkId = ++catalogSessionCheck;
+      try {
+        const response = await fetch('/api/access/catalog-session', {
+          method: 'GET',
+          credentials: 'include',
+          headers: { Accept: 'application/json' }
+        });
+        if (checkId !== catalogSessionCheck) return false;
+        if (response.status === 401) return false;
+        if (!response.ok) return null;
+        const result = await response.json();
+        if (checkId !== catalogSessionCheck) return false;
+        return result.authenticated === true && result.resource === 'catalog-pdf';
+      } catch {
+        return null;
+      }
+    };
+
+    const restoreCatalogSession = async () => {
+      if (catalogStatus) catalogStatus.textContent = 'Checking your existing catalog access...';
+      const authenticated = await validateCatalogSession();
+      if (!catalogPdfPanel.classList.contains('is-open')) return;
+      if (authenticated === true) {
+        showCatalogViewer();
+      } else if (catalogStatus) {
+        catalogStatus.textContent = authenticated === false
+          ? ''
+          : 'Catalog access could not be checked. Please try again.';
+      }
+    };
+
+    catalogFrame?.addEventListener('load', () => {
+      if (!catalogFrameLoading) return;
+      catalogFrameLoading = false;
+      clearTimeout(catalogLoadTimer);
+      if (catalogLoading) catalogLoading.hidden = true;
+    });
+    catalogFrame?.addEventListener('error', showCatalogFallback);
+    catalogPdfPanel.querySelector('.catalog-pdf-retry')?.addEventListener('click', showCatalogViewer);
+
+    resetCatalogPdfState = () => {
+      catalogSessionCheck += 1;
+      catalogFrameLoading = false;
+      clearTimeout(catalogLoadTimer);
+      catalogFrame?.removeAttribute('src');
+      if (catalogFrame) catalogFrame.hidden = false;
+      if (catalogLoading) catalogLoading.hidden = false;
+      if (catalogFallback) catalogFallback.hidden = true;
+      if (catalogViewer) catalogViewer.hidden = true;
+      if (catalogLogin) catalogLogin.hidden = false;
+      if (catalogStatus) catalogStatus.textContent = '';
+      resetCatalogAccessForm();
+    };
+
     const openCatalogPdf = (e) => {
       e.preventDefault();
       const showCatalogPdf = () => {
@@ -618,6 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
         navPanel?.setAttribute('aria-hidden', 'false');
         catalogPdfPanel.classList.add('is-open');
         catalogPdfPanel.setAttribute('aria-hidden', 'false');
+        void restoreCatalogSession();
       };
       if (catalogPdfPanel.classList.contains('is-open')) {
         closeCatalogPdf();
@@ -640,7 +747,12 @@ document.addEventListener('DOMContentLoaded', () => {
     catalogPdfTriggers.forEach((trigger) => trigger.addEventListener('click', openCatalogPdf));
     catalogPdfPanelClose?.addEventListener('click', closeCatalogPdf);
 
-    setupEmailCodeAccess(catalogPdfPanel, 'catalog-pdf');
+    resetCatalogAccessForm = setupEmailCodeAccess(catalogPdfPanel, 'catalog-pdf', async () => {
+      const authenticated = await validateCatalogSession();
+      if (authenticated !== true) return false;
+      showCatalogViewer();
+      return true;
+    });
   }
 
   if (orderEntryPanel && orderEntryTriggers.length) {
