@@ -161,9 +161,7 @@ export const getContactRoutingStore = async () => {
   const { getStore } = await import('@netlify/blobs');
   return getStore({
     name: CONTACT_ROUTING_STORE_NAME,
-    consistency: 'strong',
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_AUTH_TOKEN
+    consistency: 'strong'
   });
 };
 

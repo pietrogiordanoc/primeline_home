@@ -10,7 +10,8 @@ import {
   saveRoutingConfig,
   validateRoutingConfig
 } from '../shared/contact-routing.js';
-import { handler as contactHandler } from '../functions/send-contact.js';
+import { processContactEvent as contactHandler } from '../functions/send-contact.js';
+import sendContact from '../functions/send-contact.js';
 import adminRoutingHandler from '../functions/contact-routing-admin.js';
 
 const validSubmission = {
@@ -224,6 +225,50 @@ test('sends a valid submission to the explicit fallback with escaped fields', as
     else process.env.FROM_EMAIL = previous.fromEmail;
     globalThis.fetch = previous.fetch;
     console.error = previous.consoleError;
+  }
+});
+
+test('modern public Contact Us handler keeps the explicit fallback when Blobs is unavailable', async () => {
+  const previous = {
+    apiKey: process.env.RESEND_API_KEY,
+    fromEmail: process.env.FROM_EMAIL,
+    fetch: globalThis.fetch,
+    consoleError: console.error,
+    blobsContext: globalThis.netlifyBlobsContext
+  };
+  process.env.RESEND_API_KEY = 'test-key';
+  process.env.FROM_EMAIL = 'info@primelinedist.com';
+  console.error = () => {};
+  globalThis.netlifyBlobsContext = undefined;
+  let requestBody;
+  globalThis.fetch = async (_url, options) => {
+    requestBody = JSON.parse(options.body);
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ data: requestBody.map((_email, index) => ({ id: `mock-${index}` })) })
+    };
+  };
+
+  try {
+    const response = await sendContact(new Request('https://primelinedist.com/api/contact/send', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(validSubmission)
+    }));
+
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).sent, true);
+    assert.deepEqual(requestBody.map((email) => email.to), [['info@primelinedist.com']]);
+  } finally {
+    if (previous.apiKey === undefined) delete process.env.RESEND_API_KEY;
+    else process.env.RESEND_API_KEY = previous.apiKey;
+    if (previous.fromEmail === undefined) delete process.env.FROM_EMAIL;
+    else process.env.FROM_EMAIL = previous.fromEmail;
+    globalThis.fetch = previous.fetch;
+    console.error = previous.consoleError;
+    if (previous.blobsContext === undefined) delete globalThis.netlifyBlobsContext;
+    else globalThis.netlifyBlobsContext = previous.blobsContext;
   }
 });
 

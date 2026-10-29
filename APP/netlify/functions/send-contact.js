@@ -1,4 +1,5 @@
 import '../../assets/js/contact-form-data.js';
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import {
   DEFAULT_ROUTING_CONFIG,
   isValidEmail,
@@ -182,7 +183,7 @@ const deliverEmails = async (recipients, from, email, contact) => {
   return { delivered, failed: Math.max(0, recipients.length - delivered), status: response.status };
 };
 
-export const handler = async (event) => {
+export const processContactEvent = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405, { Allow: 'POST' });
 
   const encodedBody = typeof event.body === 'string' ? event.body : '';
@@ -248,3 +249,5 @@ export const handler = async (event) => {
       : 'Thank you. Your message has been sent.'
   });
 };
+
+export default adaptNetlifyHandler(processContactEvent);
