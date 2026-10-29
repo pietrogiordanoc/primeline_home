@@ -1,4 +1,4 @@
-const ISSUU_URL = 'https://e.issuu.com/embed.html?d=florida_spring_2021_compressed&u=primelinedist';
+const ISSUU_URL = 'https://e.issuu.com/embed.html?d=florida_spring_2021_compressed&hideIssuuLogo=true&hideShareButton=true&u=primelinedist';
 const accessStatus = document.querySelector('#catalogAccessStatus');
 const accessRetry = document.querySelector('#catalogAccessRetry');
 const viewer = document.querySelector('#catalogViewer');
