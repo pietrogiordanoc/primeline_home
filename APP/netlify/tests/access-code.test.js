@@ -219,15 +219,19 @@ test('Catalog viewer session endpoint accepts only an unexpired Catalog PDF sess
     assert.equal(validResponse.status, 200);
     assert.deepEqual(await validResponse.json(), { authenticated: true, resource: 'catalog-pdf' });
 
-    for (const id of [expiredId, masterlinkId]) {
-      const response = await requestCatalogSession(id);
-      assert.equal(response.status, 401);
-      assert.deepEqual(await response.json(), { authenticated: false });
-      assert.match(response.headers.get('set-cookie'), /access_session=.*Max-Age=0/);
-    }
+    const expiredResponse = await requestCatalogSession(expiredId);
+    assert.equal(expiredResponse.status, 401);
+    assert.deepEqual(await expiredResponse.json(), { authenticated: false });
+    assert.match(expiredResponse.headers.get('set-cookie'), /access_session=.*Max-Age=0/);
+
+    const masterlinkResponse = await requestCatalogSession(masterlinkId);
+    assert.equal(masterlinkResponse.status, 401);
+    assert.deepEqual(await masterlinkResponse.json(), { authenticated: false });
+    assert.equal(masterlinkResponse.headers.get('set-cookie'), null);
 
     const missingResponse = await requestCatalogSession(null);
     assert.equal(missingResponse.status, 401);
+    assert.match(missingResponse.headers.get('set-cookie'), /access_session=.*Max-Age=0/);
     assert.equal(blobs.has(`${SITE_STORE_PREFIX}session:${expiredId}`), false);
     assert.ok(blobRequests.length > 0);
     assert.ok(blobRequests.every((request) => request.hasRuntimeAuthorization));

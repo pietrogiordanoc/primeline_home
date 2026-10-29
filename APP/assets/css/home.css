@@ -568,6 +568,14 @@
 .catalog-choice-copy strong{ color: var(--pl-navy); font-family: var(--font-serif); font-size: 21px; }
 .catalog-choice-copy > span:not(.catalog-choice-link){ color: var(--pl-ink-soft); font-size: 13px; line-height: 1.55; }
 .catalog-choice-link{ margin-top: auto; padding-top: 8px; color: var(--pl-navy); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.catalog-session-status{
+  margin: 14px 0 0;
+  color: var(--pl-ink-soft);
+  font-size: 13px;
+  text-align: center;
+}
+.catalog-session-status.is-error{ color: #8d2929; }
+.catalog-session-status[hidden]{ display: none; }
 .catalog-panel-close{
   position: sticky;
   top: 0;

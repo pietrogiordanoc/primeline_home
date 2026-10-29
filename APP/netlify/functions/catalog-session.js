@@ -49,9 +49,10 @@ const handler = async (event) => {
       return json({ authenticated: false }, 401, { 'Set-Cookie': clearSessionCookie });
     }
 
-    if (session.resource !== 'catalog-pdf' || typeof session.email !== 'string' || !EMAIL_PATTERN.test(session.email)) {
+    if (typeof session.email !== 'string' || !EMAIL_PATTERN.test(session.email)) {
       return json({ authenticated: false }, 401, { 'Set-Cookie': clearSessionCookie });
     }
+    if (session.resource !== 'catalog-pdf') return json({ authenticated: false }, 401);
 
     return json({ authenticated: true, resource: 'catalog-pdf' });
   } catch {

@@ -11,19 +11,29 @@
 </head>
 <body>
   <header class="catalog-header">
-    <a class="catalog-back" href="/" aria-label="Back to Home">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"></path></svg>
-      <span>Back to Home</span>
-    </a>
     <a class="catalog-brand" href="/" aria-label="Prime Line home">
       <img src="/images/Logo1500.png" alt="Prime Line">
     </a>
-    <span class="catalog-header-spacer" aria-hidden="true"></span>
+    <nav class="catalog-header-actions" aria-label="Catalog actions">
+      <a class="catalog-header-button catalog-back" href="/" aria-label="Back to Home">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"></path></svg>
+        <span>Back to Home</span>
+      </a>
+      <a
+        class="catalog-action catalog-download"
+        href="https://fcdrjlzqrbvnbsehkqgm.supabase.co/storage/v1/object/public/PDF%20Catalog/Autumn%202026.pdf"
+        download="Prime-Line-Catalog-Autumn-2026.pdf"
+        target="_blank"
+        rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18v3h14v-3"></path></svg>
+        <span>Download PDF</span>
+      </a>
+    </nav>
   </header>
 
   <main class="catalog-main">
     <div class="catalog-heading">
-      <span class="catalog-eyebrow">Product Catalog</span>
+      <span class="catalog-eyebrow">PRODUCT CATALOG</span>
       <h1>Prime Line Catalog — Autumn 2026</h1>
     </div>
 

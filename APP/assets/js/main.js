@@ -786,7 +786,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (catalogPdfPanel && catalogPdfTriggers.length) {
-    const openCatalogPdf = (e) => {
+    let catalogSessionCheckInProgress = false;
+    const openCatalogPdf = async (e) => {
       e.preventDefault();
       const trigger = e.currentTarget;
       const showCatalogPdf = () => {
@@ -794,7 +795,59 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       if (catalogPdfPanel.classList.contains('is-open')) {
         closeCatalogPdf();
-      } else if (contactPanel?.classList.contains('is-open')) {
+        return;
+      }
+
+      if (catalogSessionCheckInProgress) return;
+      catalogSessionCheckInProgress = true;
+      trigger.setAttribute('aria-busy', 'true');
+      const sessionStatus = catalogPanel.querySelector('.catalog-session-status');
+      if (sessionStatus) {
+        sessionStatus.textContent = 'Checking your existing Catalog PDF access...';
+        sessionStatus.classList.remove('is-error');
+        sessionStatus.hidden = false;
+      }
+
+      let hasValidSession = false;
+      try {
+        const response = await fetch('/api/access/catalog-session', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
+          headers: { Accept: 'application/json' }
+        });
+        if (response.status !== 401) {
+          if (!response.ok) throw new Error('catalog-session-check-failed');
+          const result = await response.json();
+          if (result.authenticated === true && result.resource === 'catalog-pdf') {
+            hasValidSession = true;
+          } else if (result.authenticated !== false) {
+            throw new Error('invalid-catalog-session-response');
+          }
+        }
+      } catch {
+        if (sessionStatus) {
+          sessionStatus.textContent = 'We could not verify your existing access. Please try again.';
+          sessionStatus.classList.add('is-error');
+          sessionStatus.hidden = false;
+        }
+        catalogSessionCheckInProgress = false;
+        trigger.removeAttribute('aria-busy');
+        return;
+      }
+
+      if (sessionStatus) {
+        sessionStatus.textContent = '';
+        sessionStatus.hidden = true;
+      }
+      catalogSessionCheckInProgress = false;
+      trigger.removeAttribute('aria-busy');
+      if (hasValidSession) {
+        window.location.assign('/catalog-pdf/');
+        return;
+      }
+
+      if (contactPanel?.classList.contains('is-open')) {
         closeContact(showCatalogPdf);
       } else if (aboutPanel?.classList.contains('is-open')) {
         closeAbout(showCatalogPdf);
