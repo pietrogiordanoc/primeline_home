@@ -11,6 +11,8 @@ const shareCatalogButton = document.querySelector('#shareCatalogButton');
 const shareCatalogDialog = document.querySelector('#shareCatalogDialog');
 const shareCatalogForm = document.querySelector('#shareCatalogForm');
 const shareCatalogStatus = document.querySelector('#shareCatalogStatus');
+const staffFullName = document.querySelector('#staffFullName');
+const staffCorporateEmail = document.querySelector('#staffCorporateEmail');
 let loadTimeout;
 
 const setAccessStatus = (message, isError = false) => {
@@ -74,10 +76,44 @@ const validateCatalogSession = async () => {
   }
 };
 
+const loadStaffProfile = async () => {
+  const submitButton = shareCatalogForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  staffFullName.disabled = true;
+  staffCorporateEmail.value = '';
+  shareCatalogStatus.textContent = 'Loading verified staff details...';
+  shareCatalogStatus.classList.remove('is-error');
+  try {
+    const response = await fetch('/api/catalog/staff/share', {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' }
+    });
+    const result = await response.json();
+    if (!response.ok || !/^[^\s@]+@primelinedist\.com$/i.test(result.email || '')) {
+      throw new Error(result.error || 'Verified staff details could not be loaded. Close and reopen this dialog to try again.');
+    }
+    staffCorporateEmail.value = result.email;
+    staffFullName.value = result.fullName || '';
+    staffFullName.disabled = false;
+    shareCatalogStatus.textContent = result.fullName
+      ? ''
+      : 'Enter your full name. It will be saved for future invitations.';
+    staffFullName.focus();
+  } catch (error) {
+    staffFullName.disabled = true;
+    shareCatalogStatus.textContent = error.message || 'Verified staff details could not be loaded.';
+    shareCatalogStatus.classList.add('is-error');
+  } finally {
+    submitButton.disabled = !staffCorporateEmail.value;
+  }
+};
+
 shareCatalogButton.addEventListener('click', () => {
   shareCatalogStatus.textContent = '';
   shareCatalogDialog.showModal();
-  document.querySelector('#customerEmail').focus();
+  loadStaffProfile();
 });
 
 document.querySelector('#cancelShareCatalog').addEventListener('click', () => shareCatalogDialog.close());
@@ -96,13 +132,14 @@ shareCatalogForm.addEventListener('submit', async (event) => {
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        staffFullName: staffFullName.value.trim(),
         customerEmail: document.querySelector('#customerEmail').value.trim(),
         duration: document.querySelector('#guestDuration').value
       })
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'The invitation could not be sent.');
-    shareCatalogForm.reset();
+    document.querySelector('#customerEmail').value = '';
     document.querySelector('#guestDuration').value = '7-days';
     shareCatalogStatus.textContent = 'The private invitation was sent.';
   } catch (error) {

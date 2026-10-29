@@ -8,6 +8,8 @@ import {
   GUEST_DURATIONS,
   claimGuestToken,
   createGuestInvitationRecord,
+  getEmployeeProfile,
+  getEmployeeProfileStore,
   getGrantStore,
   getInvitationStore,
   jsonResponse,
@@ -138,6 +140,11 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
       if (!previous || previous.status === 'reissued' || previous.usedAt) {
         return jsonResponse({ error: 'This invitation cannot be reissued.' }, 409);
       }
+      const reissuerEmail = authorization.session?.email || ADMIN_EMAIL;
+      const reissuerProfile = await getEmployeeProfile(
+        reissuerEmail,
+        dependencies.getEmployeeProfileStore || getEmployeeProfileStore
+      );
       if (previous.tokenHash) {
         const claimed = await (dependencies.claimToken || claimGuestToken)(previous.tokenHash);
         if (!claimed) return jsonResponse({ error: 'This invitation has already been used.' }, 409);
@@ -150,7 +157,8 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
       const created = createGuestInvitationRecord({
         customerEmail: previous.customerEmail,
         duration: previous.duration,
-        sharedBy: authorization.session?.email || ADMIN_EMAIL,
+        sharedBy: reissuerProfile.email || reissuerEmail,
+        sharedByName: reissuerProfile.fullName,
         now: now()
       });
       created.invitation.tokenHash = created.tokenHash;

@@ -109,6 +109,48 @@ export const claimGuestToken = async (claimKey, getClaimStore = getGuestClaimSto
 
 export const hashEmail = (email) => hashValue(email);
 
+export const normalizeStaffFullName = (value) => {
+  if (typeof value !== 'string') return '';
+  const name = value.trim().replace(/\s+/g, ' ');
+  if (!name || name.length > 120 || /[\u0000-\u001f\u007f-\u009f]/.test(name)) return '';
+  return name;
+};
+
+export const getEmployeeProfileStore = () => getStore('prime-line-access');
+
+export const getEmployeeProfile = async (email, storeFactory = getEmployeeProfileStore) => {
+  const verifiedEmail = typeof email === 'string' && STAFF_EMAIL_PATTERN.test(email)
+    ? email.trim().toLowerCase()
+    : '';
+  if (!verifiedEmail) return { email: '', fullName: '' };
+  const store = await storeFactory();
+  const profile = await store.get(`staff-profile:${hashEmail(verifiedEmail)}`, { type: 'json' });
+  return {
+    email: verifiedEmail,
+    fullName: profile?.email === verifiedEmail ? normalizeStaffFullName(profile.fullName) : ''
+  };
+};
+
+export const saveEmployeeProfile = async (
+  email,
+  fullName,
+  { getProfileStore = getEmployeeProfileStore, now = Date.now } = {}
+) => {
+  const verifiedEmail = typeof email === 'string' && STAFF_EMAIL_PATTERN.test(email)
+    ? email.trim().toLowerCase()
+    : '';
+  const normalizedName = normalizeStaffFullName(fullName);
+  if (!verifiedEmail || !normalizedName) throw new Error('A verified staff email and full name are required.');
+
+  const store = await getProfileStore();
+  await store.setJSON(`staff-profile:${hashEmail(verifiedEmail)}`, {
+    email: verifiedEmail,
+    fullName: normalizedName,
+    updatedAt: now()
+  });
+  return { email: verifiedEmail, fullName: normalizedName };
+};
+
 export const getActiveGrant = (grant, now = Date.now()) => Boolean(
   grant &&
   grant.status !== 'revoked' &&
@@ -235,7 +277,14 @@ export const getPublicBaseUrl = () => {
   return parsed.origin;
 };
 
-export const createGuestInvitationRecord = ({ customerEmail, duration, sharedBy, now = Date.now(), id = createId() }) => {
+export const createGuestInvitationRecord = ({
+  customerEmail,
+  duration,
+  sharedBy,
+  sharedByName = '',
+  now = Date.now(),
+  id = createId()
+}) => {
   const token = createOpaqueToken();
   const tokenHash = hashToken(token);
   return {
@@ -245,6 +294,7 @@ export const createGuestInvitationRecord = ({ customerEmail, duration, sharedBy,
       id,
       customerEmail,
       sharedBy,
+      sharedByName: normalizeStaffFullName(sharedByName) || null,
       duration,
       status: 'pending',
       createdAt: now,
@@ -261,10 +311,26 @@ export const sendCatalogInvitationEmail = async (invitation, token, dependencies
   const link = `${baseUrl}/catalog-pdf/guest/#invite=${encodeURIComponent(token)}`;
   const safeEmail = escapeHtml(invitation.customerEmail);
   const safeDuration = escapeHtml(GUEST_DURATIONS[invitation.duration]);
+  const inviterEmail = typeof invitation.sharedBy === 'string' && STAFF_EMAIL_PATTERN.test(invitation.sharedBy)
+    ? invitation.sharedBy.trim().toLowerCase()
+    : '';
+  const inviterName = normalizeStaffFullName(invitation.sharedByName);
+  const safeInviterEmail = escapeHtml(inviterEmail);
+  const safeInviterName = escapeHtml(inviterName);
+  const inviterText = inviterEmail
+    ? `\n\nINVITED BY\n${inviterName ? `${inviterName}\nPrime Line Distributors\n` : ''}${inviterEmail}`
+    : '';
+  const inviterHtml = inviterEmail
+    ? `<div style="max-width:340px;margin:22px auto 0;padding:14px 18px;border:1px solid #eeeae3;background:#faf9f6;text-align:left;">
+        <div style="margin-bottom:7px;color:#c4933b;font-size:10px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">Invited by</div>
+        ${inviterName ? `<div style="color:#17284d;font-size:13px;font-weight:bold;line-height:1.5;">${safeInviterName}</div><div style="color:#737984;font-size:12px;line-height:1.5;">Prime Line Distributors</div>` : ''}
+        <a href="mailto:${safeInviterEmail}" style="color:#17284d;font-size:12px;line-height:1.5;text-decoration:underline;">${safeInviterEmail}</a>
+      </div>`
+    : '';
   return (dependencies.sendEmail || sendGuestEmail)({
     to: invitation.customerEmail,
     subject: 'Prime Line | Your Catalog Invitation',
-    text: `You have been invited to explore the Prime Line Specialty Foods Catalog.\n\nClick below to access the catalog: ${link}\n\nAccess duration: ${GUEST_DURATIONS[invitation.duration]}. Your access begins when you open the invitation.`,
+    text: `You have been invited to explore the Prime Line Specialty Foods Catalog.${inviterText}\n\nClick below to access the catalog: ${link}\n\nAccess duration: ${GUEST_DURATIONS[invitation.duration]}. Your access begins when you open the invitation.`,
     html: `
       <div style="margin:0;background:#f7f6f2;padding:40px 18px;font-family:Arial,Helvetica,sans-serif;color:#17284d;">
         <div style="max-width:540px;margin:0 auto;background:#fff;border:1px solid #e7e3dc;">
@@ -276,6 +342,7 @@ export const sendCatalogInvitationEmail = async (invitation, token, dependencies
             <h1 style="margin:14px 0;color:#17284d;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;">Your catalog invitation</h1>
             <p style="color:#737984;font-size:14px;line-height:1.6;">You have been invited to explore the Prime Line Specialty Foods Catalog.</p>
             <p style="color:#737984;font-size:12px;line-height:1.6;">Invited for ${safeEmail}<br>Access duration: <strong>${safeDuration}</strong><br>Your access period begins when you open the invitation.</p>
+            ${inviterHtml}
             <a href="${link}" style="display:inline-block;margin-top:12px;padding:14px 22px;background:#17284d;color:#fff;text-decoration:none;font-size:12px;font-weight:bold;letter-spacing:1px;">VIEW CATALOG</a>
           </div>
           <div style="padding:16px 22px;text-align:center;border-top:1px solid #eeeae3;color:#969ba3;font-size:11px;line-height:1.5;">This invitation link expires in 48 hours and can be used once. If you did not expect this invitation, you can ignore this email.</div>

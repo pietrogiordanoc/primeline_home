@@ -7,7 +7,10 @@ import {
   claimGuestToken,
   createGuestSession,
   getGrantExpiresAt,
-  hashToken
+  hashEmail,
+  hashToken,
+  saveEmployeeProfile,
+  sendCatalogInvitationEmail
 } from '../shared/catalog-guest-access.js';
 import { createCatalogGuestAdminHandler } from '../functions/catalog-guest-admin.js';
 import { createCatalogGuestRedeemHandler } from '../functions/catalog-guest-redeem.js';
@@ -67,7 +70,8 @@ const fixture = (start = Date.UTC(2026, 0, 31, 13, 15)) => {
     sessions: createStore(),
     verifications: createStore(),
     claims: createStore(),
-    admin: createStore()
+    admin: createStore(),
+    profiles: createStore()
   };
   const emails = [];
   const dependencies = {
@@ -76,6 +80,7 @@ const fixture = (start = Date.UTC(2026, 0, 31, 13, 15)) => {
     getGuestSessionStore: async () => stores.sessions,
     getVerificationStore: async () => stores.verifications,
     getAdminRateStore: async () => stores.admin,
+    getEmployeeProfileStore: async () => stores.profiles,
     getEmployeeSession: async () => ({
       email: 'sales@primelinedist.com',
       resource: 'catalog-pdf',
@@ -90,7 +95,8 @@ const fixture = (start = Date.UTC(2026, 0, 31, 13, 15)) => {
       emails.push({
         to: invitation.customerEmail,
         subject: 'Prime Line | Your Catalog Invitation',
-        text: `Invitation: https://primelinedist.com/catalog-pdf/guest/#invite=${token}`
+        text: `Invitation: https://primelinedist.com/catalog-pdf/guest/#invite=${token}`,
+        invitation
       });
       return true;
     },
@@ -108,9 +114,18 @@ const fixture = (start = Date.UTC(2026, 0, 31, 13, 15)) => {
   };
 };
 
-const inviteCustomer = async (fixtureState, duration = '7-days', email = 'buyer@example.com') => {
+const inviteCustomer = async (
+  fixtureState,
+  duration = '7-days',
+  email = 'buyer@example.com',
+  fullName = 'Taylor Morgan'
+) => {
   const handler = createCatalogStaffShareHandler(fixtureState.dependencies);
-  const response = await handler(makeEvent('POST', { customerEmail: email, duration }));
+  const response = await handler(makeEvent('POST', {
+    staffFullName: fullName,
+    customerEmail: email,
+    duration
+  }));
   assert.equal(response.statusCode, 200);
   return emailToken(fixtureState.emails.at(-1), 'invite');
 };
@@ -127,7 +142,11 @@ test('guest durations use fixed periods and clamped UTC calendar months', () => 
 test('only an authenticated employee can create a guest invitation and tokens are stored hashed', async () => {
   const state = fixture();
   const response = await createCatalogStaffShareHandler(state.dependencies)(
-    makeEvent('POST', { customerEmail: 'Buyer@Example.com', duration: '7-days' })
+    makeEvent('POST', {
+      staffFullName: 'Taylor Morgan',
+      customerEmail: 'Buyer@Example.com',
+      duration: '7-days'
+    })
   );
   assert.equal(response.statusCode, 200);
   assert.equal(state.emails.length, 1);
@@ -137,6 +156,8 @@ test('only an authenticated employee can create a guest invitation and tokens ar
   const invitation = await state.stores.invitations.get(`invitation:${(await state.stores.invitations.get(`token:${tokenHash}`, { type: 'json' })).invitationId}`, { type: 'json' });
   assert.equal(invitation.customerEmail, 'buyer@example.com');
   assert.equal(invitation.duration, '7-days');
+  assert.equal(invitation.sharedBy, 'sales@primelinedist.com');
+  assert.equal(invitation.sharedByName, 'Taylor Morgan');
   assert.equal(invitation.expiresAt, state.now + GUEST_INVITATION_LIFETIME_MS);
   assert.equal(invitation.tokenHash, tokenHash);
   assert.equal(JSON.stringify([...state.stores.invitations.data.values()]).includes(token), false);
@@ -157,7 +178,11 @@ test('staff invitation creation rejects malformed email and does not require pri
   assert.equal(invalid.statusCode, 400);
 
   const invited = await createCatalogStaffShareHandler(state.dependencies)(
-    makeEvent('POST', { customerEmail: 'buyer@example.com', duration: '7-days' })
+    makeEvent('POST', {
+      staffFullName: 'Taylor Morgan',
+      customerEmail: 'buyer@example.com',
+      duration: '7-days'
+    })
   );
   assert.equal(invited.statusCode, 200);
   assert.equal(state.emails.length, 1);
@@ -168,9 +193,119 @@ test('Resend failure does not leave a redeemable invitation record', async () =>
   const response = await createCatalogStaffShareHandler({
     ...state.dependencies,
     sendInvitation: async () => false
-  })(makeEvent('POST', { customerEmail: 'buyer@example.com', duration: '7-days' }));
+  })(makeEvent('POST', {
+    staffFullName: 'Taylor Morgan',
+    customerEmail: 'buyer@example.com',
+    duration: '7-days'
+  }));
   assert.equal(response.statusCode, 502);
   assert.equal(state.stores.invitations.data.size, 0);
+});
+
+test('staff profile is loaded and updated only for the verified employee email', async () => {
+  const state = fixture();
+  const handler = createCatalogStaffShareHandler(state.dependencies);
+  const profileKey = `staff-profile:${hashEmail('sales@primelinedist.com')}`;
+
+  const initial = await handler(makeEvent('GET'));
+  assert.equal(responseBody(initial).email, 'sales@primelinedist.com');
+  assert.equal(responseBody(initial).fullName, '');
+
+  const impersonation = await handler(makeEvent('POST', {
+    staffFullName: 'Taylor Morgan',
+    email: 'another@primelinedist.com',
+    customerEmail: 'buyer@example.com',
+    duration: '7-days'
+  }));
+  assert.equal(impersonation.statusCode, 400);
+  assert.equal(await state.stores.profiles.get(profileKey), null);
+  assert.equal(state.emails.length, 0);
+
+  const invited = await handler(makeEvent('POST', {
+    staffFullName: '  Taylor   Morgan ',
+    customerEmail: 'buyer@example.com',
+    duration: '7-days'
+  }));
+  assert.equal(invited.statusCode, 200);
+  assert.equal(state.emails[0].invitation.sharedBy, 'sales@primelinedist.com');
+  assert.equal(state.emails[0].invitation.sharedByName, 'Taylor Morgan');
+  assert.deepEqual(await state.stores.profiles.get(profileKey, { type: 'json' }), {
+    email: 'sales@primelinedist.com',
+    fullName: 'Taylor Morgan',
+    updatedAt: state.now
+  });
+
+  const corrected = await handler(makeEvent('POST', {
+    staffFullName: 'Taylor Lee Morgan',
+    customerEmail: 'another-buyer@example.com',
+    duration: '7-days'
+  }));
+  assert.equal(corrected.statusCode, 200);
+  assert.equal(responseBody(await handler(makeEvent('GET'))).fullName, 'Taylor Lee Morgan');
+  assert.equal(state.emails[1].invitation.sharedByName, 'Taylor Lee Morgan');
+});
+
+test('catalog invitation Resend request includes escaped inviter details in HTML and plain text', async () => {
+  const previousFetch = globalThis.fetch;
+  const previousApiKey = process.env.RESEND_API_KEY;
+  const previousFromEmail = process.env.FROM_EMAIL;
+  let request;
+  process.env.RESEND_API_KEY = 'mock-resend-key';
+  process.env.FROM_EMAIL = 'catalog@primelinedist.com';
+  globalThis.fetch = async (url, options) => {
+    request = { url, options };
+    return { ok: true };
+  };
+
+  try {
+    const sent = await sendCatalogInvitationEmail({
+      customerEmail: 'buyer@example.com',
+      duration: '7-days',
+      sharedBy: 'sales@primelinedist.com',
+      sharedByName: '<img src=x onerror=alert(1)> & Morgan'
+    }, 'mocked-invitation-token', {
+      getPublicBaseUrl: () => 'https://primelinedist.com'
+    });
+
+    assert.equal(sent, true);
+    assert.equal(request.url, 'https://api.resend.com/emails');
+    assert.equal(request.options.method, 'POST');
+    assert.equal(request.options.headers.Authorization, 'Bearer mock-resend-key');
+    const message = JSON.parse(request.options.body);
+    assert.equal(message.from, 'catalog@primelinedist.com');
+    assert.match(message.text, /INVITED BY\n<img src=x onerror=alert\(1\)> & Morgan\nPrime Line Distributors\nsales@primelinedist\.com/);
+    assert.match(message.html, /INVITED BY/i);
+    assert.match(message.html, /&lt;img src=x onerror=alert\(1\)&gt; &amp; Morgan/);
+    assert.doesNotMatch(message.html, /<img src=x onerror=alert\(1\)>/);
+    assert.match(message.html, /href="mailto:sales@primelinedist\.com"/);
+    assert.match(message.html, /VIEW CATALOG/);
+    assert.match(message.html, /expires in 48 hours and can be used once/);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousApiKey === undefined) delete process.env.RESEND_API_KEY;
+    else process.env.RESEND_API_KEY = previousApiKey;
+    if (previousFromEmail === undefined) delete process.env.FROM_EMAIL;
+    else process.env.FROM_EMAIL = previousFromEmail;
+  }
+});
+
+test('legacy catalog invitations include a known inviter email without an unverified name', async () => {
+  let message;
+  await sendCatalogInvitationEmail({
+    customerEmail: 'buyer@example.com',
+    duration: '7-days',
+    sharedBy: 'sales@primelinedist.com'
+  }, 'mocked-invitation-token', {
+    getPublicBaseUrl: () => 'https://primelinedist.com',
+    sendEmail: async (email) => {
+      message = email;
+      return true;
+    }
+  });
+  assert.match(message.text, /INVITED BY\nsales@primelinedist\.com/);
+  assert.doesNotMatch(message.text, /Prime Line Distributors/);
+  assert.match(message.html, /mailto:sales@primelinedist\.com/);
+  assert.doesNotMatch(message.html, /Prime Line Distributors/);
 });
 
 test('GET never redeems a Magic Link and explicit POST creates the selected grant and finite session', async () => {
@@ -187,6 +322,8 @@ test('GET never redeems a Magic Link and explicit POST creates the selected gran
   assert.equal(result.authenticated, true);
   assert.equal(result.resource, 'catalog-guest');
   assert.equal(result.expiresAt, state.now + 7 * 24 * 60 * 60 * 1000);
+  assert.equal(result.sharedBy, 'sales@primelinedist.com');
+  assert.equal(result.sharedByName, 'Taylor Morgan');
   const cookies = response.multiValueHeaders['Set-Cookie'];
   assert.match(cookies[0], /HttpOnly; Secure; SameSite=Strict/);
   assert.match(cookies[0], new RegExp(`Max-Age=${GUEST_SESSION_LIFETIME_SECONDS}`));
@@ -194,6 +331,11 @@ test('GET never redeems a Magic Link and explicit POST creates the selected gran
   const session = await state.stores.sessions.get(`session:${sessionId}`, { type: 'json' });
   assert.equal(session.resource, 'catalog-guest');
   assert.equal(session.expiresAt, state.now + GUEST_SESSION_LIFETIME_SECONDS * 1000);
+  const sessionResponse = await createCatalogGuestSessionHandler(state.dependencies)(
+    makeEvent('GET', undefined, cookies[0].split(';')[0])
+  );
+  assert.equal(responseBody(sessionResponse).sharedBy, 'sales@primelinedist.com');
+  assert.equal(responseBody(sessionResponse).sharedByName, 'Taylor Morgan');
 });
 
 test('invitation redemption rejects sequential replays and persists a token claim', async () => {
@@ -359,6 +501,10 @@ test('guest token claims persist so sequential replays are rejected without Supa
 test('Admin guest operations require authorization and can reissue an expired invitation', async () => {
   const state = fixture();
   const originalToken = await inviteCustomer(state);
+  await saveEmployeeProfile('pietro@primelinedist.com', 'Pietro Giordano', {
+    getProfileStore: async () => state.stores.profiles,
+    now: () => state.now
+  });
   state.setNow(state.now + GUEST_INVITATION_LIFETIME_MS + 1);
   const tokenHash = hashToken(originalToken);
   const pointer = await state.stores.invitations.get(`token:${tokenHash}`, { type: 'json' });
@@ -370,6 +516,8 @@ test('Admin guest operations require authorization and can reissue an expired in
   assert.equal(response.statusCode, 200);
   assert.equal(state.emails.length, 2);
   assert.notEqual(emailToken(state.emails[1], 'invite'), originalToken);
+  assert.equal(state.emails[1].invitation.sharedBy, 'pietro@primelinedist.com');
+  assert.equal(state.emails[1].invitation.sharedByName, 'Pietro Giordano');
 
   const denied = await createCatalogGuestAdminHandler({
     ...state.dependencies,

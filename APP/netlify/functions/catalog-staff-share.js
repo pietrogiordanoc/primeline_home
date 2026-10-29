@@ -3,19 +3,26 @@ import { isSameOrigin } from '../shared/admin-auth.js';
 import {
   checkGuestRateLimit,
   createGuestInvitationRecord,
+  getEmployeeProfile,
   getEmployeeCatalogSession,
+  getEmployeeProfileStore,
   getInvitationStore,
   hashEmail,
   isGuestDuration,
   jsonResponse,
   normalizeEmail,
+  normalizeStaffFullName,
   parseBody,
+  saveEmployeeProfile,
   sendCatalogInvitationEmail
 } from '../shared/catalog-guest-access.js';
 
 export const createCatalogStaffShareHandler = (dependencies = {}) => async (event) => {
-  if (event.httpMethod !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405);
-  if (!(dependencies.isSameOrigin || isSameOrigin)(event)) return jsonResponse({ error: 'Request could not be completed.' }, 403);
+  const method = event.httpMethod;
+  if (method !== 'GET' && method !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405);
+  if (method === 'POST' && !(dependencies.isSameOrigin || isSameOrigin)(event)) {
+    return jsonResponse({ error: 'Request could not be completed.' }, 403);
+  }
 
   const now = dependencies.now || Date.now;
   try {
@@ -26,14 +33,37 @@ export const createCatalogStaffShareHandler = (dependencies = {}) => async (even
     );
     if (!employee) return jsonResponse({ error: 'Authorized employee catalog access is required.' }, 401);
 
-    const payload = (dependencies.parseBody || parseBody)(event);
-    const customerEmail = (dependencies.normalizeEmail || normalizeEmail)(payload?.customerEmail);
-    if (!payload || !customerEmail || !isGuestDuration(payload.duration)) {
-      return jsonResponse({ error: 'Enter a valid customer email and access duration.' }, 400);
+    if (method === 'GET') {
+      const profile = await (dependencies.getEmployeeProfile || getEmployeeProfile)(
+        employee.email,
+        dependencies.getEmployeeProfileStore || getEmployeeProfileStore
+      );
+      return jsonResponse(profile);
     }
 
+    const payload = (dependencies.parseBody || parseBody)(event);
+    const customerEmail = (dependencies.normalizeEmail || normalizeEmail)(payload?.customerEmail);
+    const staffFullName = normalizeStaffFullName(payload?.staffFullName);
+    if (
+      !payload ||
+      Object.hasOwn(payload, 'email') ||
+      !staffFullName ||
+      !customerEmail ||
+      !isGuestDuration(payload.duration)
+    ) {
+      return jsonResponse({ error: 'Enter your name, a valid customer email, and access duration.' }, 400);
+    }
+    const profile = await (dependencies.saveEmployeeProfile || saveEmployeeProfile)(
+      employee.email,
+      staffFullName,
+      {
+        getProfileStore: dependencies.getEmployeeProfileStore || getEmployeeProfileStore,
+        now
+      }
+    );
+
     const allowed = await (dependencies.rateLimit || checkGuestRateLimit)(
-      hashEmail(employee.email),
+      hashEmail(profile.email),
       20,
       60 * 60 * 1000,
       now
@@ -43,7 +73,8 @@ export const createCatalogStaffShareHandler = (dependencies = {}) => async (even
     const created = (dependencies.createInvitation || createGuestInvitationRecord)({
       customerEmail,
       duration: payload.duration,
-      sharedBy: employee.email,
+      sharedBy: profile.email,
+      sharedByName: profile.fullName,
       now: now()
     });
     const store = await (dependencies.getInvitationStore || getInvitationStore)();

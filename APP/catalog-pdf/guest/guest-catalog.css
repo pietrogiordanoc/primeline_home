@@ -48,6 +48,32 @@ body{
 }
 .guest-status.is-error,.guest-form-status.is-error{color:#8d2929}
 .guest-access-note{margin:8px 0 0}
+.guest-inviter-note{
+  display:grid;
+  justify-items:start;
+  gap:2px;
+  width:fit-content;
+  max-width:100%;
+  margin-top:10px;
+  padding:9px 12px;
+  border-left:2px solid var(--pl-gold);
+  background:rgba(255,255,255,.72);
+}
+.guest-inviter-label{
+  margin-bottom:2px;
+  color:var(--pl-gold);
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:.14em;
+}
+.guest-inviter-note p,.guest-inviter-note a{
+  margin:0;
+  color:var(--pl-ink-soft);
+  font-size:11px;
+  line-height:1.45;
+}
+.guest-inviter-note p:first-of-type{color:var(--pl-navy);font-weight:600}
+.guest-inviter-note a{color:var(--pl-navy);text-decoration:underline}
 .guest-status{margin:0 0 10px}
 .guest-link-panel,.guest-renew-panel{
   width:min(100%,520px);

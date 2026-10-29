@@ -46,6 +46,7 @@ const redeemInvitation = async (token, dependencies, now) => {
     invitationId: invitation.id,
     email: invitation.customerEmail,
     sharedBy: invitation.sharedBy,
+    sharedByName: invitation.sharedByName || null,
     duration: invitation.duration,
     createdAt: redeemedAt,
     expiresAt: getGrantExpiresAt(invitation.duration, redeemedAt),
@@ -69,7 +70,9 @@ const redeemInvitation = async (token, dependencies, now) => {
     authenticated: true,
     resource: 'catalog-guest',
     duration: GUEST_DURATIONS[grant.duration],
-    expiresAt: grant.expiresAt
+    expiresAt: grant.expiresAt,
+    sharedBy: grant.sharedBy || null,
+    sharedByName: grant.sharedByName || null
   }, 200, [cookie]);
 };
 
@@ -107,7 +110,9 @@ const redeemVerification = async (token, dependencies, now) => {
     authenticated: true,
     resource: 'catalog-guest',
     duration: GUEST_DURATIONS[grant.duration],
-    expiresAt: grant.expiresAt
+    expiresAt: grant.expiresAt,
+    sharedBy: grant.sharedBy || null,
+    sharedByName: grant.sharedByName || null
   }, 200, [cookie]);
 };
 

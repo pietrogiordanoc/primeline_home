@@ -7,6 +7,10 @@ const requestLinkForm = document.querySelector('#requestGuestLinkForm');
 const guestFormStatus = document.querySelector('#guestFormStatus');
 const guestStatus = document.querySelector('#guestStatus');
 const guestAccessNote = document.querySelector('#guestAccessNote');
+const guestInviterNote = document.querySelector('#guestInviterNote');
+const guestInviterName = document.querySelector('#guestInviterName');
+const guestInviterCompany = document.querySelector('#guestInviterCompany');
+const guestInviterEmail = document.querySelector('#guestInviterEmail');
 const guestViewer = document.querySelector('#guestViewer');
 const guestViewerStatus = document.querySelector('#guestViewerStatus');
 const guestViewerError = document.querySelector('#guestViewerError');
@@ -32,6 +36,27 @@ const setAccessNote = (expiresAt) => {
     ? 'Catalog Access · No Expiration'
     : `Catalog Access · Expires ${new Date(expiresAt).toLocaleDateString(undefined, { dateStyle: 'long' })}`;
   guestAccessNote.hidden = false;
+};
+
+const setInviterDetails = (name, email) => {
+  const verifiedEmail = typeof email === 'string' && /^[^\s@]+@primelinedist\.com$/i.test(email)
+    ? email.trim().toLowerCase()
+    : '';
+  if (!verifiedEmail) {
+    guestInviterNote.hidden = true;
+    return;
+  }
+  const fullName = typeof name === 'string' &&
+    name.trim().length <= 120 &&
+    !/[\u0000-\u001f\u007f-\u009f]/.test(name)
+    ? name.trim().replace(/\s+/g, ' ')
+    : '';
+  guestInviterName.textContent = fullName;
+  guestInviterName.hidden = !fullName;
+  guestInviterCompany.hidden = !fullName;
+  guestInviterEmail.textContent = verifiedEmail;
+  guestInviterEmail.href = `mailto:${verifiedEmail}`;
+  guestInviterNote.hidden = false;
 };
 
 const showRenewal = (message = '') => {
@@ -104,6 +129,7 @@ openButton.addEventListener('click', async () => {
     }
     magicToken = '';
     setAccessNote(result.expiresAt);
+    setInviterDetails(result.sharedByName, result.sharedBy);
     loadCatalogViewer();
   } catch (error) {
     setStatus(error.message || 'This catalog link could not be verified.', true);
@@ -158,6 +184,7 @@ const initialize = async () => {
       return;
     }
     setAccessNote(result.expiresAt);
+    setInviterDetails(result.sharedByName, result.sharedBy);
     loadCatalogViewer();
   } catch {
     showRenewal('We could not verify your access. Please try again or request a fresh verification link.');

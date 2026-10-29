@@ -16,7 +16,9 @@ export const createCatalogGuestSessionHandler = (dependencies = {}) => async (ev
       resource: 'catalog-guest',
       duration: GUEST_DURATIONS[authenticated.grant.duration],
       expiresAt: authenticated.grant.expiresAt,
-      sessionExpiresAt: authenticated.session.expiresAt
+      sessionExpiresAt: authenticated.session.expiresAt,
+      sharedBy: authenticated.grant.sharedBy || null,
+      sharedByName: authenticated.grant.sharedByName || null
     });
   } catch {
     return jsonResponse({ error: 'Guest catalog session could not be verified.' }, 503);

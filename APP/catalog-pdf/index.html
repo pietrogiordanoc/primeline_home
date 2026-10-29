@@ -64,6 +64,10 @@
     <form class="catalog-share-form" id="shareCatalogForm">
       <span class="catalog-eyebrow">EMPLOYEE ACCESS</span>
       <h2 id="shareCatalogTitle">Share the private catalog</h2>
+      <label for="staffFullName">Staff full name</label>
+      <input id="staffFullName" name="staffFullName" type="text" autocomplete="name" maxlength="120" required>
+      <label for="staffCorporateEmail">Verified corporate email</label>
+      <input id="staffCorporateEmail" type="email" autocomplete="email" readonly aria-readonly="true">
       <label for="customerEmail">Customer email</label>
       <input id="customerEmail" name="customerEmail" type="email" autocomplete="email" maxlength="254" required>
       <label for="guestDuration">Access duration</label>
