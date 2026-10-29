@@ -106,6 +106,16 @@ body{
 .catalog-action[hidden]{ display: none; }
 .catalog-action:hover{ background: var(--pl-navy-deep); }
 .catalog-header-actions .catalog-action{ margin-top: 0; }
+.catalog-download{
+  min-height: 48px;
+  justify-content: flex-start;
+  text-align: left;
+}
+.catalog-download > span{ display: grid; gap: 3px; }
+.catalog-download strong{ font-size: 11px; letter-spacing: .06em; }
+.catalog-download small{ color: #e4d4b2; font-size: 9px; font-weight: 500; letter-spacing: .06em; }
+.catalog-share{ background: #fff; cursor: pointer; font: inherit; }
+.catalog-share:hover{ border-color: var(--pl-gold); color: var(--pl-gold); }
 .catalog-action svg{
   width: 16px;
   height: 16px;
@@ -150,6 +160,28 @@ body{
 }
 .catalog-viewer-error p{ margin: 0; }
 .catalog-viewer-error .catalog-action{ margin-top: 14px; }
+.catalog-share-dialog{
+  width: min(460px, calc(100% - 32px));
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-top: 4px solid var(--pl-gold);
+  background: #fff;
+  color: var(--pl-ink);
+  box-shadow: 0 24px 80px rgba(13, 24, 48, .25);
+}
+.catalog-share-dialog::backdrop{ background: rgba(13, 24, 48, .72); backdrop-filter: blur(3px); }
+.catalog-share-form{ display: grid; gap: 10px; padding: 28px; }
+.catalog-share-form h2{ margin: 0 0 8px; color: var(--pl-navy); font-family: var(--font-serif); font-size: 26px; font-weight: 400; }
+.catalog-share-form label{ margin-top: 4px; color: var(--pl-ink-soft); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.catalog-share-form input,
+.catalog-share-form select{ width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--pl-line); background: #fff; color: var(--pl-ink); font: inherit; }
+.catalog-share-form input:focus,
+.catalog-share-form select:focus{ outline: 2px solid var(--pl-gold); outline-offset: 2px; }
+.catalog-share-status{ min-height: 1.4em; margin: 2px 0 0; color: var(--pl-ink-soft); font-size: 12px; }
+.catalog-share-status.is-error{ color: #8d2929; }
+.catalog-share-actions{ display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+.catalog-share-actions .catalog-action{ margin-top: 0; }
 
 @media (max-width: 720px){
   .catalog-header{
@@ -163,6 +195,9 @@ body{
     padding: 0 11px;
     font-size: 12px;
   }
+  .catalog-download{ min-height: 42px; }
+  .catalog-download strong{ font-size: 10px; }
+  .catalog-download small{ font-size: 8px; }
   .catalog-back{ gap: 6px; }
   .catalog-back svg{ width: 16px; height: 16px; }
   .catalog-brand img{ width: clamp(118px, 30vw, 160px); }

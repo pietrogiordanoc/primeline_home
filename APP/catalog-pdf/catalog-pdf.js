@@ -6,6 +6,11 @@ const viewerStatus = document.querySelector('#catalogViewerStatus');
 const viewerError = document.querySelector('#catalogViewerError');
 const viewerRetry = document.querySelector('#catalogViewerRetry');
 const frame = document.querySelector('#catalogFrame');
+const staffDownloadButton = document.querySelector('#staffDownloadButton');
+const shareCatalogButton = document.querySelector('#shareCatalogButton');
+const shareCatalogDialog = document.querySelector('#shareCatalogDialog');
+const shareCatalogForm = document.querySelector('#shareCatalogForm');
+const shareCatalogStatus = document.querySelector('#shareCatalogStatus');
 let loadTimeout;
 
 const setAccessStatus = (message, isError = false) => {
@@ -54,11 +59,13 @@ const validateCatalogSession = async () => {
     if (!response.ok) throw new Error('session-validation-failed');
 
     const result = await response.json();
-    if (result.authenticated !== true || result.resource !== 'catalog-pdf') {
+    if (result.authenticated !== true || result.resource !== 'catalog-pdf' || result.role !== 'staff') {
       setAccessStatus('This catalog is available only to authorized Prime Line employees.', true);
       return;
     }
 
+    staffDownloadButton.hidden = false;
+    shareCatalogButton.hidden = false;
     setAccessStatus('');
     loadViewer();
   } catch {
@@ -66,6 +73,45 @@ const validateCatalogSession = async () => {
     accessRetry.hidden = false;
   }
 };
+
+shareCatalogButton.addEventListener('click', () => {
+  shareCatalogStatus.textContent = '';
+  shareCatalogDialog.showModal();
+  document.querySelector('#customerEmail').focus();
+});
+
+document.querySelector('#cancelShareCatalog').addEventListener('click', () => shareCatalogDialog.close());
+
+shareCatalogForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!shareCatalogForm.reportValidity()) return;
+
+  const submitButton = shareCatalogForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  shareCatalogStatus.textContent = 'Sending private invitation...';
+  shareCatalogStatus.classList.remove('is-error');
+  try {
+    const response = await fetch('/api/catalog/staff/share', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerEmail: document.querySelector('#customerEmail').value.trim(),
+        duration: document.querySelector('#guestDuration').value
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'The invitation could not be sent.');
+    shareCatalogForm.reset();
+    document.querySelector('#guestDuration').value = '7-days';
+    shareCatalogStatus.textContent = 'The private invitation was sent.';
+  } catch (error) {
+    shareCatalogStatus.textContent = error.message || 'The invitation could not be sent.';
+    shareCatalogStatus.classList.add('is-error');
+  } finally {
+    submitButton.disabled = false;
+  }
+});
 
 accessRetry.addEventListener('click', validateCatalogSession);
 viewerRetry.addEventListener('click', validateCatalogSession);

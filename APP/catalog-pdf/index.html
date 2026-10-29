@@ -19,15 +19,14 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"></path></svg>
         <span>Back to Home</span>
       </a>
-      <a
-        class="catalog-action catalog-download"
-        href="https://fcdrjlzqrbvnbsehkqgm.supabase.co/storage/v1/object/public/PDF%20Catalog/Autumn%202026.pdf"
-        download="Prime-Line-Catalog-Autumn-2026.pdf"
-        target="_blank"
-        rel="noopener noreferrer">
+      <a class="catalog-action catalog-download" id="staffDownloadButton" href="/api/catalog/staff/download" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18v3h14v-3"></path></svg>
-        <span>Download PDF</span>
+        <span><strong>DOWNLOAD PDF</strong><small>PRIME LINE STAFF ONLY</small></span>
       </a>
+      <button class="catalog-header-button catalog-share" id="shareCatalogButton" type="button" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.7 10.6 6.6-4.1m-6.6 7 6.6 4"></path></svg>
+        <span>Share Catalog</span>
+      </button>
     </nav>
   </header>
 
@@ -60,6 +59,28 @@
       </div>
     </section>
   </main>
+
+  <dialog class="catalog-share-dialog" id="shareCatalogDialog" aria-labelledby="shareCatalogTitle">
+    <form class="catalog-share-form" id="shareCatalogForm">
+      <span class="catalog-eyebrow">EMPLOYEE ACCESS</span>
+      <h2 id="shareCatalogTitle">Share the private catalog</h2>
+      <label for="customerEmail">Customer email</label>
+      <input id="customerEmail" name="customerEmail" type="email" autocomplete="email" maxlength="254" required>
+      <label for="guestDuration">Access duration</label>
+      <select id="guestDuration" name="duration" required>
+        <option value="24-hours">24 Hours</option>
+        <option value="7-days" selected>7 Days</option>
+        <option value="1-month">1 Month</option>
+        <option value="3-months">3 Months</option>
+        <option value="permanent">Permanent</option>
+      </select>
+      <p class="catalog-share-status" id="shareCatalogStatus" role="status" aria-live="polite"></p>
+      <div class="catalog-share-actions">
+        <button class="catalog-header-button" id="cancelShareCatalog" type="button">Cancel</button>
+        <button class="catalog-action" type="submit">Send private invitation</button>
+      </div>
+    </form>
+  </dialog>
 
   <script type="module" src="./catalog-pdf.js"></script>
 </body>

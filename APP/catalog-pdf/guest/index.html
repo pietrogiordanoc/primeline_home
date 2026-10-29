@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="Magic Link access to the Prime Line Specialty Foods Catalog.">
+  <title>Prime Line Catalog Access</title>
+  <link rel="icon" type="image/gif" href="/images/favicon.gif">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="./guest-catalog.css">
+</head>
+<body>
+  <header class="guest-header">
+    <a class="guest-brand" href="/" aria-label="Prime Line home">
+      <img src="/images/Logo1500.png" alt="Prime Line">
+    </a>
+    <a class="guest-home-link" href="/">Back to Home</a>
+  </header>
+
+  <main class="guest-main">
+    <div class="guest-heading">
+      <span class="guest-eyebrow">CATALOG ACCESS</span>
+      <h1>Prime Line Catalog — Autumn 2026</h1>
+      <p class="guest-access-note" id="guestAccessNote" hidden></p>
+    </div>
+
+    <p class="guest-status" id="guestStatus" role="status" aria-live="polite"></p>
+
+    <section class="guest-link-panel" id="guestLinkPanel" hidden aria-labelledby="guestLinkTitle">
+      <h2 id="guestLinkTitle">Open the catalog</h2>
+      <p id="guestLinkDescription"></p>
+      <button class="guest-primary-button" id="openGuestCatalog" type="button">Open Catalog</button>
+    </section>
+
+    <section class="guest-renew-panel" id="guestRenewPanel" hidden aria-labelledby="guestRenewTitle">
+      <h2 id="guestRenewTitle">Request a verification link</h2>
+      <p>Enter the email address that received your invitation. If access is still active, a one-time link will be sent.</p>
+      <form id="requestGuestLinkForm">
+        <label for="guestEmail">Customer email</label>
+        <input id="guestEmail" name="email" type="email" autocomplete="email" maxlength="254" required>
+        <button class="guest-primary-button" type="submit">Email me a link</button>
+      </form>
+      <p class="guest-form-status" id="guestFormStatus" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="guest-viewer" id="guestViewer" hidden aria-label="Catalog viewer">
+      <div class="guest-viewer-toolbar">
+        <span>Catalog access</span>
+        <button class="guest-reload-button" id="reloadGuestCatalog" type="button">Reload catalog</button>
+      </div>
+      <div class="guest-viewer-frame">
+        <iframe id="guestPdfFrame" title="Prime Line Specialty Foods Catalog" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./guest-catalog.js"></script>
+</body>
+</html>

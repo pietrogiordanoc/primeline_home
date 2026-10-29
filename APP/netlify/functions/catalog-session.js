@@ -54,7 +54,7 @@ const handler = async (event) => {
     }
     if (session.resource !== 'catalog-pdf') return json({ authenticated: false }, 401);
 
-    return json({ authenticated: true, resource: 'catalog-pdf' });
+    return json({ authenticated: true, resource: 'catalog-pdf', role: 'staff' });
   } catch {
     console.error('Catalog access session could not be validated.');
     return json({ error: 'Catalog access is temporarily unavailable.' }, 503);

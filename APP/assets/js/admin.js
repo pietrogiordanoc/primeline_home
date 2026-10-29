@@ -1,4 +1,5 @@
 import './contact-form-data.js';
+import { initializeCatalogGuestAdmin } from './catalog-guest-admin.js';
 
 const contactData = globalThis.PRIME_LINE_CONTACT_DATA;
 const authDialog = document.querySelector('#authDialog');
@@ -265,6 +266,7 @@ const loadSession = async () => {
   dashboard.hidden = false;
   if (authDialog.open) authDialog.close();
   loadContactConfig();
+  await initializeCatalogGuestAdmin();
   return true;
 };
 

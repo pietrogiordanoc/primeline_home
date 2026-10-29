@@ -74,6 +74,8 @@
 .admin-rules-table td{ padding:10px; border-top:1px solid var(--pl-line); color:var(--pl-navy); font-size:12px; vertical-align:middle; }
 .admin-rules-table td:first-child{ font-weight:600; }
 .admin-rules-table td:nth-child(2){ width:40%; overflow-wrap:anywhere; color:var(--pl-ink-soft); }
+.guest-access-table td:nth-child(2){ width:auto; }
+.guest-access-table td:nth-child(3),.guest-access-table td:nth-child(4),.guest-access-table td:nth-child(5){ white-space:nowrap; }
 .admin-rule-actions{ display:flex; gap:10px; }
 .admin-empty-rules{ margin:0; padding:15px 10px; border-top:1px solid var(--pl-line); color:var(--pl-ink-soft); font-size:12px; }
 .admin-rule-form[hidden]{ display:none; }

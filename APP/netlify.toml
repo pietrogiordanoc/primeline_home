@@ -24,6 +24,41 @@
   status = 200
 
 [[redirects]]
+  from = "/api/admin/catalog-guests"
+  to = "/.netlify/functions/catalog-guest-admin"
+  status = 200
+
+[[redirects]]
+  from = "/api/catalog/guest/redeem"
+  to = "/.netlify/functions/catalog-guest-redeem"
+  status = 200
+
+[[redirects]]
+  from = "/api/catalog/guest/request-link"
+  to = "/.netlify/functions/catalog-guest-request-link"
+  status = 200
+
+[[redirects]]
+  from = "/api/catalog/guest/session"
+  to = "/.netlify/functions/catalog-guest-session"
+  status = 200
+
+[[redirects]]
+  from = "/api/catalog/guest/pdf"
+  to = "/.netlify/functions/catalog-guest-pdf"
+  status = 200
+
+[[redirects]]
+  from = "/api/catalog/staff/download"
+  to = "/.netlify/functions/catalog-staff-download"
+  status = 200
+
+[[redirects]]
+  from = "/api/catalog/staff/share"
+  to = "/.netlify/functions/catalog-staff-share"
+  status = 200
+
+[[redirects]]
   from = "/api/careers/submit-application"
   to = "/.netlify/functions/submit-application"
   status = 200

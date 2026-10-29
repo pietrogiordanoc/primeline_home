@@ -217,7 +217,7 @@ test('Catalog viewer session endpoint accepts only an unexpired Catalog PDF sess
 
     const validResponse = await requestCatalogSession(validId);
     assert.equal(validResponse.status, 200);
-    assert.deepEqual(await validResponse.json(), { authenticated: true, resource: 'catalog-pdf' });
+    assert.deepEqual(await validResponse.json(), { authenticated: true, resource: 'catalog-pdf', role: 'staff' });
 
     const expiredResponse = await requestCatalogSession(expiredId);
     assert.equal(expiredResponse.status, 401);

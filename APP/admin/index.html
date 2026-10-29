@@ -112,6 +112,36 @@
           <button class="admin-primary-button" id="saveContactConfig" type="button">Save changes</button>
         </div>
       </section>
+
+      <section class="admin-config" id="guestAccessConfig" aria-labelledby="guestAccessTitle">
+        <div class="admin-config-block">
+          <div class="admin-config-heading">
+            <div>
+              <span class="eyebrow">Catalog</span>
+              <h2 id="guestAccessTitle">Catalog Guest Access</h2>
+              <p>Review invitations and grants, reissue unused invitations, or revoke active access.</p>
+            </div>
+            <button class="admin-secondary-button" id="reloadGuestAccess" type="button">Reload</button>
+          </div>
+          <div class="admin-rules-table-wrap">
+            <table class="admin-rules-table guest-access-table">
+              <thead>
+                <tr>
+                  <th scope="col">Customer Email</th>
+                  <th scope="col">Shared By</th>
+                  <th scope="col">Access Duration</th>
+                  <th scope="col">Expiration</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="guestAccessList"></tbody>
+            </table>
+            <p class="admin-empty-rules" id="emptyGuestAccess">No catalog invitations or grants yet.</p>
+          </div>
+          <p class="admin-config-status" id="guestAccessStatus" role="status" aria-live="polite"></p>
+        </div>
+      </section>
     </section>
 
     <dialog class="admin-auth" id="authDialog" aria-labelledby="authTitle">
