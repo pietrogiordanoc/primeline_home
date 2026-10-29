@@ -165,7 +165,7 @@ export const getContactRoutingStore = async () => {
   });
 };
 
-export const isProductionContext = () => process.env.CONTEXT === 'production';
+export const isProductionContext = (context) => context?.deploy?.context === 'production';
 
 const normalizeStoredConfig = (document) => {
   if (!document || typeof document !== 'object' || Array.isArray(document)) {
@@ -185,8 +185,8 @@ export const loadRoutingConfig = async (store) => {
   return normalizeStoredConfig(document);
 };
 
-export const saveRoutingConfig = async (config, store) => {
-  if (!isProductionContext()) {
+export const saveRoutingConfig = async (config, store, context) => {
+  if (!isProductionContext(context)) {
     throw new Error('Contact routing configuration can only be changed in production.');
   }
   const validation = validateRoutingConfig(config);

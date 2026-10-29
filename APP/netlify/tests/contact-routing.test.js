@@ -10,6 +10,7 @@ import {
   saveRoutingConfig,
   validateRoutingConfig
 } from '../shared/contact-routing.js';
+import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import { processContactEvent as contactHandler } from '../functions/send-contact.js';
 import sendContact from '../functions/send-contact.js';
 import adminRoutingHandler from '../functions/contact-routing-admin.js';
@@ -83,55 +84,59 @@ test('returns the initial default configuration when the Blob key is absent', as
 });
 
 test('saves and reads the single configuration document across store instances', async () => {
-  const originalContext = process.env.CONTEXT;
-  process.env.CONTEXT = 'production';
   const blobs = new Map();
-  try {
-    const saved = await saveRoutingConfig(validConfig, createMemoryStore(blobs));
-    const read = await loadRoutingConfig(createMemoryStore(blobs));
-    assert.equal(Date.parse(saved.updatedAt) > 0, true);
-    assert.deepEqual(read, saved);
-    assert.equal(blobs.size, 1);
-    assert.equal(blobs.has(CONTACT_ROUTING_CONFIG_KEY), true);
-  } finally {
-    if (originalContext === undefined) delete process.env.CONTEXT;
-    else process.env.CONTEXT = originalContext;
-  }
+  const saved = await saveRoutingConfig(
+    validConfig,
+    createMemoryStore(blobs),
+    { deploy: { context: 'production' } }
+  );
+  const read = await loadRoutingConfig(createMemoryStore(blobs));
+  assert.equal(Date.parse(saved.updatedAt) > 0, true);
+  assert.deepEqual(read, saved);
+  assert.equal(blobs.size, 1);
+  assert.equal(blobs.has(CONTACT_ROUTING_CONFIG_KEY), true);
 });
 
 test('blocks configuration writes outside production', async () => {
-  const originalContext = process.env.CONTEXT;
-  process.env.CONTEXT = 'deploy-preview';
   let writeCalls = 0;
-  try {
-    assert.equal(isProductionContext(), false);
-    await assert.rejects(
-      saveRoutingConfig(validConfig, createMemoryStore(new Map(), {
-        setJSON: async () => { writeCalls += 1; }
-      })),
-      /only be changed in production/
-    );
-    assert.equal(writeCalls, 0);
-  } finally {
-    if (originalContext === undefined) delete process.env.CONTEXT;
-    else process.env.CONTEXT = originalContext;
-  }
+  const store = createMemoryStore(new Map(), {
+    setJSON: async () => { writeCalls += 1; }
+  });
+  assert.equal(isProductionContext({ deploy: { context: 'deploy-preview' } }), false);
+  assert.equal(isProductionContext(undefined), false);
+  await assert.rejects(
+    saveRoutingConfig(validConfig, store, { deploy: { context: 'deploy-preview' } }),
+    /only be changed in production/
+  );
+  assert.equal(writeCalls, 0);
 });
 
 test('surfaces Blob read and write failures', async () => {
-  const originalContext = process.env.CONTEXT;
-  process.env.CONTEXT = 'production';
   const failingStore = createMemoryStore(new Map(), {
     get: async () => { throw new Error('mock read failure'); },
     setJSON: async () => { throw new Error('mock write failure'); }
   });
-  try {
-    await assert.rejects(loadRoutingConfig(failingStore), /mock read failure/);
-    await assert.rejects(saveRoutingConfig(validConfig, failingStore), /mock write failure/);
-  } finally {
-    if (originalContext === undefined) delete process.env.CONTEXT;
-    else process.env.CONTEXT = originalContext;
-  }
+  await assert.rejects(loadRoutingConfig(failingStore), /mock read failure/);
+  await assert.rejects(
+    saveRoutingConfig(validConfig, failingStore, { deploy: { context: 'production' } }),
+    /mock write failure/
+  );
+});
+
+test('Netlify handler adapter forwards production and preview deploy contexts', async () => {
+  const handler = adaptNetlifyHandler(async (_event, context) =>
+    new Response(context.deploy.context)
+  );
+  const request = new Request('https://primelinedist.com/api/admin/contact-routing');
+
+  assert.equal(
+    await (await handler(request, { deploy: { context: 'production' } })).text(),
+    'production'
+  );
+  assert.equal(
+    await (await handler(request, { deploy: { context: 'deploy-preview' } })).text(),
+    'deploy-preview'
+  );
 });
 
 test('validates recipient configuration and rejects malformed email types', () => {

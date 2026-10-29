@@ -13,7 +13,7 @@ import {
 
 const MAX_CONFIG_BYTES = 1024 * 1024;
 
-const handler = async (event) => {
+const handler = async (event, context) => {
   if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT') {
     return jsonResponse({ error: 'Method not allowed.' }, 405);
   }
@@ -41,7 +41,7 @@ const handler = async (event) => {
     }
   }
 
-  if (!isProductionContext()) {
+  if (!isProductionContext(context)) {
     return jsonResponse({ error: 'Contact routing changes are only available in production.' }, 403);
   }
 
@@ -56,7 +56,7 @@ const handler = async (event) => {
   if (!validation.ok) return jsonResponse({ error: validation.error }, 400);
 
   try {
-    return jsonResponse(await saveRoutingConfig(validation.config));
+    return jsonResponse(await saveRoutingConfig(validation.config, undefined, context));
   } catch (error) {
     console.error('Contact routing configuration could not be saved.', error);
     return jsonResponse({ error: 'Contact routing configuration could not be saved.' }, 503);

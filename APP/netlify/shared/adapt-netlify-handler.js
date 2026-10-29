@@ -1,4 +1,4 @@
-export const adaptNetlifyHandler = (handler) => async (request) => {
+export const adaptNetlifyHandler = (handler) => async (request, context) => {
   const headers = Object.fromEntries(request.headers.entries());
   if (!headers.host) headers.host = new URL(request.url).host;
   const event = {
@@ -7,7 +7,7 @@ export const adaptNetlifyHandler = (handler) => async (request) => {
     body: request.body === null ? null : await request.text(),
     isBase64Encoded: false
   };
-  const result = await handler(event);
+  const result = await handler(event, context);
   const responseHeaders = new Headers(result.headers);
 
   for (const [name, values] of Object.entries(result.multiValueHeaders || {})) {
