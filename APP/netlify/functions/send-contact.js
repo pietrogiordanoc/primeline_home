@@ -11,7 +11,9 @@ import {
 
 const MAX_REQUEST_BYTES = 20 * 1024;
 const SENDER_EMAIL = 'info@primelinedist.com';
-const SUBJECT = 'PRIME LINE | New Website Inquiry';
+const BODY_SUBJECT = 'PRIME LINE | New Website Inquiry';
+const CONTACT_SUBJECT_PREFIX = 'PRIME LINE | Contact Us — ';
+const MAX_SUBJECT_LENGTH = 180;
 const DATA = globalThis.PRIME_LINE_CONTACT_DATA;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INQUIRY_TYPES = new Set(DATA.inquiryTypes);
@@ -43,6 +45,23 @@ const stringField = (payload, name, maxLength, { required = false } = {}) => {
   const trimmed = value.trim();
   if (trimmed.length > maxLength || (required && !trimmed)) return null;
   return trimmed;
+};
+
+const sanitizeSubjectPart = (value) => typeof value === 'string'
+  ? value.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ').replace(/\s+/g, ' ').trim()
+  : '';
+
+export const buildContactSubject = (contact) => {
+  const firstName = sanitizeSubjectPart(contact?.firstName);
+  const lastName = sanitizeSubjectPart(contact?.lastName);
+  const name = `${firstName} ${lastName}`.trim().slice(0, 100).trimEnd() || 'New Inquiry';
+  const base = `${CONTACT_SUBJECT_PREFIX}${name}`;
+  const company = sanitizeSubjectPart(contact?.companyName);
+  if (!company) return base;
+
+  const companyLength = MAX_SUBJECT_LENGTH - base.length - 3;
+  const limitedCompany = company.slice(0, companyLength).trimEnd();
+  return limitedCompany ? `${base} | ${limitedCompany}` : base;
 };
 
 const validateSubmission = (payload) => {
@@ -125,7 +144,7 @@ const buildEmail = (contact) => {
     </tr>
   `).join('');
   const text = [
-    SUBJECT,
+    BODY_SUBJECT,
     '',
     ...rows.map(([label, value]) => `${label}: ${value || 'Not provided'}`)
   ].join('\n');
@@ -151,23 +170,24 @@ const buildEmail = (contact) => {
   };
 };
 
-const createDelivery = (recipient, from, email, contact) => ({
+const createDelivery = (recipient, from, email, contact, subject) => ({
   from,
   to: [recipient],
-  subject: SUBJECT,
+  subject,
   reply_to: contact.email,
   text: email.text,
   html: email.html
 });
 
 const deliverEmails = async (recipients, from, email, contact) => {
+  const subject = buildContactSubject(contact);
   const response = await fetch('https://api.resend.com/emails/batch', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(recipients.map((recipient) => createDelivery(recipient, from, email, contact)))
+    body: JSON.stringify(recipients.map((recipient) => createDelivery(recipient, from, email, contact, subject)))
   });
   if (!response.ok) return { delivered: 0, failed: recipients.length, status: response.status };
 

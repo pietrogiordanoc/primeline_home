@@ -11,8 +11,10 @@ import {
   validateRoutingConfig
 } from '../shared/contact-routing.js';
 import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
-import { processContactEvent as contactHandler } from '../functions/send-contact.js';
-import sendContact from '../functions/send-contact.js';
+import sendContact, {
+  buildContactSubject,
+  processContactEvent as contactHandler
+} from '../functions/send-contact.js';
 import adminRoutingHandler from '../functions/contact-routing-admin.js';
 
 const validSubmission = {
@@ -252,6 +254,33 @@ test('rejects invalid multi-state values and multiple international provinces', 
   }).ok, false);
 });
 
+test('builds a bounded Contact Us subject without header control characters', () => {
+  assert.equal(
+    buildContactSubject({ firstName: 'Pedro', lastName: 'Perez', companyName: 'ABC Restaurant' }),
+    'PRIME LINE | Contact Us — Pedro Perez | ABC Restaurant'
+  );
+  assert.equal(
+    buildContactSubject({ firstName: 'Pedro', lastName: 'Perez' }),
+    'PRIME LINE | Contact Us — Pedro Perez'
+  );
+  assert.equal(
+    buildContactSubject({
+      firstName: 'Pedro\r\nBcc: forged',
+      lastName: 'Perez\u0000',
+      companyName: 'ABC\r\nBcc: forged'
+    }),
+    'PRIME LINE | Contact Us — Pedro Bcc: forged Perez | ABC Bcc: forged'
+  );
+
+  const longSubject = buildContactSubject({
+    firstName: 'A'.repeat(80),
+    lastName: 'B'.repeat(80),
+    companyName: 'C'.repeat(160)
+  });
+  assert.ok(longSubject.length <= 180);
+  assert.doesNotMatch(longSubject, /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/);
+});
+
 test('rejects invalid public submission and honeypot without sending email', async () => {
   const originalFetch = globalThis.fetch;
   let fetchCalls = 0;
@@ -297,6 +326,7 @@ test('sends a valid submission to the explicit fallback with escaped fields', as
     assert.equal(requestBody.length, 1);
     assert.deepEqual(requestBody[0].to, ['info@primelinedist.com']);
     assert.equal(requestBody[0].reply_to, 'alex@example.com');
+    assert.equal(requestBody[0].subject, 'PRIME LINE | Contact Us — <Alex> Buyer | Example Foods');
     assert.match(requestBody[0].html, /&lt;Alex&gt;/);
     assert.match(requestBody[0].text, /Address Line 1: 10 Main Street/);
   } finally {

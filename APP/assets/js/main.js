@@ -303,8 +303,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Escape') closeContact();
     });
     const contactForm = contactPanel.querySelector('.contact-form');
-    const contactFormStatus = contactForm?.querySelector('.contact-form-status');
+    const contactFormStatus = contactPanel.querySelector('.contact-form-status');
+    const contactPanelInner = contactPanel.querySelector('.contact-panel-inner');
     const contactSubmitButton = contactForm?.querySelector('button[type="submit"]');
+    const showContactFormStatus = (message, className) => {
+      if (!contactFormStatus) return;
+      contactFormStatus.textContent = message;
+      contactFormStatus.classList.remove('is-success', 'is-error');
+      contactFormStatus.classList.add(className);
+      contactFormStatus.hidden = false;
+      contactPanelInner?.scrollTo({ top: 0, behavior: 'smooth' });
+    };
     contactForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (contactForm.dataset.submitting === 'true') return;
@@ -330,26 +339,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const result = await response.json();
         if (!response.ok || result.sent !== true) {
-          if (contactFormStatus) {
-            contactFormStatus.textContent = result.error || 'Your message could not be sent. Please try again.';
-            contactFormStatus.classList.add('is-error');
-            contactFormStatus.hidden = false;
-          }
+          showContactFormStatus(
+            result.error || 'Your message could not be sent. Please try again.',
+            'is-error'
+          );
           return;
         }
 
         contactForm.reset();
-        if (contactFormStatus) {
-          contactFormStatus.textContent = result.message;
-          contactFormStatus.classList.add('is-success');
-          contactFormStatus.hidden = false;
-        }
+        showContactFormStatus(result.message, 'is-success');
       } catch {
-        if (contactFormStatus) {
-          contactFormStatus.textContent = 'Your message could not be sent. Please check your connection and try again.';
-          contactFormStatus.classList.add('is-error');
-          contactFormStatus.hidden = false;
-        }
+        showContactFormStatus(
+          'Your message could not be sent. Please check your connection and try again.',
+          'is-error'
+        );
       } finally {
         delete contactForm.dataset.submitting;
         contactForm.removeAttribute('aria-busy');

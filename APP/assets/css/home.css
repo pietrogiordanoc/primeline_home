@@ -277,25 +277,24 @@
   font-size: 30px;
   margin: 10px 0 14px;
 }
-.contact-panel-inner > p{
+.contact-panel-inner > p:not(.contact-form-status){
   color: var(--pl-ink-soft);
   font-size: 14px;
   line-height: 1.6;
-  margin-bottom: 34px;
+  margin-bottom: 20px;
 }
 .contact-form{
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 16px;
+  gap: 11px 16px;
 }
 .contact-form > label,
-.contact-form > button,
-.contact-form > .contact-form-status{ grid-column: 1 / -1; }
+.contact-form > button{ grid-column: 1 / -1; }
 .contact-form label{
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
   font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
@@ -312,7 +311,7 @@
   color: var(--pl-ink);
   border: none;
   border-bottom: 1px solid var(--pl-line);
-  padding: 8px 2px;
+  padding: 5px 2px;
   background: transparent;
   resize: vertical;
   transition: border-color .25s var(--ease);
@@ -324,17 +323,22 @@
   border-color: var(--pl-navy);
 }
 .contact-form select{ cursor:pointer; }
+.contact-form textarea{
+  box-sizing: border-box;
+  height: 72px;
+  min-height: 72px;
+}
 .contact-form-grid{
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 10px;
 }
 .contact-form-hint{ font-size:10px; font-weight:400; letter-spacing:normal; line-height:1.5; text-transform:none; }
 .contact-form button{
-  margin-top: 10px;
+  margin-top: 6px;
   align-self: flex-start;
-  padding: 15px 34px;
+  padding: 10px 34px;
 }
 .contact-form button:disabled{ opacity: .65; cursor: wait; }
 .contact-form-honeypot{
@@ -345,12 +349,22 @@
   overflow: hidden;
 }
 .contact-form-status{
-  margin: 0;
+  margin: 0 0 14px;
+  padding: 12px 16px;
   font-size: 13px;
   line-height: 1.55;
+  border-left: 2px solid transparent;
 }
-.contact-form-status.is-success{ color: #286347; }
-.contact-form-status.is-error{ color: #a33a32; }
+.contact-form-status.is-success{
+  color: #286347;
+  background: #f3f7f3;
+  border-left-color: #286347;
+}
+.contact-form-status.is-error{
+  color: #a33a32;
+  background: #fcf3f2;
+  border-left-color: #a33a32;
+}
 
 /* ---------- Locations panel - third curtain, revealed alongside the contact form ---------- */
 .locations-panel{
@@ -1079,6 +1093,15 @@
     height: 100dvh;
   }
   .contact-panel-inner{ padding: 0 28px 32px; }
+  .contact-panel-inner > p{ margin-bottom: 28px; }
+  .contact-form{ gap: 18px 16px; }
+  .contact-form label{ gap: 8px; }
+  .contact-form input,
+  .contact-form textarea,
+  .contact-form select{ padding: 8px 2px; }
+  .contact-form textarea{ height: auto; min-height: 0; }
+  .contact-form-grid{ gap: 16px; }
+  .contact-form button{ margin-top: 10px; padding: 15px 34px; }
   .side-drawers:has(.contact-panel.is-open) .locations-panel{
     width: 0;
     visibility: hidden;
