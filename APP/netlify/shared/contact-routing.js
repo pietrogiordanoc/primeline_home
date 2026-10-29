@@ -86,7 +86,6 @@ export const validateRoutingConfig = (input) => {
   }
 
   const ruleIds = new Set();
-  const ruleKeys = new Set();
   const stateRules = [];
   for (const rule of input.stateRules) {
     if (
@@ -94,6 +93,7 @@ export const validateRoutingConfig = (input) => {
       typeof rule !== 'object' ||
       !validId(rule.id) ||
       typeof rule.enabled !== 'boolean' ||
+      (!Array.isArray(rule.states) && typeof rule.state !== 'string') ||
       !Array.isArray(rule.recipients) ||
       !rule.recipients.length ||
       rule.recipients.length > 20
@@ -102,13 +102,23 @@ export const validateRoutingConfig = (input) => {
     }
 
     const countryCode = normalizeCountryCode(rule.countryCode);
-    const state = normalizeRoutingState(countryCode, rule.state);
-    if (!countryCode || !state || state.length > 100) {
+    const rawStates = Array.isArray(rule.states) ? rule.states : [rule.state];
+    if (!countryCode || !rawStates.length || rawStates.length > 51) {
       return { ok: false, error: 'Each routing rule needs a recognized country and state or province.' };
     }
     if (ruleIds.has(rule.id)) return { ok: false, error: 'Routing rule IDs must be unique.' };
-    const ruleKey = `${countryCode}:${state}`;
-    if (ruleKeys.has(ruleKey)) return { ok: false, error: 'Only one rule may exist for each country and state.' };
+    if (countryCode !== 'US' && rawStates.length !== 1) {
+      return { ok: false, error: 'International routing rules must contain one state or province.' };
+    }
+
+    const states = [];
+    for (const value of rawStates) {
+      const state = normalizeRoutingState(countryCode, value);
+      if (!state || state.length > 100) {
+        return { ok: false, error: 'Each routing rule needs a recognized country and state or province.' };
+      }
+      if (!states.includes(state)) states.push(state);
+    }
 
     const recipients = [];
     const recipientSet = new Set();
@@ -122,10 +132,8 @@ export const validateRoutingConfig = (input) => {
       }
     }
     if (!recipients.length) return { ok: false, error: 'Each routing rule needs at least one recipient.' };
-
     ruleIds.add(rule.id);
-    ruleKeys.add(ruleKey);
-    stateRules.push({ id: rule.id, countryCode, state, recipients, enabled: rule.enabled });
+    stateRules.push({ id: rule.id, countryCode, states, recipients, enabled: rule.enabled });
   }
 
   return {
@@ -142,7 +150,8 @@ export const resolveRecipients = (contact, config) => {
   const matchedRules = config.stateRules.filter((rule) =>
     rule.enabled &&
     rule.countryCode === contact.country &&
-    normalizeRoutingState(rule.countryCode, rule.state) === normalizedState
+    (Array.isArray(rule.states) ? rule.states : [rule.state])
+      .some((state) => normalizeRoutingState(rule.countryCode, state) === normalizedState)
   );
   const selected = matchedRules.length
     ? [...general, ...matchedRules.flatMap((rule) => rule.recipients)]
@@ -171,7 +180,15 @@ const normalizeStoredConfig = (document) => {
   if (!document || typeof document !== 'object' || Array.isArray(document)) {
     throw new Error('Saved contact routing configuration is invalid.');
   }
-  const result = validateRoutingConfig(document);
+  const result = validateRoutingConfig({
+    ...document,
+    stateRules: Array.isArray(document.stateRules)
+      ? document.stateRules.map((rule) => ({
+        ...rule,
+        states: Array.isArray(rule?.states) ? rule.states : [rule?.state]
+      }))
+      : document.stateRules
+  });
   if (!result.ok || typeof document.updatedAt !== 'string' || Number.isNaN(Date.parse(document.updatedAt))) {
     throw new Error('Saved contact routing configuration is invalid.');
   }

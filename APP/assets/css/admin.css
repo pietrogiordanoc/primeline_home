@@ -58,6 +58,39 @@
 .admin-text-button{ justify-self:start; padding:6px 0; }
 .admin-status{ min-height:1.5em; margin-top:16px; color:var(--pl-ink-soft); font-size:12px; }
 .admin-status.is-error{ color:#9f372e; }
+.admin-section-heading{ display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.admin-section-heading h3{ margin:0; color:var(--pl-navy); font-size:19px; }
+.admin-section-heading p{ margin:6px 0 0; color:var(--pl-ink-soft); font-size:12px; line-height:1.5; }
+.admin-from-address{ display:grid; gap:3px; justify-items:end; white-space:nowrap; }
+.admin-from-address span,.admin-from-address small{ color:var(--pl-ink-soft); font-size:9px; font-weight:700; letter-spacing:.1em; }
+.admin-from-address strong{ color:var(--pl-navy); font-size:12px; }
+.admin-recipient-row{ display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:14px; padding:11px 0; border-top:1px solid var(--pl-line); }
+.admin-recipient-list{ margin-top:16px; }
+.admin-inline-form{ grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:8px 14px; margin-top:14px; padding-top:14px; border-top:1px solid var(--pl-line); }
+.admin-inline-form>label{ grid-column:1/-1; }
+.admin-rules-table-wrap{ margin-top:16px; }
+.admin-rules-table{ width:100%; border-collapse:collapse; text-align:left; }
+.admin-rules-table th{ padding:9px 10px; background:var(--pl-cream); color:var(--pl-ink-soft); font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.admin-rules-table td{ padding:10px; border-top:1px solid var(--pl-line); color:var(--pl-navy); font-size:12px; vertical-align:middle; }
+.admin-rules-table td:first-child{ font-weight:600; }
+.admin-rules-table td:nth-child(2){ width:40%; overflow-wrap:anywhere; color:var(--pl-ink-soft); }
+.admin-rule-actions{ display:flex; gap:10px; }
+.admin-empty-rules{ margin:0; padding:15px 10px; border-top:1px solid var(--pl-line); color:var(--pl-ink-soft); font-size:12px; }
+.admin-rule-form[hidden]{ display:none; }
+.admin-rule-form{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:18px; padding:16px; border:1px solid var(--pl-line); background:var(--pl-cream); }
+.admin-rule-form h4,.admin-rule-form>label,.admin-rule-form>#ruleStatesField,.admin-rule-form>.admin-inline-controls{ grid-column:1/-1; }
+.admin-rule-form>label,.admin-rule-form>#ruleStatesField{ display:grid; gap:6px; color:var(--pl-ink-soft); font-size:11px; font-weight:600; }
+.admin-rule-form input,.admin-rule-form select,.admin-rule-form textarea{ min-height:40px; padding:8px 10px; border:1px solid var(--pl-line); background:#fff; font:inherit; }
+.admin-rule-form textarea{ min-height:72px; resize:vertical; }
+.admin-state-tools{ display:flex; gap:14px; }
+.admin-state-options{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px 10px; }
+.admin-state-option{ display:flex; align-items:center; gap:6px; min-width:0; color:var(--pl-ink); font-size:11px; font-weight:400; letter-spacing:normal; text-transform:none; }
+.admin-state-option input{ width:auto; min-height:0; margin:0; accent-color:var(--pl-navy); }
+.admin-state-chips{ display:flex; flex-wrap:wrap; gap:5px; }
+.admin-state-chip{ padding:3px 7px; background:#e9edf3; color:var(--pl-navy); font-size:10px; }
+.admin-rule-editor-actions{ display:flex; align-items:center; gap:14px; }
+.admin-config-status.is-dirty{ color:var(--pl-navy); font-weight:600; }
+.admin-save-state{ display:flex; align-items:center; gap:14px; }
 @media(max-width:560px){
   .admin-header{ gap:16px; }
   .admin-brand img{ width:126px; }
@@ -69,4 +102,15 @@
   .admin-rule-actions{ flex-wrap:wrap; }
   .admin-config-footer{ align-items:flex-start; flex-direction:column-reverse; }
   .admin-auth-content{ padding:24px; }
+  .admin-section-heading{ align-items:flex-start; flex-direction:column; }
+  .admin-from-address{ justify-items:start; }
+  .admin-inline-form{ grid-template-columns:minmax(0,1fr); }
+  .admin-rules-table thead{ display:none; }
+  .admin-rules-table,.admin-rules-table tbody,.admin-rules-table tr,.admin-rules-table td{ display:block; width:100%; }
+  .admin-rules-table tr{ padding:8px 0; border-top:1px solid var(--pl-line); }
+  .admin-rules-table td{ display:grid; grid-template-columns:86px minmax(0,1fr); gap:8px; padding:6px 4px; border:0; }
+  .admin-rules-table td::before{ content:attr(data-label); color:var(--pl-ink-soft); font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+  .admin-rules-table td:nth-child(2){ width:auto; }
+  .admin-state-options{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .admin-rule-form{ grid-template-columns:minmax(0,1fr); padding:12px; }
 }

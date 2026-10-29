@@ -3,7 +3,11 @@
   const countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
   const countries = countryCodes
     .map((code) => ({ code, name: countryNames.of(code) }))
-    .sort((left, right) => left.name.localeCompare(right.name));
+    .sort((left, right) => {
+      if (left.code === 'US') return -1;
+      if (right.code === 'US') return 1;
+      return left.name.localeCompare(right.name);
+    });
   const usStates = [
     { code: 'AL', name: 'Alabama' },
     { code: 'AK', name: 'Alaska' },

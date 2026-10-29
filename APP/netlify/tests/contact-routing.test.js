@@ -67,6 +67,12 @@ test('normalizes US state names and codes exactly', () => {
   assert.equal(normalizeUsState('NY'), 'NY');
   assert.equal(normalizeUsState('New York'), 'NY');
   assert.equal(normalizeUsState('York'), '');
+  assert.equal(globalThis.PRIME_LINE_CONTACT_DATA.usStates.length, 51);
+  assert.equal(globalThis.PRIME_LINE_CONTACT_DATA.countries[0].code, 'US');
+  assert.deepEqual(
+    globalThis.PRIME_LINE_CONTACT_DATA.countries.slice(1).map((country) => country.name),
+    [...globalThis.PRIME_LINE_CONTACT_DATA.countries.slice(1).map((country) => country.name)].sort((a, b) => a.localeCompare(b))
+  );
 });
 
 test('returns the initial default configuration when the Blob key is absent', async () => {
@@ -95,6 +101,37 @@ test('saves and reads the single configuration document across store instances',
   assert.deepEqual(read, saved);
   assert.equal(blobs.size, 1);
   assert.equal(blobs.has(CONTACT_ROUTING_CONFIG_KEY), true);
+});
+
+test('migrates saved single-state rules to states arrays without losing settings', async () => {
+  const legacyDocument = {
+    generalRecipients: [{ id: 'legacy-general', email: 'all@example.com', enabled: false }, {
+      id: 'legacy-fallback',
+      email: 'info@primelinedist.com',
+      enabled: true
+    }],
+    stateRules: [{
+      id: 'legacy-ny',
+      countryCode: 'US',
+      state: 'New York',
+      recipients: ['route@example.com'],
+      enabled: false
+    }],
+    updatedAt: '2026-10-28T12:00:00.000Z'
+  };
+  const migrated = await loadRoutingConfig(createMemoryStore(new Map([
+    [CONTACT_ROUTING_CONFIG_KEY, legacyDocument]
+  ])));
+
+  assert.deepEqual(migrated.stateRules, [{
+    id: 'legacy-ny',
+    countryCode: 'US',
+    states: ['NY'],
+    recipients: ['route@example.com'],
+    enabled: false
+  }]);
+  assert.deepEqual(migrated.generalRecipients, legacyDocument.generalRecipients);
+  assert.equal(migrated.updatedAt, legacyDocument.updatedAt);
 });
 
 test('blocks configuration writes outside production', async () => {
@@ -156,7 +193,7 @@ test('validates recipient configuration and rejects malformed email types', () =
     }]
   });
   assert.equal(validation.ok, true);
-  assert.equal(validation.config.stateRules[0].state, 'NY');
+  assert.deepEqual(validation.config.stateRules[0].states, ['NY']);
 });
 
 test('resolves enabled general and exact state-rule recipients without duplicates', () => {
@@ -174,6 +211,45 @@ test('resolves enabled general and exact state-rule recipients without duplicate
   assert.deepEqual(resolveRecipients({ country: 'US', state: 'NY' }, config), ['info@example.com', 'ny@example.com']);
   assert.deepEqual(resolveRecipients({ country: 'US', state: 'CA' }, config), ['info@example.com', 'ca@example.com']);
   assert.deepEqual(resolveRecipients({ country: 'US', state: 'FL' }, config), ['info@example.com']);
+});
+
+test('validates multiple state arrays, permits overlapping rules and deduplicates recipients', () => {
+  const validation = validateRoutingConfig({
+    generalRecipients: [{ id: 'general', email: 'info@example.com', enabled: true }],
+    stateRules: [
+      { id: 'tri-state', countryCode: 'US', states: ['NY', 'NJ', 'CT', 'New York'], recipients: ['m@example.com', 'M@example.com'], enabled: true },
+      { id: 'ny-overlap', countryCode: 'US', states: ['NY'], recipients: ['info@example.com', 'other@example.com'], enabled: true },
+      { id: 'disabled', countryCode: 'US', states: ['CT'], recipients: ['disabled@example.com'], enabled: false }
+    ]
+  });
+
+  assert.equal(validation.ok, true);
+  assert.deepEqual(validation.config.stateRules[0].states, ['NY', 'NJ', 'CT']);
+  assert.deepEqual(validation.config.stateRules[0].recipients, ['m@example.com']);
+  assert.deepEqual(resolveRecipients({ country: 'US', state: 'NY' }, validation.config), [
+    'info@example.com',
+    'm@example.com',
+    'other@example.com'
+  ]);
+  assert.deepEqual(resolveRecipients({ country: 'US', state: 'CT' }, validation.config), [
+    'info@example.com',
+    'm@example.com'
+  ]);
+});
+
+test('rejects invalid multi-state values and multiple international provinces', () => {
+  const base = {
+    generalRecipients: [{ id: 'general', email: 'info@example.com', enabled: true }],
+    stateRules: []
+  };
+  assert.equal(validateRoutingConfig({
+    ...base,
+    stateRules: [{ id: 'bad', countryCode: 'US', states: ['NY', 'Unknown'], recipients: ['route@example.com'], enabled: true }]
+  }).ok, false);
+  assert.equal(validateRoutingConfig({
+    ...base,
+    stateRules: [{ id: 'intl', countryCode: 'CA', states: ['ON', 'QC'], recipients: ['route@example.com'], enabled: true }]
+  }).ok, false);
 });
 
 test('rejects invalid public submission and honeypot without sending email', async () => {

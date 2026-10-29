@@ -39,13 +39,19 @@
           <div>
             <span class="eyebrow">Contact Us</span>
             <h2 id="contactConfigTitle">Email Routing</h2>
+            <p>FROM is fixed. TO recipients are managed separately below.</p>
           </div>
           <button class="admin-secondary-button" id="reloadContactConfig" type="button">Reload</button>
         </div>
 
         <section class="admin-config-block" aria-labelledby="generalRecipientsTitle">
-          <h3 id="generalRecipientsTitle">General Recipients</h3>
-          <p>Enabled recipients receive every website inquiry. Keep at least one enabled.</p>
+          <div class="admin-section-heading">
+            <div>
+              <h3 id="generalRecipientsTitle">General Recipients</h3>
+              <p>TO: enabled addresses receive every inquiry. Keep at least one enabled.</p>
+            </div>
+            <div class="admin-from-address"><span>FROM</span><strong>info@primelinedist.com</strong><small>Read-only</small></div>
+          </div>
           <div class="admin-recipient-list" id="generalRecipientsList"></div>
           <form class="admin-inline-form" id="addRecipientForm">
             <label for="newRecipientEmail">Add an email recipient</label>
@@ -57,21 +63,37 @@
         </section>
 
         <section class="admin-config-block" aria-labelledby="routingRulesTitle">
-          <div class="admin-config-heading">
+          <div class="admin-section-heading">
             <div>
               <h3 id="routingRulesTitle">Conditional Routing Rules</h3>
-              <p>Additional recipients are notified when the submitted country and state match.</p>
+              <p>TO: additional recipients are notified only when a submitted state matches.</p>
             </div>
+            <button class="admin-secondary-button" id="addRoutingRule" type="button">Add Rule</button>
           </div>
-          <div class="admin-rule-list" id="routingRulesList"></div>
-          <form class="admin-rule-form" id="routingRuleForm">
+          <div class="admin-rules-table-wrap">
+            <table class="admin-rules-table">
+              <thead>
+                <tr><th scope="col">States</th><th scope="col">Recipients</th><th scope="col">Enabled</th><th scope="col">Actions</th></tr>
+              </thead>
+              <tbody id="routingRulesList"></tbody>
+            </table>
+            <p class="admin-empty-rules" id="emptyRoutingRules">No conditional routing rules yet.</p>
+          </div>
+          <form class="admin-rule-form" id="routingRuleForm" hidden>
             <h4 id="routingRuleFormTitle">Add a routing rule</h4>
             <label for="ruleCountry">Country
               <select id="ruleCountry" required></select>
             </label>
-            <label for="ruleStateSelect" id="ruleStateSelectLabel">State
-              <select id="ruleStateSelect" required></select>
-            </label>
+            <div id="ruleStatesField">
+              <label for="ruleStateSearch" id="ruleStatesLabel">States</label>
+              <input id="ruleStateSearch" type="search" placeholder="Search states..." autocomplete="off">
+              <div class="admin-state-tools">
+                <button class="admin-text-button" id="selectAllStates" type="button">Select all</button>
+                <button class="admin-text-button" id="clearStates" type="button">Clear all</button>
+              </div>
+              <div class="admin-state-options" id="ruleStateOptions"></div>
+              <div class="admin-state-chips" id="selectedStateChips" aria-live="polite"></div>
+            </div>
             <label for="ruleStateText" id="ruleStateTextLabel" hidden>State / Province
               <input id="ruleStateText" type="text" maxlength="100" disabled>
             </label>
