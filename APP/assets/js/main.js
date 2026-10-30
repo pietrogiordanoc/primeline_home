@@ -960,6 +960,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const bannerCopy = {
       parmigiano: { eyebrow: 'Cheese', title: 'Exceptional Cheese, Selected at the Source', text: 'Parmigiano and international specialties for professional kitchens.' },
       mozzarellaburrata: { eyebrow: 'Fresh Cheese', title: 'Mozzarella & Burrata', text: 'Fresh Italian cheese selected for exceptional texture, flavor and professional service.' },
+      rice: { eyebrow: 'Rice', title: 'Italian Rice, Selected for the Professional Kitchen', text: 'Carnaroli, Arborio, Vialone Nano and specialty rice selections.' },
+      tomatoes: { eyebrow: 'Tomatoes', title: 'Italian Tomatoes, Prepared for the Professional Kitchen', text: 'From whole and chopped tomatoes to passata and specialty varieties.' },
       antipasto_and_vegetables: { eyebrow: 'Antipasto', title: 'Antipasto & Vegetables', text: 'Reference text about antipasto and vegetables. Replace with final copy.' },
       baking_and_pastry: { eyebrow: 'Baking & Pastry', title: 'Crafted for the Art of Pastry', text: 'Premium ingredients and authentic specialties selected for professional bakers, pastry chefs and culinary creators.' },
       balsamic_vinegars: { eyebrow: 'Balsamic Vinegars', title: 'Exceptional Balsamic Vinegars, Selected at the Source', text: 'Italian Tradition & Distinctive Specialties' },
@@ -1288,6 +1290,111 @@ document.addEventListener('DOMContentLoaded', () => {
           </section>
         </div>`;
       },
+      rice: () => `
+        <div class="frg-page frg-rice-landing">
+          <section class="frg-title reveal">
+            <span class="eyebrow">Rice</span>
+            <h2>Italian Rice, Selected for the Professional Kitchen</h2>
+            <span class="frg-title-sub">Carnaroli, Arborio, Vialone Nano &amp; Specialty Rice</span>
+          </section>
+          <section class="frg-intro">
+            <div class="frg-intro-photo frg-intro-photo--image frg-rice-image reveal"><img src="images/spots/wep-optimized/rice01.webp" alt="Acquerello Carnaroli rice" loading="lazy"></div>
+            <div class="frg-intro-copy reveal">
+              <span class="eyebrow">A Tradition of the Italian Table</span>
+              <h2>Choose the Grain for the Dish</h2>
+              <p>The collection brings together Carnaroli, Arborio and Vialone Nano alongside specialty black rice and prepared risotto selections. Together, they give chefs a considered range for classic risotto and other rice-led dishes.</p>
+              <p>From named varieties to professional pack formats, the collection is selected for restaurants, hospitality and foodservice kitchens.</p>
+            </div>
+          </section>
+          <section class="frg-feature frg-feature--rice frg-rice-section--2">
+            <div class="frg-feature-media frg-feature-media--image frg-rice-image reveal"><img src="images/spots/wep-optimized/rice02.webp" alt="San Massimo Carnaroli rice and risotto" loading="lazy"></div>
+            <div class="frg-feature-copy reveal">
+              <span class="eyebrow">Carnaroli, Arborio &amp; Vialone Nano</span>
+              <h2>Rice for Risotto and More</h2>
+              <p>The selection includes Carnaroli from Acquerello, San Massimo, Riso Buono, Cascina Belvedere and Merlano, alongside Arborio and Vialone Nano from Cascina Belvedere and Scotti.</p>
+              <p>These familiar Italian rice varieties give professional kitchens a choice of grains for risotto and a wider range of menu applications.</p>
+            </div>
+          </section>
+          <section class="frg-feature frg-feature--grains frg-rice-section--3">
+            <div class="frg-feature-copy reveal">
+              <span class="eyebrow">Aged &amp; Specialty Selections</span>
+              <h2>Distinctive Rice, Carefully Selected</h2>
+              <p>Acquerello lists Carnaroli aged seven years, while Riso Buono offers aged Carnaroli. Specialty options include Riso Buono Artemide Nero and Scotti Venere whole grain black rice.</p>
+              <p>Cascina Belvedere's catalog selection also includes risotti with saffron, porcini and truffle, bringing additional flavor profiles to professional menus.</p>
+            </div>
+            <div class="frg-feature-media frg-feature-media--image frg-rice-image reveal"><img src="images/spots/wep-optimized/rice03.webp" alt="Cascina Belvedere Carnaroli rice prepared in a professional kitchen" loading="lazy"></div>
+          </section>
+          <section class="frg-values">
+            <span class="eyebrow">For Chefs, Restaurants &amp; Foodservice</span>
+            <h2>Versatile Ingredients for Professional Service</h2>
+            <div class="frg-values-grid">
+              <div class="frg-value reveal"><h3>Menu Flexibility</h3><p>Choose from risotto varieties, specialty black rice and prepared risotti to suit different menus and service styles.</p></div>
+              <div class="frg-value reveal"><h3>Recognized Varieties</h3><p>Catalog-listed Carnaroli, Arborio and Vialone Nano provide familiar starting points for rice-based dishes.</p></div>
+              <div class="frg-value reveal"><h3>Professional Selection</h3><p>Brand and format options support the needs of restaurants, hospitality teams and foodservice operators.</p></div>
+            </div>
+          </section>
+        </div>`,
+      tomatoes: () => `
+        <div class="cs-page">
+          <section class="cs-title reveal">
+            <span class="eyebrow">Tomatoes</span>
+            <h2>Italian Tomatoes, Prepared for the Professional Kitchen</h2>
+            <span class="cs-title-sub">San Marzano, Datterini &amp; Specialty Tomato Formats</span>
+          </section>
+          <section class="cs-intro">
+            <div class="cs-editorial-photo reveal"><img src="images/spots/wep-optimized/tomato01.webp" alt="Datterini tomatoes and preserved tomato preparations in a rustic Italian setting" loading="lazy" decoding="async"></div>
+            <div class="cs-copy reveal">
+              <span class="eyebrow">A Versatile Italian Essential</span>
+              <h2>Variety, Character and Culinary Possibility</h2>
+              <p>Italian tomato traditions bring together cherry tomatoes, Datterini, San Marzano DOP tomatoes, Corbarini, yellow varieties and a wide range of preserved preparations.</p>
+              <p>Whole peeled, chopped, crushed, strained and passata formats give chefs a choice of tomato character and preparation for sauces, pasta, pizza and other professional applications.</p>
+            </div>
+          </section>
+          <section class="cs-feature">
+            <div class="cs-copy reveal">
+              <span class="eyebrow">San Marzano &amp; Regional Varieties</span>
+              <h2>Distinctive Varieties, Clearly Identified</h2>
+              <p>Our selection celebrates San Marzano DOP tomatoes, prized for their balanced flavor and versatility in traditional sauces and professional kitchens.</p>
+              <p>Regional varieties bring their own distinctive color, sweetness and texture to prepared dishes and menus.</p>
+            </div>
+            <div class="cs-editorial-photo reveal"><img src="images/spots/wep-optimized/tomato02.webp" alt="San Marzano tomatoes and preserved tomato preparations in a professional kitchen" loading="lazy" decoding="async"></div>
+          </section>
+          <section class="cs-trio" id="tomato-families" aria-label="Tomato product families">
+            <article class="cs-card reveal">
+              <div class="cs-card-media"><img src="images/banners/wep-optimized/tomato03.webp" alt="Whole peeled tomatoes and fresh tomatoes in an Italian kitchen" loading="lazy" decoding="async"></div>
+              <div class="cs-card-copy"><h3>Cherry &amp; Datterini</h3><p>Sweet cherry tomatoes and Datterini, including DOP-certified selections, bring bright flavor and delicate texture to salads, sauces and finished dishes.</p></div>
+            </article>
+            <article class="cs-card reveal">
+              <div class="cs-card-media"><img src="images/banners/wep-optimized/tomato04.webp" alt="San Marzano and regional tomatoes in a rustic kitchen" loading="lazy" decoding="async"></div>
+              <div class="cs-card-copy"><h3>Whole &amp; Regional Varieties</h3><p>San Marzano DOP tomatoes and regional varieties such as Corbarini offer distinctive shape, rich flesh and a versatile foundation for traditional preparations.</p></div>
+            </article>
+            <article class="cs-card reveal">
+              <div class="cs-card-media"><img src="images/banners/wep-optimized/tomato05.webp" alt="Peeled tomatoes and fresh produce prepared for cooking" loading="lazy" decoding="async"></div>
+              <div class="cs-card-copy"><h3>Polpa, Passata &amp; More</h3><p>From silky passata and textured polpa to crushed and peeled tomatoes, choose the consistency and format suited to sauces, soups, pizzas and service.</p></div>
+            </article>
+          </section>
+          <section class="cs-origins">
+            <div class="cs-origins-copy reveal">
+              <span class="eyebrow">Origin &amp; Product Identity</span>
+              <h2>A Range Defined by Its Varieties</h2>
+              <p>Italy’s tomato-growing traditions are expressed through varieties with distinctive shapes, colors and flavors. San Marzano DOP, Corbarini, Datterini and other regional types each bring character to the professional pantry.</p>
+              <p>From whole tomatoes to passata, these preparations give chefs versatile options for building the flavor and texture of a dish.</p>
+            </div>
+            <div class="cs-origin-list reveal" aria-label="Tomato origins, designations and formats">
+              <span>Italy · selected products</span><span>San Marzano · DOP</span><span>Whole · Chopped · Passata</span>
+            </div>
+            <p class="cs-origin-note">One essential ingredient. Many expressions for the kitchen.</p>
+          </section>
+          <section class="cs-values">
+            <span class="eyebrow">For Chefs, Restaurants &amp; Foodservice</span>
+            <h2>Formats for the Pace of Service</h2>
+            <div class="cs-values-grid">
+              <div class="cs-value reveal"><h3>Menu Versatility</h3><p>Choose from whole, chopped, crushed and strained tomato preparations for a wide range of dishes.</p></div>
+              <div class="cs-value reveal"><h3>Professional Formats</h3><p>The range includes large tins, jars and pouch formats to suit different kitchen needs.</p></div>
+              <div class="cs-value reveal"><h3>Varietal Character</h3><p>Distinctive regional styles give chefs expressive options for professional menus.</p></div>
+            </div>
+          </section>
+        </div>`,
       pasta: () => {
         const collections = [
           {
