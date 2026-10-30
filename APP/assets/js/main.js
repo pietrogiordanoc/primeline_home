@@ -977,13 +977,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Centralized placeholders: replace these paths when the final cheese photography arrives.
     const cheeseImages = {
-      hero: 'images/banners/parmigiano.jpg',
-      parmigiano: 'images/banners/parmigiano.jpg',
-      agedFirm: 'images/banners/parmigiano.jpg',
-      alpine: 'images/spots/gruyere01.png',
-      blue: 'images/spots/gorgonzola01.png',
-      italy: 'images/spots/cheesesmisce.png',
-      world: 'images/spots/romacheese.jpg',
+      hero: 'images/banners/wep-optimized/parmigiano.webp',
+      parmigiano: 'images/banners/wep-optimized/parmigiano.webp',
+      agedFirm: 'images/banners/wep-optimized/parmigiano.webp',
+      alpine: 'images/spots/wep-optimized/gruyere01.webp',
+      blue: 'images/spots/wep-optimized/gorgonzola01.webp',
+      italy: 'images/spots/wep-optimized/cheesesmisce.webp',
+      world: 'images/spots/wep-optimized/romacheese.webp',
     };
 
     // Full rich landing (intro/trio/spot/tips/diff/close) for categories with final copy - others fall back to a simple caption.
@@ -992,12 +992,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="mb-page">
           <section class="mb-title reveal"><span class="eyebrow">Fresh Italian Cheese</span><h2>Freshness, Texture and Italian Tradition</h2><span class="mb-title-sub">Mozzarella, Burrata &amp; Fresh Cheese Specialties</span></section>
           <section class="mb-intro">
-            <div class="mb-intro-photo reveal"><img src="images/spots/burrata01.jpg" alt="Fresh burrata prepared for service"></div>
+            <div class="mb-intro-photo reveal"><img src="images/spots/wep-optimized/burrata01.webp" alt="Fresh burrata prepared for service"></div>
             <div class="mb-intro-copy reveal"><span class="eyebrow">Selected for Professional Kitchens</span><h2>Made to Be Enjoyed at Its Freshest</h2><p>Prime Line brings together fresh Italian cheeses selected for their delicate texture, clean flavor and reliable performance in professional kitchens.</p><p>From creamy burrata to classic mozzarella, each selection adds a sense of generosity and authentic Italian character to the plate.</p></div>
           </section>
-          <section class="mb-feature mb-feature--mozzarella"><div class="mb-feature-copy reveal"><span class="eyebrow">01 &nbsp; Mozzarella</span><h2>A Fresh Italian Essential</h2><p>Delicate, milky and beautifully balanced, mozzarella brings a clean flavor and supple texture to every dish. Its freshness is what makes it feel both simple and distinctive.</p><p class="mb-detail">Ideal for caprese salads, antipasti, pizzas, pasta and composed plates where quality and freshness take the lead.</p></div><div class="mb-feature-media mb-media--mozzarella reveal"><img src="images/spots/mozzarella01.jpg" alt="Fresh mozzarella prepared for service"></div></section>
+          <section class="mb-feature mb-feature--mozzarella"><div class="mb-feature-copy reveal"><span class="eyebrow">01 &nbsp; Mozzarella</span><h2>A Fresh Italian Essential</h2><p>Delicate, milky and beautifully balanced, mozzarella brings a clean flavor and supple texture to every dish. Its freshness is what makes it feel both simple and distinctive.</p><p class="mb-detail">Ideal for caprese salads, antipasti, pizzas, pasta and composed plates where quality and freshness take the lead.</p></div><div class="mb-feature-media mb-media--mozzarella reveal"><img src="images/spots/wep-optimized/mozzarella01.webp" alt="Fresh mozzarella prepared for service"></div></section>
           <section class="mb-story">
-            <div class="mb-story-gallery reveal"><img class="mb-story-image mb-story-image--primary" src="images/spots/fioretta01.jpg" alt="Artisan fresh cheese production in a Florida facility"><img class="mb-story-image mb-story-image--detail" src="images/spots/fioretta02.jpg" alt="Fresh mozzarella being shaped by hand during production"></div>
+            <div class="mb-story-gallery reveal"><img class="mb-story-image mb-story-image--primary" src="images/spots/wep-optimized/fioretta01.webp" alt="Artisan fresh cheese production in a Florida facility"><img class="mb-story-image mb-story-image--detail" src="images/spots/wep-optimized/fioretta02.webp" alt="Fresh mozzarella being shaped by hand during production"></div>
             <div class="mb-story-copy reveal"><span class="eyebrow">Crafted with Precision &amp; Care</span><h2>From Production to Professional Kitchens</h2><p>Fresh, artisanal cheeses produced under strict quality standards, with close attention to texture, freshness and consistency from the first step to delivery.</p></div>
           </section>
         </div>`,
@@ -1005,19 +1005,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const collections = [
           {
             slot: 'gelato-category-card',
-            image: 'dessert04.jpg',
+            image: 'wep-optimized/dessert04.webp',
             title: 'Italian Gelato',
             description: 'Distinctive frozen specialties inspired by Italian gelato traditions and celebrated for their flavor and smooth texture.'
           },
           {
             slot: 'desserts-category-card',
-            image: 'dessert05.jpg',
+            image: 'wep-optimized/dessert05.webp',
             title: 'Classic Desserts',
             description: 'Timeless sweet creations bringing together refined flavors, inviting textures, and memorable presentation.'
           },
           {
             slot: 'frozen-specialties-card',
-            image: 'dessert06.png',
+            image: 'wep-optimized/dessert06.webp',
             title: 'Sorbet & Frozen Specialties',
             description: 'Refreshing frozen expressions and specialty desserts offering variety and creative culinary possibilities.'
           }
@@ -1031,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="dg-title-sub">Exceptional Desserts &amp; Italian Gelato</span>
           </section>
           <section class="dg-intro">
-            <div class="dg-intro-photo dg-intro-photo--image reveal"><img src="images/spots/dessert01.jpg" alt="Dessert selection"></div>
+            <div class="dg-intro-photo dg-intro-photo--image reveal"><img src="images/spots/wep-optimized/dessert01.webp" alt="Dessert selection"></div>
             <div class="dg-intro-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>A Celebration of Sweet Moments</h2>
@@ -1047,10 +1047,10 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>From familiar classics to creative specialty flavors, the world of gelato brings enjoyment, variety, and a memorable finishing touch to the dining experience.</p>
               <a href="#dg-collections">Explore Our Gelato Selection</a>
             </div>
-            <div class="dg-feature-media dg-feature-media--image reveal"><img src="images/spots/dessert02.jpg" alt="Italian gelato"></div>
+            <div class="dg-feature-media dg-feature-media--image reveal"><img src="images/spots/wep-optimized/dessert02.webp" alt="Italian gelato"></div>
           </section>
           <section class="dg-feature dg-feature--desserts">
-            <div class="dg-feature-media reveal"><img src="images/spots/dessert03.png" alt="Elegant plated dessert"></div>
+            <div class="dg-feature-media reveal"><img src="images/spots/wep-optimized/dessert03.webp" alt="Elegant plated dessert"></div>
             <div class="dg-feature-copy reveal">
               <span class="eyebrow">The Pleasure of Dessert</span>
               <h2>The Elegance of a Perfect Dessert</h2>
@@ -1073,7 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>From the velvety richness of frozen specialties to the delicate layers and contrasting textures of classic desserts, the sweet culinary world offers an exceptional variety of experiences.</p>
               <p>Different flavors, temperatures, and presentations allow culinary professionals to create desserts that complement every occasion and inspire memorable moments.</p>
             </div>
-            <div class="dg-feature-media dg-feature-media--image reveal"><img src="images/spots/dessert07.png" alt="Dessert textures and layers"></div>
+            <div class="dg-feature-media dg-feature-media--image reveal"><img src="images/spots/wep-optimized/dessert07.webp" alt="Dessert textures and layers"></div>
           </section>
           <section class="dg-origins">
             <div class="dg-origins-copy reveal">
@@ -1112,19 +1112,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const collections = [
           {
             slot: 'seafood-anchovies-card',
-            image: 'fish03.png',
+            image: 'wep-optimized/fish03.webp',
             title: 'Anchovies & Traditional Preserves',
             description: 'Distinctive seafood specialties celebrated for their rich flavor and enduring Mediterranean culinary traditions.'
           },
           {
             slot: 'seafood-tuna-card',
-            image: 'fish04.png',
+            image: 'wep-optimized/fish04.webp',
             title: 'Tuna & Selected Fish',
             description: 'Versatile fish specialties offering distinctive textures, balanced flavors, and culinary possibilities.'
           },
           {
             slot: 'seafood-specialties-card',
-            image: 'fish05.png',
+            image: 'wep-optimized/fish05.webp',
             title: 'Seafood Specialties',
             description: 'Traditional and contemporary seafood preparations bringing character and variety to professional menus.'
           }
@@ -1138,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="fs-title-sub">Exceptional Fish &amp; Seafood Specialties</span>
           </section>
           <section class="fs-intro">
-            <div class="fs-intro-photo fs-intro-photo--image reveal"><img src="images/spots/fish01.jpg" alt="Premium seafood selection"></div>
+            <div class="fs-intro-photo fs-intro-photo--image reveal"><img src="images/spots/wep-optimized/fish01.webp" alt="Premium seafood selection"></div>
             <div class="fs-intro-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>A Heritage of the Sea</h2>
@@ -1155,7 +1155,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p class="fs-detail">These are culinary traditions, not claims about the production methods used for every product.</p>
               <a href="#fs-collections">Explore Our Selection</a>
             </div>
-            <div class="fs-feature-media fs-feature-media--image reveal"><img src="images/spots/fish02.jpg" alt="Traditional seafood preparation"></div>
+            <div class="fs-feature-media fs-feature-media--image reveal"><img src="images/spots/wep-optimized/fish02.webp" alt="Traditional seafood preparation"></div>
           </section>
           <section class="fs-trio" id="fs-collections" aria-label="Fish & Seafood editorial categories">
             ${collections.map(({ image, title, description }) => `
@@ -1172,7 +1172,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Distinctive seafood selections allow culinary professionals to explore classic preparations while creating memorable dishes for their guests.</p>
               <a href="#fs-collections">Discover Culinary Possibilities</a>
             </div>
-            <div class="fs-feature-media fs-feature-media--image reveal"><img src="images/spots/fish06.png" alt="Seafood dish prepared for the professional kitchen"></div>
+            <div class="fs-feature-media fs-feature-media--image reveal"><img src="images/spots/wep-optimized/fish06.webp" alt="Seafood dish prepared for the professional kitchen"></div>
           </section>
           <section class="fs-origins">
             <div class="fs-origins-copy reveal">
@@ -1217,7 +1217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="frg-title-sub">Exceptional Flours, Rice &amp; Traditional Grains</span>
           </section>
           <section class="frg-intro">
-            <div class="frg-intro-photo frg-intro-photo--image reveal"><img src="images/spots/flour01.jpg" alt="Flour and artisan baking"></div>
+            <div class="frg-intro-photo frg-intro-photo--image reveal"><img src="images/spots/wep-optimized/flour01.webp" alt="Flour and artisan baking"></div>
             <div class="frg-intro-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>Extraordinary Cuisine Begins with the Essentials</h2>
@@ -1233,10 +1233,10 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>From pizza and artisanal breads to fresh pasta and specialty creations, selecting the right flour is an essential part of the craft.</p>
               <p class="frg-detail">Specific flour types, protein levels, and milling details will be added only after catalog verification.</p>
             </div>
-            <div class="frg-feature-media frg-feature-media--image reveal"><img src="images/spots/flour02.jpg" alt="Artisan flour and dough"></div>
+            <div class="frg-feature-media frg-feature-media--image reveal"><img src="images/spots/wep-optimized/flour02.webp" alt="Artisan flour and dough"></div>
           </section>
           <section class="frg-feature frg-feature--rice">
-            <div class="frg-feature-media frg-feature-media--image reveal"><img src="images/spots/flour03.jpg" alt="Rice prepared in an Italian dish"></div>
+            <div class="frg-feature-media frg-feature-media--image reveal"><img src="images/spots/wep-optimized/flour03.webp" alt="Rice prepared in an Italian dish"></div>
             <div class="frg-feature-copy reveal">
               <span class="eyebrow">The Italian Rice Tradition</span>
               <h2>The Tradition of Exceptional Rice</h2>
@@ -1253,7 +1253,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>From classic preparations to contemporary dishes, pasta offers chefs versatile possibilities to bring character and creativity to the table.</p>
               <p class="frg-detail">Specific pasta varieties and production details are pending catalog verification.</p>
             </div>
-            <div class="frg-feature-media frg-feature-media--image reveal"><img src="images/spots/flour05.png" alt="Pasta prepared with traditional ingredients"></div>
+            <div class="frg-feature-media frg-feature-media--image reveal"><img src="images/spots/wep-optimized/flour05.webp" alt="Pasta prepared with traditional ingredients"></div>
           </section>
           <section class="frg-origins">
             <div class="frg-origins-copy reveal">
@@ -1292,19 +1292,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const collections = [
           {
             slot: 'italian-pasta-long-card',
-            image: 'pasta06.png',
+            image: 'wep-optimized/pasta06.webp',
             title: 'Long Pasta',
             description: 'Timeless Italian shapes celebrated for their elegance, versatility, and distinctive culinary traditions.'
           },
           {
             slot: 'italian-pasta-short-card',
-            image: 'pasta02.png',
+            image: 'wep-optimized/pasta02.webp',
             title: 'Short & Shaped Pasta',
             description: 'Distinctive forms and textures designed to complement a wide range of sauces and preparations.'
           },
           {
             slot: 'italian-pasta-specialty-card',
-            image: 'pasta05.jpg',
+            image: 'wep-optimized/pasta05.webp',
             title: 'Specialty Pasta',
             description: 'Unique shapes and culinary expressions that celebrate the remarkable diversity of Italian pasta.'
           }
@@ -1338,7 +1338,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <a href="#pa-collections">Explore Our Pasta Selection</a>
             </div>
             <div class="pa-feature-media reveal">
-              <img src="images/spots/pasta01.png" alt="Italian pasta craftsmanship and traditional pasta making">
+              <img src="images/spots/wep-optimized/pasta01.webp" alt="Italian pasta craftsmanship and traditional pasta making">
             </div>
           </section>
           <section class="pa-trio" id="pa-collections" aria-label="Italian pasta editorial categories">
@@ -1350,7 +1350,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </section>
           <section class="pa-feature pa-feature--texture">
             <div class="pa-feature-media reveal">
-              <img src="images/spots/pasta09.png" alt="A variety of Italian pasta shapes and textures">
+              <img src="images/spots/wep-optimized/pasta09.webp" alt="A variety of Italian pasta shapes and textures">
             </div>
             <div class="pa-feature-copy reveal">
               <span class="eyebrow">Shape &amp; Character</span>
@@ -1408,23 +1408,23 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="bp-page">
           <section class="bp-title reveal"><span class="eyebrow">Baking &amp; Pastry</span><h2>Crafted for the Art of Pastry</h2><span class="bp-title-sub">Ingredients for Bakers, Pastry Chefs &amp; Culinary Creators</span></section>
           <section class="bp-intro" id="baking-collection">
-            <div class="bp-intro-photo reveal"><img src="images/spots/baking04.png" alt="Crisp cannoli filled with cream and finished with pistachio"></div>
+            <div class="bp-intro-photo reveal"><img src="images/spots/wep-optimized/baking04.webp" alt="Crisp cannoli filled with cream and finished with pistachio"></div>
             <div class="bp-copy reveal"><span class="eyebrow">A Considered Collection</span><h2>Where Craft Meets Ingredient</h2><p>From fine chocolate and aromatic vanilla to delicate pastry shells and traditional Italian specialties, our collection brings together the ingredients professionals trust to create exceptional desserts.</p></div>
           </section>
           <section class="bp-feature bp-feature--essentials">
             <div class="bp-copy reveal"><span class="eyebrow">01 &nbsp; Baking Essentials</span><h2>The Essentials Behind Every Creation</h2><p>Carefully selected ingredients that bring aroma, structure, texture and consistency to every recipe.</p><p class="bp-detail">Vanilla beans, extracts and paste sit alongside almond and coffee extracts, orange blossom water, honey, gelatin, yeast and puff pastry sheets.</p></div>
-            <div class="bp-media bp-media--image reveal"><img src="images/spots/baking01.png" alt="Baking essentials arranged for professional pastry preparation"></div>
+            <div class="bp-media bp-media--image reveal"><img src="images/spots/wep-optimized/baking01.webp" alt="Baking essentials arranged for professional pastry preparation"></div>
           </section>
           <section class="bp-feature bp-feature--chocolate">
-            <div class="bp-media bp-media--image reveal"><img src="images/spots/baking02.png" alt="Professional chocolate and pastry ingredients arranged for culinary use"></div>
+            <div class="bp-media bp-media--image reveal"><img src="images/spots/wep-optimized/baking02.webp" alt="Professional chocolate and pastry ingredients arranged for culinary use"></div>
             <div class="bp-copy bp-copy--light reveal"><span class="eyebrow bp-eyebrow-light">02 &nbsp; Professional Chocolate</span><h2>Chocolate Without Compromise</h2><p>Professional couverture, callets, cocoa and pastry fillings created for precision, performance and remarkable flavor.</p><p class="bp-detail">Callebaut chocolate blocks, callets, chocolate chips, cocoa powder and white chocolate for pastry work that demands control and depth.</p></div>
           </section>
           <section class="bp-feature bp-feature--finishing">
             <div class="bp-copy reveal"><span class="eyebrow">03 &nbsp; Amarena &amp; Finishing</span><h2>The Perfect Finishing Touch</h2><p>Distinctive fruit, glazes and finishing ingredients that transform every dessert into a memorable presentation.</p><p class="bp-detail">Toschi Amarena cherries, cherries in syrup and refined finishing ingredients for pastry chefs who understand the final detail.</p></div>
-            <div class="bp-media bp-media--image reveal"><img src="images/spots/baking03.png" alt="Amarena cherries and finishing ingredients for pastry presentation"></div>
+            <div class="bp-media bp-media--image reveal"><img src="images/spots/wep-optimized/baking03.webp" alt="Amarena cherries and finishing ingredients for pastry presentation"></div>
           </section>
           <section class="bp-cannoli">
-            <div class="bp-cannoli-photo reveal"><img src="images/banners/baking_and_pastry.jpeg" alt="Crisp Sicilian cannoli filled with ricotta cream and finished with pistachio" style="object-position: 31% 63%;"></div>
+            <div class="bp-cannoli-photo reveal"><img src="images/banners/wep-optimized/baking_and_pastry.webp" alt="Crisp Sicilian cannoli filled with ricotta cream and finished with pistachio" style="object-position: 31% 63%;"></div>
             <div class="bp-cannoli-copy reveal"><span class="eyebrow">04 &nbsp; Cannoli</span><h2>A Sicilian Classic, Ready to Create</h2><p>Crisp traditional shells and rich Sicilian ricotta cream bring authentic flavor, texture and character to every cannolo.</p><p class="bp-detail">Large and mini cannoli shells, ricotta cream and professional ingredients for an unmistakably Sicilian finish.</p></div>
           </section>
         </div>`,
@@ -1452,11 +1452,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <p>Our collection spans distinctive ages and profiles, allowing chefs to select the ideal expression for finishing, service, tasting and refined culinary applications.</p>
             <a href="#">Discover Our Parmigiano Selection</a>
           </div>
-          <div class="cheese-feature-photo reveal"><img class="cheese-image" src="images/spots/gennari01.jpg" alt="Parmigiano Reggiano wheels and cheese tools in an Italian aging room" style="object-position: 70% center;"></div>
+          <div class="cheese-feature-photo reveal"><img class="cheese-image" src="images/spots/wep-optimized/gennari01.webp" alt="Parmigiano Reggiano wheels and cheese tools in an Italian aging room" style="object-position: 70% center;"></div>
         </section>
         <section class="cheese-trio">
           <article class="cheese-card reveal">
-            <img class="cheese-image" src="images/spots/pecorino01.jpg" alt="Pecorino cheese from an Italian producer" style="object-position: 12% center;">
+            <img class="cheese-image" src="images/spots/wep-optimized/pecorino01.webp" alt="Pecorino cheese from an Italian producer" style="object-position: 12% center;">
             <div class="cheese-card-copy"><h3>Pecorino</h3><p>A distinguished selection from Italy's finest producers and celebrated regions, offering diverse origins, aging profiles and expressions of authentic sheep's milk cheese.</p></div>
           </article>
           <article class="cheese-card reveal">
@@ -1515,7 +1515,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="cm-title-sub">Traditional Salumi &amp; International Specialties</span>
           </section>
           <section class="cm-intro">
-            <div class="cm-intro-photo reveal"><img src="images/banners/cured_meats.jpeg" alt="Traditional cured meats and salumi"></div>
+            <div class="cm-intro-photo reveal"><img src="images/banners/wep-optimized/cured_meats.webp" alt="Traditional cured meats and salumi"></div>
             <div class="cm-intro-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>A Tradition Worth Preserving</h2>
@@ -1531,19 +1531,19 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>These qualities make traditional salumi a valued part of antipasti, specialty sandwiches, charcuterie presentations, and contemporary menus.</p>
               <a href="#cm-collections">Explore Our Selection</a>
             </div>
-            <div class="cm-feature-media reveal"><img src="images/spots/meats06.jpg" alt="Cured meats prepared with traditional craftsmanship"></div>
+            <div class="cm-feature-media reveal"><img src="images/spots/wep-optimized/meats06.webp" alt="Cured meats prepared with traditional craftsmanship"></div>
           </section>
           <section class="cm-trio" id="cm-collections">
             <article class="cm-card reveal">
-              <div class="cm-card-media"><img src="images/spots/meats03.png" alt="Guanciale"></div>
+              <div class="cm-card-media"><img src="images/spots/wep-optimized/meats03.webp" alt="Guanciale"></div>
               <div class="cm-card-copy"><h3>Guanciale</h3><p>Traditional cured pork cheek with rich flavor and delicate texture.</p></div>
             </article>
             <article class="cm-card reveal">
-              <div class="cm-card-media"><img src="images/spots/meats04.png" alt="Salami and traditional salumi"></div>
+              <div class="cm-card-media"><img src="images/spots/wep-optimized/meats04.webp" alt="Salami and traditional salumi"></div>
               <div class="cm-card-copy"><h3>Salami &amp; Traditional Salumi</h3><p>Regional character, balanced seasoning, and distinctive artisanal styles.</p></div>
             </article>
             <article class="cm-card reveal">
-              <div class="cm-card-media"><img src="images/spots/meats05.png" alt="Mortadella and specialties"></div>
+              <div class="cm-card-media"><img src="images/spots/wep-optimized/meats05.webp" alt="Mortadella and specialties"></div>
               <div class="cm-card-copy"><h3>Mortadella &amp; Specialties</h3><p>Classic deli traditions with exceptional culinary versatility.</p></div>
             </article>
           </section>
@@ -1554,7 +1554,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Beyond familiar favorites, cured meat traditions offer a remarkable range of textures, aromas, and regional expressions.</p>
               <p>From delicately seasoned specialties to richer, more intensely flavored cuts, our approach celebrates variety, authenticity, and thoughtful selection.</p>
             </div>
-            <div class="cm-feature-media reveal"><img src="images/spots/meats02.jpg" alt="Specialty cured meats"></div>
+            <div class="cm-feature-media reveal"><img src="images/spots/wep-optimized/meats02.webp" alt="Specialty cured meats"></div>
           </section>
           <section class="cm-origins">
             <div class="cm-origins-copy reveal">
@@ -1567,7 +1567,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </section>
           <section class="cm-close">
-            <div class="cm-close-media" role="img" aria-label="Cured meats and salumi"><img src="images/banners/cured_meats02.jpeg" alt=""></div>
+            <div class="cm-close-media" role="img" aria-label="Cured meats and salumi"><img src="images/banners/wep-optimized/cured_meats02.webp" alt=""></div>
             <div class="cm-close-copy reveal">
               <span class="eyebrow cm-eyebrow--light">Cured Meats</span>
               <h2>Many traditions.<br>Distinctive flavors.</h2>
@@ -1580,21 +1580,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const collections = [
           {
             slot: 'balsamic-classic',
-            image: 'vinegars04.jpg',
+            image: 'wep-optimized/vinegars04.webp',
             imageClass: 'classic',
             title: 'Balsamic Vinegars',
             description: 'Classic expressions appreciated for their versatility, balanced acidity, and distinctive flavor.'
           },
           {
             slot: 'balsamic-aged',
-            image: 'vinegars05.jpg',
+            image: 'wep-optimized/vinegars05.webp',
             imageClass: 'aged',
             title: 'Aged & Specialty Balsamics',
             description: 'Selected expressions offering distinctive richness, aroma, and culinary character.'
           },
           {
             slot: 'balsamic-condiments',
-            image: 'vinegars06.jpg',
+            image: 'wep-optimized/vinegars06.webp',
             imageClass: 'condiments',
             title: 'Balsamic Condiments & Glazes',
             description: 'Versatile finishing specialties that bring contrast, flavor, and visual appeal to creative dishes.'
@@ -1609,7 +1609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="vc-title-sub">Italian Tradition &amp; Distinctive Specialties</span>
           </section>
           <section class="vc-intro">
-            <div class="vc-media-image reveal"><img src="images/spots/vinegars03.jpg" alt="Italian balsamic vinegar and specialty condiments"></div>
+            <div class="vc-media-image reveal"><img src="images/spots/wep-optimized/vinegars03.webp" alt="Italian balsamic vinegar and specialty condiments"></div>
             <div class="vc-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>A Heritage of Exceptional Flavor</h2>
@@ -1625,7 +1625,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Different styles offer distinctive textures, aromas, and levels of intensity, allowing chefs to select the right expression for each culinary application.</p>
               <a href="#vc-collections">Discover Our Selection</a>
             </div>
-            <div class="vc-media-image reveal"><img src="images/spots/vinegars01.jpg" alt="Balsamic vinegar craftsmanship"></div>
+            <div class="vc-media-image reveal"><img src="images/spots/wep-optimized/vinegars01.webp" alt="Balsamic vinegar craftsmanship"></div>
           </section>
           <section class="vc-trio" id="vc-collections" aria-label="Balsamic collections">
             ${collections.map(({ slot, image, imageClass, title, description }) => `
@@ -1637,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </article>`).join('')}
           </section>
           <section class="vc-feature vc-feature--texture">
-            <div class="vc-media-image reveal"><img src="images/spots/vinegars07.jpg" alt="Balsamic vinegar showing its natural color and texture"></div>
+            <div class="vc-media-image reveal"><img src="images/spots/wep-optimized/vinegars07.webp" alt="Balsamic vinegar showing its natural color and texture"></div>
             <div class="vc-copy reveal">
               <span class="eyebrow">Balance &amp; Complexity</span>
               <h2>The Perfect Balance of Sweetness &amp; Acidity</h2>
@@ -1669,7 +1669,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </section>
           <section class="vc-close">
             <div class="vc-close-media reveal" role="img" aria-label="Balsamic vinegar setting with dark glass and warm natural highlights">
-              <img src="images/spots/vinegars02.jpg" alt="">
+              <img src="images/spots/wep-optimized/vinegars02.webp" alt="">
             </div>
             <div class="vc-close-copy reveal">
               <span class="eyebrow vc-eyebrow--light">An Italian Legacy</span>
@@ -1689,7 +1689,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="bl-title-sub">Traditional Varieties &amp; Mediterranean Essentials</span>
           </section>
           <section class="bl-intro">
-            <div class="bl-intro-photo reveal"><img src="images/spots/beans01.jpg" alt="Beans and legumes selected for the collection"></div>
+            <div class="bl-intro-photo reveal"><img src="images/spots/wep-optimized/beans01.webp" alt="Beans and legumes selected for the collection"></div>
             <div class="bl-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>The Beauty of Simple Ingredients</h2>
@@ -1721,7 +1721,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </section>
           <section class="bl-close">
             <div class="bl-close-media reveal" role="img" aria-label="A warm Mediterranean table with legume-based dishes">
-              <img src="images/spots/beans02.jpg" alt="">
+              <img src="images/spots/wep-optimized/beans02.webp" alt="">
             </div>
             <div class="bl-close-copy reveal">
               <span class="eyebrow bl-eyebrow--light">From the Earth to the Table</span>
@@ -1735,19 +1735,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const collections = [
           {
             slot: 'olive-oil-extra-virgin-card',
-            image: 'oil03.png',
+            image: 'wep-optimized/oil03.webp',
             title: 'Extra Virgin Olive Oils',
             description: 'Distinctive olive oils selected for their character, expressive flavors, and culinary versatility.'
           },
           {
             slot: 'olive-oil-regional-card',
-            image: 'oil04.png',
+            image: 'wep-optimized/oil04.webp',
             title: 'Regional & Specialty Oils',
             description: 'A celebration of different traditions, origins, and carefully selected olive oil expressions.'
           },
           {
             slot: 'olive-oil-professional-card',
-            image: 'oil05.jpg',
+            image: 'wep-optimized/oil05.webp',
             title: 'Culinary & Professional Formats',
             description: 'Versatile selections and practical formats designed for the demands of professional kitchens.'
           }
@@ -1761,7 +1761,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="oo-title-sub">Extra Virgin &amp; Mediterranean Specialties</span>
           </section>
           <section class="oo-intro">
-            <div class="oo-media-pending oo-media-image reveal"><img src="images/spots/oil01.jpg" alt="Olive oil with fresh olives"></div>
+            <div class="oo-media-pending oo-media-image reveal"><img src="images/spots/wep-optimized/oil01.webp" alt="Olive oil with fresh olives"></div>
             <div class="oo-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>The Heart of Mediterranean Cuisine</h2>
@@ -1777,7 +1777,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>From delicate and balanced to vibrant and intensely expressive, each selection offers its own culinary possibilities.</p>
               <a href="#oo-collections">Explore Our Olive Oil Selection</a>
             </div>
-            <div class="oo-media-pending oo-media-image reveal"><img src="images/spots/oil02.jpg" alt="Olive harvest in a Mediterranean grove"></div>
+            <div class="oo-media-pending oo-media-image reveal"><img src="images/spots/wep-optimized/oil02.webp" alt="Olive harvest in a Mediterranean grove"></div>
           </section>
           <section class="oo-trio" id="oo-collections" aria-label="Olive oil editorial categories">
             ${collections.map(({ image, title, description }) => `
@@ -1818,7 +1818,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </section>
           <section class="oo-close">
-            <div class="oo-media-pending oo-media-image reveal"><img src="images/spots/oil06.jpg" alt="Mediterranean table with olive oil, bread, and olives"></div>
+            <div class="oo-media-pending oo-media-image reveal"><img src="images/spots/wep-optimized/oil06.webp" alt="Mediterranean table with olive oil, bread, and olives"></div>
             <div class="oo-close-copy reveal">
               <span class="eyebrow oo-eyebrow--light">The Mediterranean Tradition</span>
               <h2>The Essence of the Mediterranean Table</h2>
@@ -1837,7 +1837,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="coffee-title-sub">Timeless Rituals &amp; Distinctive Flavors</span>
           </section>
           <section class="coffee-intro">
-            <div class="coffee-photo reveal"><img src="images/spots/coffee01.jpg" alt="Coffee and tea arranged for a warm hospitality setting"></div>
+            <div class="coffee-photo reveal"><img src="images/spots/wep-optimized/coffee01.webp" alt="Coffee and tea arranged for a warm hospitality setting"></div>
             <div class="coffee-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>The Art of Everyday Rituals</h2>
@@ -1852,10 +1852,10 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Few beverages capture the spirit of Italian daily life like espresso. Its concentrated character, rich aroma, and distinctive preparation have made it an enduring symbol of Italian coffee culture.</p>
               <p>Our coffee presentation celebrates this tradition and the important role of a memorable espresso experience in cafés, restaurants, and hospitality.</p>
             </div>
-            <div class="coffee-photo reveal"><img src="images/spots/coffee02.jpg" alt="Italian espresso prepared for a professional café"></div>
+            <div class="coffee-photo reveal"><img src="images/spots/wep-optimized/coffee02.webp" alt="Italian espresso prepared for a professional café"></div>
           </section>
           <section class="coffee-feature coffee-feature--tea">
-            <div class="coffee-photo reveal"><img src="images/spots/coffee03.jpg" alt="Tea service arranged for hospitality"></div>
+            <div class="coffee-photo reveal"><img src="images/spots/wep-optimized/coffee03.webp" alt="Tea service arranged for hospitality"></div>
             <div class="coffee-copy reveal">
               <span class="eyebrow">The Art of Tea</span>
               <h2>A Tradition of Balance &amp; Discovery</h2>
@@ -1898,17 +1898,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const collections = [
           {
             title: 'Tomato-Based Sauces',
-            image: 'condiments03.jpg',
+            image: 'wep-optimized/condiments03.webp',
             description: 'Classic culinary favorites bringing richness, balance, and the vibrant character of tomatoes to the table.'
           },
           {
             title: 'Pesto & Herb Sauces',
-            image: 'condiments04.jpg',
+            image: 'wep-optimized/condiments04.webp',
             description: 'Distinctive herb-forward preparations inspired by culinary tradition and fresh, expressive flavors.'
           },
           {
             title: 'Specialty Condiments & Spreads',
-            image: 'condiments05.jpg',
+            image: 'wep-optimized/condiments05.webp',
             description: 'Versatile culinary specialties designed to bring depth, contrast, and character to exceptional dishes.'
           }
         ];
@@ -1921,7 +1921,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="cs-title-sub">Exceptional Condiments &amp; Culinary Specialties</span>
           </section>
           <section class="cs-intro">
-            <div class="cs-editorial-photo reveal"><img src="images/spots/condiments01.jpg" alt="Condiments and sauce ingredients prepared for the collection"></div>
+            <div class="cs-editorial-photo reveal"><img src="images/spots/wep-optimized/condiments01.webp" alt="Condiments and sauce ingredients prepared for the collection"></div>
             <div class="cs-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>The Ingredients Behind Exceptional Flavor</h2>
@@ -1937,7 +1937,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Each style brings its own expression of flavor, offering chefs new ways to complement, enhance, and elevate their creations.</p>
               <a href="#cs-collections">Explore Our Selection</a>
             </div>
-            <div class="cs-editorial-photo reveal"><img src="images/spots/condiments02.jpg" alt="Sauce preparation highlighting culinary craftsmanship"></div>
+            <div class="cs-editorial-photo reveal"><img src="images/spots/wep-optimized/condiments02.webp" alt="Sauce preparation highlighting culinary craftsmanship"></div>
           </section>
           <section class="cs-trio" id="cs-collections" aria-label="Sauces and condiments editorial categories">
             ${collections.map(({ title, image, description }) => `
@@ -1949,7 +1949,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </article>`).join('')}
           </section>
           <section class="cs-feature cs-feature--specialties">
-            <div class="cs-editorial-photo reveal"><img src="images/spots/condiments06.jpg" alt="Specialty condiments and culinary spreads"></div>
+            <div class="cs-editorial-photo reveal"><img src="images/spots/wep-optimized/condiments06.webp" alt="Specialty condiments and culinary spreads"></div>
             <div class="cs-copy reveal">
               <span class="eyebrow">Beyond the Essentials</span>
               <h2>Beyond the Everyday Essentials</h2>
@@ -1982,7 +1982,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </section>
           <section class="cs-close">
             <div class="cs-close-media" role="img" aria-label="A finished dish with sauce and condiments">
-              <img src="images/spots/condiments08.jpg" alt="">
+              <img src="images/spots/wep-optimized/condiments08.webp" alt="">
             </div>
             <div class="cs-close-copy reveal">
               <span class="eyebrow cs-eyebrow--light">The Art of Exceptional Flavor</span>
@@ -1996,18 +1996,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const collections = [
           {
             slot: 'confections-biscuits-card',
-            image: 'confections03.png',
+            image: 'wep-optimized/confections03.webp',
             title: 'Cookies & Traditional Biscuits',
             description: 'Timeless baked specialties celebrated for their distinctive textures, authentic recipes, and everyday enjoyment.'
           },
           {
-            image: 'confections04.png',
+            image: 'wep-optimized/confections04.webp',
             title: 'Chocolates & Confections',
             description: 'Rich, delicate, and distinctive sweet creations inspired by confectionery traditions.'
           },
           {
             slot: 'confections-baked-goods-card',
-            image: 'confections05.png',
+            image: 'wep-optimized/confections05.webp',
             title: 'Specialty Cakes & Baked Goods',
             description: 'Traditional baked favorites and distinctive sweet specialties for memorable occasions.'
           }
@@ -2021,7 +2021,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="cb-title-sub">Exceptional Confections &amp; Baked Specialties</span>
           </section>
           <section class="cb-intro">
-            <img class="cb-intro-photo reveal" src="images/spots/confections01.png" alt="Traditional artisan biscuits and confections">
+            <img class="cb-intro-photo reveal" src="images/spots/wep-optimized/confections01.webp" alt="Traditional artisan biscuits and confections">
             <div class="cb-intro-copy reveal">
               <span class="eyebrow">The Heart of the Collection</span>
               <h2>A Celebration of Sweet Traditions</h2>
@@ -2037,7 +2037,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>Each style brings its own personality, offering distinctive textures, aromas, and flavors that make everyday occasions and special celebrations memorable.</p>
               <a href="#cb-collections">Explore Our Collection</a>
             </div>
-            <img class="cb-feature-media cb-feature-media--image reveal" src="images/spots/confections02.jpg" alt="Artisanal confectionery">
+            <img class="cb-feature-media cb-feature-media--image reveal" src="images/spots/wep-optimized/confections02.webp" alt="Artisanal confectionery">
           </section>
           <section class="cb-trio" id="cb-collections" aria-label="Confections and baked goods editorial categories">
             ${collections.map(({ image, title, description }) => `
@@ -2047,7 +2047,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </article>`).join('')}
           </section>
           <section class="cb-feature cb-feature--seasonal">
-            <img class="cb-feature-media cb-feature-media--image reveal" src="images/spots/confections06.png" alt="Traditional seasonal baked specialty">
+            <img class="cb-feature-media cb-feature-media--image reveal" src="images/spots/wep-optimized/confections06.webp" alt="Traditional seasonal baked specialty">
             <div class="cb-feature-copy reveal">
               <span class="eyebrow">Traditions of Celebration</span>
               <h2>Traditions for Every Celebration</h2>
@@ -2088,7 +2088,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="cv-title-sub">Antipastos &amp; Vegetables</span>
         </section>
         <section class="cv-intro">
-          <div class="cv-intro-photo reveal"><img src="images/spots/agnoni1.png" alt="Balsamic-glazed onions and grilled mushrooms, rustic Italian kitchen"></div>
+          <div class="cv-intro-photo reveal"><img src="images/spots/wep-optimized/agnoni1.webp" alt="Balsamic-glazed onions and grilled mushrooms, rustic Italian kitchen"></div>
           <div class="cv-intro-copy reveal">
             <span class="eyebrow">Curated for Professional Kitchens</span>
             <h2>Exceptional Ingredients. Endless Possibilities.</h2>
@@ -2098,15 +2098,15 @@ document.addEventListener('DOMContentLoaded', () => {
         </section>
         <section class="cv-trio">
           <a class="cv-trio-card reveal" href="#">
-            <img src="images/spots/Primizia Artichokes VE59.png" alt="Artichoke hearts, whole and halved" style="object-position: left center;">
+            <img src="images/spots/wep-optimized/Primizia Artichokes VE59.webp" alt="Artichoke hearts, whole and halved" style="object-position: left center;">
             <div class="cv-trio-label"><h3>Artichokes</h3><p>Tender, flavorful and remarkably versatile, from antipasti and salads to pizzas, pastas and signature entrées.</p></div>
           </a>
           <a class="cv-trio-card reveal" href="#">
-            <img src="images/spots/deliziedicalabria02.jpg" alt="Hand-harvesting fresh Calabrian chili peppers into a crate">
+            <img src="images/spots/wep-optimized/deliziedicalabria02.webp" alt="Hand-harvesting fresh Calabrian chili peppers into a crate">
             <div class="cv-trio-label"><h3>Peppers</h3><p>Fiery Calabrian chilies, sun-ripened and hand-harvested for bold, authentic heat.</p></div>
           </a>
           <a class="cv-trio-card reveal" href="#">
-            <img src="images/spots/cappers.jpg" alt="Capers in a rustic wooden bowl">
+            <img src="images/spots/wep-optimized/cappers.webp" alt="Capers in a rustic wooden bowl">
             <div class="cv-trio-label"><h3>Capers</h3><p>Hand-harvested on Pantelleria, off the southern coast of Italy, prized for their delicate texture and briny, aromatic flavor.</p></div>
           </a>
         </section>
@@ -2118,7 +2118,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <p>Our selection includes artichokes, eggplants, mixed mushrooms, peppers, tomatoes and zucchini, each prepared to be ready for the table in minutes.</p>
             <a href="#">Discover Our Antipasto Selection</a>
           </div>
-          <div class="cv-spot-photo reveal"><img src="images/spots/buscema1.png" alt="Assorted grilled and roasted vegetable antipasti in oil"></div>
+          <div class="cv-spot-photo reveal"><img src="images/spots/wep-optimized/buscema1.webp" alt="Assorted grilled and roasted vegetable antipasti in oil"></div>
         </section>
         <section class="cv-tips reveal">
           <span class="eyebrow">From Our Table</span>
@@ -2147,7 +2147,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </section>
         <section class="cv-close">
-          <img src="images/spots/deliziedicalabria01.jpg" alt="Calabrian chili peppers, freshly harvested on a hillside overlooking the coast">
+          <img src="images/spots/wep-optimized/deliziedicalabria01.webp" alt="Calabrian chili peppers, freshly harvested on a hillside overlooking the coast">
           <div class="cv-close-content reveal">
             <span class="eyebrow cv-eyebrow--light">Grown in Calabria, Italy</span>
             <h1>Sun-Ripened, Hand-Harvested, Truly Authentic</h1>
@@ -2173,18 +2173,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const categoryDetail = document.getElementById('categoryDetail');
     let categoryDetailTimer;
+    const categoryDetailNodes = new Map();
 
     function updateCategoryDetail(slideEl) {
       if (!categoryDetail) return;
       const media = slideEl.querySelector('img, video');
-      const key = slideEl.dataset.category || decodeURIComponent((media?.getAttribute('src') || '').split('/').pop() || '').replace(/\.[^.]+$/, '');
+      const mediaSrc = media?.getAttribute('src') || media?.querySelector('source')?.getAttribute('src') || media?.querySelector('source')?.dataset.src || media?.dataset.src || '';
+      const key = slideEl.dataset.category || decodeURIComponent(mediaSrc.split('/').pop() || '').replace(/\.[^.]+$/, '');
       const data = bannerCopy[key] || { eyebrow: 'Prime Line', title: media?.getAttribute('alt') || 'Category', text: 'Reference text coming soon.' };
       const render = categoryDetailTemplates[key] || (() => defaultDetailTemplate(data));
       clearTimeout(categoryDetailTimer);
       categoryDetail.classList.add('is-fading');
       categoryDetailTimer = setTimeout(() => {
-        categoryDetail.innerHTML = `
-          ${render()}`;
+        let nodes = categoryDetailNodes.get(key);
+        if (!nodes) {
+          const template = document.createElement('template');
+          template.innerHTML = render();
+          nodes = Array.from(template.content.childNodes);
+          categoryDetailNodes.set(key, nodes);
+        }
+        categoryDetail.replaceChildren(...nodes);
         categoryDetail.classList.remove('is-fading');
         categoryDetail.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-visible'));
       }, 300);
@@ -2196,7 +2204,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const requestedCategory = new URLSearchParams(window.location.search).get('category');
       const requestedIndex = requestedCategory
         ? slides.findIndex((slide) => {
-          const src = slide.querySelector('img, video')?.getAttribute('src') || '';
+          const media = slide.querySelector('img, video');
+          const src = media?.getAttribute('src') || media?.querySelector('source')?.dataset.src || media?.dataset.src || '';
           if (slide.dataset.category === requestedCategory) return true;
           return decodeURIComponent(src.split('/').pop() || '').replace(/\.[^.]+$/, '') === requestedCategory;
         })
@@ -2205,10 +2214,32 @@ document.addEventListener('DOMContentLoaded', () => {
         ? requestedIndex
         : Math.max(0, slides.findIndex((s) => s.classList.contains('is-active')));
       slides.forEach((slide, index) => slide.classList.toggle('is-active', index === current));
+      const preparedSlides = new WeakSet();
+      function prepareSlideMedia(index) {
+        const slide = slides[(index + slides.length) % slides.length];
+        if (preparedSlides.has(slide)) return;
+        const image = slide.querySelector('img');
+        if (image?.dataset.src) {
+          image.src = image.dataset.src;
+          image.loading = 'eager';
+          image.decoding = 'async';
+        }
+        const video = slide.querySelector('video');
+        const source = video?.querySelector('source');
+        if (video && source?.dataset.src) {
+          if (video.dataset.poster) video.poster = video.dataset.poster;
+          video.preload = 'auto';
+          source.src = source.dataset.src;
+          video.load();
+        }
+        preparedSlides.add(slide);
+      }
+      prepareSlideMedia(current);
+      prepareSlideMedia(current + 1);
       let timer;
       let autoplayAllowed = true;
       let pointerOverCategoryDetail = false;
-      const videoLoopFadeLead = 0.55;
+      let videoAdvancePending = false;
       const keyboardToast = document.getElementById('sliderKeyboardToast');
       const keyboardToastCountKey = 'primeLineSliderPointerHintVisitsV3';
       let keyboardToastCountedThisVisit = false;
@@ -2227,19 +2258,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const video = slide.querySelector('video');
         if (!video) return;
         video.loop = false;
-        video.addEventListener('timeupdate', () => {
-          if (Number.isFinite(video.duration) && video.duration - video.currentTime <= videoLoopFadeLead) {
-            video.classList.add('is-loop-fading');
-          }
-        });
         video.addEventListener('ended', () => {
           if (slides[current] !== slide) return;
-          video.classList.add('is-loop-fading');
-          video.addEventListener('seeked', () => {
-            video.classList.remove('is-loop-fading');
-            if (slides[current] === slide) video.play().catch(() => {});
-          }, { once: true });
-          video.currentTime = 0;
+          videoAdvancePending = true;
+          advanceAfterVideo();
         });
       });
       updateCategoryDetail(slides[current]);
@@ -2254,16 +2276,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       function goTo(index) {
+        videoAdvancePending = false;
         const previousVideo = slides[current].querySelector('video');
         previousVideo?.pause();
         slides[current].classList.remove('is-active');
         dots[current].classList.remove('is-active');
         current = (index + slides.length) % slides.length;
+        prepareSlideMedia(current);
+        prepareSlideMedia(current + 1);
         slides[current].classList.add('is-active');
         dots[current].classList.add('is-active');
         const nextVideo = slides[current].querySelector('video');
         if (nextVideo) {
-          nextVideo.classList.remove('is-loop-fading');
           nextVideo.currentTime = 0;
           nextVideo.play().catch(() => {});
         }
@@ -2325,11 +2349,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       function resetTimer() {
         clearTimeout(timer);
+        if (videoAdvancePending) {
+          advanceAfterVideo();
+          return;
+        }
         if (!autoplayAllowed || pointerOverCategoryDetail) return;
         const slide = slides[current];
         const video = slide.querySelector('video');
         if (video) return;
         timer = setTimeout(() => goTo(current + 1), 5000);
+      }
+      function advanceAfterVideo() {
+        if (!videoAdvancePending || !autoplayAllowed || pointerOverCategoryDetail || slider.matches(':hover')) return;
+        videoAdvancePending = false;
+        goTo(current + 1);
       }
 
       slider.setAttribute('tabindex', '0');
@@ -2361,7 +2394,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       slider.addEventListener('mouseenter', () => clearTimeout(timer));
-      slider.addEventListener('mouseleave', resetTimer);
+      slider.addEventListener('mouseleave', (event) => {
+        if (categoryDetail && event.relatedTarget instanceof Node && categoryDetail.contains(event.relatedTarget)) {
+          pointerOverCategoryDetail = true;
+        }
+        resetTimer();
+      });
       slider.addEventListener('focusin', () => clearTimeout(timer));
       slider.addEventListener('focusout', (e) => {
         if (!slider.contains(e.relatedTarget)) resetTimer();

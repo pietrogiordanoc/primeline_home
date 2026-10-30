@@ -978,13 +978,12 @@
   object-fit: cover;
   display: block;
 }
-.slide img[src$=".jpg"],.slide img[src$=".jpeg"]{
+.slide img[src$=".jpg"],.slide img[src$=".jpeg"],.slide img[src$=".webp"]{
   transform: scale(1);
   transition: transform 5s ease-out;
 }
-.slide.is-active img[src$=".jpg"],.slide.is-active img[src$=".jpeg"]{ transform: scale(1.06); }
+.slide.is-active img[src$=".jpg"],.slide.is-active img[src$=".jpeg"],.slide.is-active img[src$=".webp"]{ transform: scale(1.06); }
 .slide video{ opacity: 1; transition: opacity .24s ease-in-out; }
-.slide video.is-loop-fading{ opacity: .2; }
 .slider-arrow{
   position: absolute;
   top: 50%;
