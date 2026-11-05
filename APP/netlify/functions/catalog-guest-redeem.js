@@ -13,12 +13,13 @@ import {
   hashToken,
   isGuestDuration,
   jsonResponse,
-  parseBody
+  parseBody,
+  registerGuestDevice
 } from '../shared/catalog-guest-access.js';
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
-const redeemInvitation = async (token, dependencies, now) => {
+const redeemInvitation = async (token, event, dependencies, now) => {
   const hash = hashToken(token);
   const invitationStore = await (dependencies.getInvitationStore || getInvitationStore)();
   const pointer = await invitationStore.get(`token:${hash}`, { type: 'json' });
@@ -29,42 +30,65 @@ const redeemInvitation = async (token, dependencies, now) => {
   if (
     !invitation ||
     invitation.tokenHash !== hash ||
-    invitation.status !== 'pending' ||
-    invitation.usedAt ||
-    !Number.isFinite(invitation.expiresAt) ||
-    invitation.expiresAt <= now() ||
     !isGuestDuration(invitation.duration)
   ) return jsonResponse({ error: 'This invitation is invalid or has expired.' }, 401);
 
-  if (!(await (dependencies.claimToken || claimGuestToken)(hash))) {
-    return jsonResponse({ error: 'This invitation has already been used.' }, 409);
+  const grantStore = await (dependencies.getGrantStore || getGrantStore)();
+  let grant = await grantStore.get(`grant:${invitation.grantId}`, { type: 'json' });
+  if (invitation.status === 'pending' && !invitation.usedAt) {
+    if (!Number.isFinite(invitation.expiresAt) || invitation.expiresAt <= now()) {
+      return jsonResponse({ error: 'This invitation is invalid or has expired.' }, 401);
+    }
+
+    const redeemedAt = now();
+    grant = {
+      id: invitation.grantId,
+      invitationId: invitation.id,
+      email: invitation.customerEmail,
+      sharedBy: invitation.sharedBy,
+      sharedByName: invitation.sharedByName || null,
+      duration: invitation.duration,
+      createdAt: redeemedAt,
+      expiresAt: getGrantExpiresAt(invitation.duration, redeemedAt),
+      revokedAt: null,
+      status: 'active',
+      deviceHashes: []
+    };
+    if (grant.expiresAt === undefined) return jsonResponse({ error: 'Invalid access duration.' }, 400);
+
+    await grantStore.setJSON(`grant:${grant.id}`, grant);
+    invitation.usedAt = redeemedAt;
+    invitation.status = 'redeemed';
+    invitation.expiresAt = grant.expiresAt;
+    await invitationStore.setJSON(invitationKey, invitation);
+  } else if (
+    invitation.status !== 'redeemed' ||
+    !invitation.usedAt ||
+    !getActiveGrant(grant, now())
+  ) {
+    return jsonResponse({ error: 'This catalog access has expired or been revoked.' }, 401);
   }
 
-  const redeemedAt = now();
-  const grant = {
-    id: invitation.grantId,
-    invitationId: invitation.id,
-    email: invitation.customerEmail,
-    sharedBy: invitation.sharedBy,
-    sharedByName: invitation.sharedByName || null,
-    duration: invitation.duration,
-    createdAt: redeemedAt,
-    expiresAt: getGrantExpiresAt(invitation.duration, redeemedAt),
-    revokedAt: null,
-    status: 'active'
-  };
-  if (grant.expiresAt === undefined) return jsonResponse({ error: 'Invalid access duration.' }, 400);
-
-  const grantStore = await (dependencies.getGrantStore || getGrantStore)();
-  await grantStore.setJSON(`grant:${grant.id}`, grant);
-  invitation.usedAt = redeemedAt;
-  invitation.status = 'redeemed';
-  await invitationStore.setJSON(invitationKey, invitation);
-  await invitationStore.delete(`token:${hash}`);
+  const device = await (dependencies.registerDevice || registerGuestDevice)(
+    grant,
+    event,
+    { getGrantStore: dependencies.getGrantStore || getGrantStore, now }
+  );
+  if (device.limitReached) {
+    return jsonResponse({
+      error: 'This catalog invitation has already been opened on 3 devices. Please contact your sales representative for additional access.',
+      code: 'device_limit'
+    }, 403);
+  }
+  if (device.expired) return jsonResponse({ error: 'This catalog access has expired.' }, 401);
 
   const { cookie } = await (dependencies.createSession || createGuestSession)(
     grant,
-    { getSessionStore: dependencies.getGuestSessionStore || getGuestSessionStore, now }
+    {
+      getSessionStore: dependencies.getGuestSessionStore || getGuestSessionStore,
+      now,
+      deviceHash: device.deviceHash
+    }
   );
   return jsonResponse({
     authenticated: true,
@@ -73,10 +97,10 @@ const redeemInvitation = async (token, dependencies, now) => {
     expiresAt: grant.expiresAt,
     sharedBy: grant.sharedBy || null,
     sharedByName: grant.sharedByName || null
-  }, 200, [cookie]);
+  }, 200, [cookie, device.cookie]);
 };
 
-const redeemVerification = async (token, dependencies, now) => {
+const redeemVerification = async (token, event, dependencies, now) => {
   const hash = hashToken(token);
   const verificationStore = await (dependencies.getVerificationStore || getVerificationStore)();
   const pointer = await verificationStore.get(`token:${hash}`, { type: 'json' });
@@ -99,9 +123,25 @@ const redeemVerification = async (token, dependencies, now) => {
   if (!getActiveGrant(grant, now()) || grant.email !== record.email) {
     return jsonResponse({ error: 'Catalog access is no longer active.' }, 401);
   }
+  const device = await (dependencies.registerDevice || registerGuestDevice)(
+    grant,
+    event,
+    { getGrantStore: dependencies.getGrantStore || getGrantStore, now }
+  );
+  if (device.limitReached) {
+    return jsonResponse({
+      error: 'This catalog access has already been opened on 3 devices. Please contact your sales representative for additional access.',
+      code: 'device_limit'
+    }, 403);
+  }
+  if (device.expired) return jsonResponse({ error: 'This catalog access has expired.' }, 401);
   const { cookie } = await (dependencies.createSession || createGuestSession)(
     grant,
-    { getSessionStore: dependencies.getGuestSessionStore || getGuestSessionStore, now }
+    {
+      getSessionStore: dependencies.getGuestSessionStore || getGuestSessionStore,
+      now,
+      deviceHash: device.deviceHash
+    }
   );
   record.usedAt = now();
   await verificationStore.setJSON(`verification:${pointer.grantId}:${hash}`, record);
@@ -113,7 +153,7 @@ const redeemVerification = async (token, dependencies, now) => {
     expiresAt: grant.expiresAt,
     sharedBy: grant.sharedBy || null,
     sharedByName: grant.sharedByName || null
-  }, 200, [cookie]);
+  }, 200, [cookie, device.cookie]);
 };
 
 export const createCatalogGuestRedeemHandler = (dependencies = {}) => async (event) => {
@@ -127,8 +167,8 @@ export const createCatalogGuestRedeemHandler = (dependencies = {}) => async (eve
 
   const now = dependencies.now || Date.now;
   try {
-    if (payload.purpose === 'invite') return await redeemInvitation(payload.token, dependencies, now);
-    return await redeemVerification(payload.token, dependencies, now);
+    if (payload.purpose === 'invite') return await redeemInvitation(payload.token, event, dependencies, now);
+    return await redeemVerification(payload.token, event, dependencies, now);
   } catch {
     return jsonResponse({ error: 'Catalog access could not be verified. Please request a fresh link or contact Prime Line.' }, 503);
   }

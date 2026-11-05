@@ -2,12 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   CATALOG_PUBLIC_URL,
+  GUEST_DEVICE_COOKIE,
+  GUEST_MAX_DEVICES,
   GUEST_SESSION_LIFETIME_SECONDS,
   GUEST_INVITATION_LIFETIME_MS,
   claimGuestToken,
   createGuestSession,
   getGrantExpiresAt,
   hashEmail,
+  hashDeviceId,
   hashToken,
   saveEmployeeProfile,
   sendCatalogInvitationEmail
@@ -279,7 +282,8 @@ test('catalog invitation Resend request includes escaped inviter details in HTML
     assert.doesNotMatch(message.html, /<img src=x onerror=alert\(1\)>/);
     assert.match(message.html, /href="mailto:sales@primelinedist\.com"/);
     assert.match(message.html, /VIEW CATALOG/);
-    assert.match(message.html, /expires in 48 hours and can be used once/);
+    assert.match(message.html, /must be opened within 48 hours/);
+    assert.match(message.html, /used on up to 3 devices/);
   } finally {
     globalThis.fetch = previousFetch;
     if (previousApiKey === undefined) delete process.env.RESEND_API_KEY;
@@ -325,32 +329,41 @@ test('GET never redeems a Magic Link and explicit POST creates the selected gran
   assert.equal(result.sharedBy, 'sales@primelinedist.com');
   assert.equal(result.sharedByName, 'Taylor Morgan');
   const cookies = response.multiValueHeaders['Set-Cookie'];
+  assert.equal(cookies.length, 2);
   assert.match(cookies[0], /HttpOnly; Secure; SameSite=Strict/);
   assert.match(cookies[0], new RegExp(`Max-Age=${GUEST_SESSION_LIFETIME_SECONDS}`));
+  assert.match(cookies[1], new RegExp(`^${GUEST_DEVICE_COOKIE}=`));
   const sessionId = cookies[0].match(/__Host-pl-guest-catalog-session=([^;]+)/)?.[1];
   const session = await state.stores.sessions.get(`session:${sessionId}`, { type: 'json' });
   assert.equal(session.resource, 'catalog-guest');
   assert.equal(session.expiresAt, state.now + GUEST_SESSION_LIFETIME_SECONDS * 1000);
+  const browserCookie = `${cookies[0].split(';')[0]}; ${cookies[1].split(';')[0]}`;
   const sessionResponse = await createCatalogGuestSessionHandler(state.dependencies)(
-    makeEvent('GET', undefined, cookies[0].split(';')[0])
+    makeEvent('GET', undefined, browserCookie)
   );
   assert.equal(responseBody(sessionResponse).sharedBy, 'sales@primelinedist.com');
   assert.equal(responseBody(sessionResponse).sharedByName, 'Taylor Morgan');
 });
 
-test('invitation redemption rejects sequential replays and persists a token claim', async () => {
+test('invitation link is reusable on the same device without creating another grant', async () => {
   const state = fixture();
   const token = await inviteCustomer(state);
   const handler = createCatalogGuestRedeemHandler(state.dependencies);
   const first = await handler(makeEvent('POST', { token, purpose: 'invite' }));
-  const replay = await handler(makeEvent('POST', { token, purpose: 'invite' }));
+  const cookies = first.multiValueHeaders['Set-Cookie'];
+  const deviceCookie = cookies[1].split(';')[0];
+  const replay = await handler(makeEvent('POST', { token, purpose: 'invite' }, deviceCookie));
   assert.equal(first.statusCode, 200);
-  assert.equal(replay.statusCode, 401);
+  assert.equal(replay.statusCode, 200);
   assert.equal(state.stores.grants.data.size, 1);
-  assert.equal(state.stores.sessions.data.size, 1);
+  assert.equal(state.stores.sessions.data.size, 2);
+  assert.equal((await state.stores.grants.get(
+    `grant:${(await state.stores.invitations.get(`invitation:${(await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' })).invitationId}`, { type: 'json' })).grantId}`,
+    { type: 'json' }
+  )).deviceHashes.length, 1);
 });
 
-test('expired 48-hour invitations are rejected before creating a token claim', async () => {
+test('unopened invitations expire after 48 hours', async () => {
   const state = fixture();
   const token = await inviteCustomer(state);
   state.setNow(state.now + GUEST_INVITATION_LIFETIME_MS + 1);
@@ -360,6 +373,83 @@ test('expired 48-hour invitations are rejected before creating a token claim', a
   assert.equal(response.statusCode, 401);
   assert.equal(state.claims.data.size, 0);
   assert.equal(state.stores.grants.data.size, 0);
+});
+
+test('reusable invitation permits three devices and blocks a fourth with sales guidance', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state);
+  const redeem = createCatalogGuestRedeemHandler(state.dependencies);
+  const first = await redeem(makeEvent('POST', { token, purpose: 'invite' }));
+  const firstDevice = first.multiValueHeaders['Set-Cookie'][1].split(';')[0];
+  const secondDevice = `${GUEST_DEVICE_COOKIE}=11111111-1111-4111-8111-111111111111`;
+  const thirdDevice = `${GUEST_DEVICE_COOKIE}=22222222-2222-4222-8222-222222222222`;
+  const fourthDevice = `${GUEST_DEVICE_COOKIE}=33333333-3333-4333-8333-333333333333`;
+
+  const second = await redeem(makeEvent('POST', { token, purpose: 'invite' }, secondDevice));
+  const third = await redeem(makeEvent('POST', { token, purpose: 'invite' }, thirdDevice));
+  const fourth = await redeem(makeEvent('POST', { token, purpose: 'invite' }, fourthDevice));
+  const invitation = (await state.stores.invitations.get(
+    `invitation:${(await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' })).invitationId}`,
+    { type: 'json' }
+  ));
+  const grant = await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' });
+  const fourthResult = responseBody(fourth);
+
+  assert.equal(first.statusCode, 200);
+  assert.equal(second.statusCode, 200);
+  assert.equal(third.statusCode, 200);
+  assert.equal(fourth.statusCode, 403);
+  assert.equal(fourthResult.code, 'device_limit');
+  assert.match(fourthResult.error, /contact your sales representative/i);
+  assert.equal(GUEST_MAX_DEVICES, 3);
+  assert.equal(grant.deviceHashes.length, 3);
+  assert.equal(state.stores.sessions.data.size, 3);
+
+  const sameFirstDevice = await redeem(makeEvent('POST', { token, purpose: 'invite' }, firstDevice));
+  assert.equal(sameFirstDevice.statusCode, 200);
+  assert.equal((await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' })).deviceHashes.length, 3);
+});
+
+test('reused invitation expires with the authorized access period', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state, '7-days');
+  const redeem = createCatalogGuestRedeemHandler(state.dependencies);
+  const first = await redeem(makeEvent('POST', { token, purpose: 'invite' }));
+  assert.equal(first.statusCode, 200);
+
+  state.setNow(state.now + 7 * 24 * 60 * 60 * 1000 + 1);
+  const expired = await redeem(makeEvent('POST', { token, purpose: 'invite' }));
+  assert.equal(expired.statusCode, 401);
+  assert.match(responseBody(expired).error, /expired or been revoked/i);
+});
+
+test('same device renews its short browser session while its grant is still active', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state, '3-months');
+  const redeemed = await createCatalogGuestRedeemHandler(state.dependencies)(
+    makeEvent('POST', { token, purpose: 'invite' })
+  );
+  const deviceCookie = redeemed.multiValueHeaders['Set-Cookie'][1].split(';')[0];
+  const invitation = (await state.stores.invitations.get(
+    `invitation:${(await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' })).invitationId}`,
+    { type: 'json' }
+  ));
+  const grant = await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' });
+
+  state.setNow(state.now + GUEST_SESSION_LIFETIME_SECONDS * 1000 + 1000);
+  const refreshed = await createCatalogGuestSessionHandler(state.dependencies)(
+    makeEvent('GET', undefined, deviceCookie)
+  );
+  assert.equal(refreshed.statusCode, 200);
+  assert.equal(responseBody(refreshed).authenticated, true);
+  assert.equal(responseBody(refreshed).expiresAt, grant.expiresAt);
+  assert.equal(refreshed.multiValueHeaders['Set-Cookie'].length, 2);
+
+  const refreshedCookie = `${refreshed.multiValueHeaders['Set-Cookie'][0].split(';')[0]}; ${deviceCookie}`;
+  const viewerAccess = await createCatalogGuestPdfHandler(state.dependencies)(
+    makeEvent('GET', undefined, refreshedCookie)
+  );
+  assert.equal(viewerAccess.statusCode, 200);
 });
 
 test('permanent grants create only seven-day browser sessions and remain revocable', async () => {

@@ -809,6 +809,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       let hasValidSession = false;
+      let hasGuestSession = false;
       try {
         const response = await fetch('/api/access/catalog-session', {
           method: 'GET',
@@ -823,6 +824,24 @@ document.addEventListener('DOMContentLoaded', () => {
             hasValidSession = true;
           } else if (result.authenticated !== false) {
             throw new Error('invalid-catalog-session-response');
+          }
+        }
+
+        if (!hasValidSession && response.status === 401) {
+          const guestResponse = await fetch('/api/catalog/guest/session', {
+            method: 'GET',
+            credentials: 'include',
+            cache: 'no-store',
+            headers: { Accept: 'application/json' }
+          });
+          if (guestResponse.status !== 401) {
+            if (!guestResponse.ok) throw new Error('guest-catalog-session-check-failed');
+            const guestResult = await guestResponse.json();
+            if (guestResult.authenticated === true && guestResult.resource === 'catalog-guest') {
+              hasGuestSession = true;
+            } else if (guestResult.authenticated !== false) {
+              throw new Error('invalid-guest-catalog-session-response');
+            }
           }
         }
       } catch {
@@ -844,6 +863,10 @@ document.addEventListener('DOMContentLoaded', () => {
       trigger.removeAttribute('aria-busy');
       if (hasValidSession) {
         window.location.assign('/catalog-pdf/');
+        return;
+      }
+      if (hasGuestSession) {
+        window.location.assign('/catalog-pdf/guest/');
         return;
       }
 

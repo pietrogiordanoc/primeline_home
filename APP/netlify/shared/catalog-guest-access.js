@@ -7,9 +7,12 @@ export const GUEST_SESSION_STORE = 'prime-line-guest-sessions';
 export const GUEST_VERIFICATION_STORE = 'prime-line-guest-verifications';
 export const GUEST_CLAIM_STORE = 'prime-line-guest-claims';
 export const GUEST_SESSION_COOKIE = '__Host-pl-guest-catalog-session';
+export const GUEST_DEVICE_COOKIE = '__Host-pl-guest-catalog-device';
+export const GUEST_MAX_DEVICES = 3;
 export const GUEST_INVITATION_LIFETIME_MS = 48 * 60 * 60 * 1000;
 export const GUEST_VERIFICATION_LIFETIME_MS = 15 * 60 * 1000;
 export const GUEST_SESSION_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
+export const GUEST_DEVICE_COOKIE_MAX_AGE_SECONDS = 400 * 24 * 60 * 60;
 export const CATALOG_PUBLIC_URL = 'https://fcdrjlzqrbvnbsehkqgm.supabase.co/storage/v1/object/public/PDF%20Catalog/Autumn%202026.pdf';
 export const GUEST_DURATIONS = Object.freeze({
   '24-hours': '24 Hours',
@@ -95,6 +98,9 @@ export const readCookie = (event, name) => {
 export const guestSessionCookie = (sessionId, maxAge) =>
   `${GUEST_SESSION_COOKIE}=${sessionId}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Strict`;
 
+export const guestDeviceCookie = (deviceId, maxAge) =>
+  `${GUEST_DEVICE_COOKIE}=${deviceId}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Strict`;
+
 export const clearGuestSessionCookie = () =>
   `${GUEST_SESSION_COOKIE}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict`;
 
@@ -108,6 +114,7 @@ export const claimGuestToken = async (claimKey, getClaimStore = getGuestClaimSto
 };
 
 export const hashEmail = (email) => hashValue(email);
+export const hashDeviceId = (deviceId) => createHash('sha256').update(deviceId).digest('hex');
 
 export const normalizeStaffFullName = (value) => {
   if (typeof value !== 'string') return '';
@@ -158,6 +165,36 @@ export const getActiveGrant = (grant, now = Date.now()) => Boolean(
   (grant.expiresAt === null || (Number.isFinite(grant.expiresAt) && grant.expiresAt > now))
 );
 
+export const registerGuestDevice = async (
+  grant,
+  event,
+  { getGrantStore: getStoreForGrant = getGrantStore, now = Date.now } = {}
+) => {
+  const cookieDeviceId = readCookie(event, GUEST_DEVICE_COOKIE);
+  const deviceId = UUID_PATTERN.test(cookieDeviceId) ? cookieDeviceId : createId();
+  const deviceHash = hashDeviceId(deviceId);
+  const deviceHashes = Array.isArray(grant.deviceHashes)
+    ? [...new Set(grant.deviceHashes.filter((hash) => /^[0-9a-f]{64}$/.test(hash)))]
+    : [];
+  if (!deviceHashes.includes(deviceHash)) {
+    if (deviceHashes.length >= GUEST_MAX_DEVICES) return { limitReached: true };
+    deviceHashes.push(deviceHash);
+    grant.deviceHashes = deviceHashes;
+    const store = await getStoreForGrant();
+    await store.setJSON(`grant:${grant.id}`, grant);
+  }
+
+  const remaining = grant.expiresAt === null
+    ? GUEST_DEVICE_COOKIE_MAX_AGE_SECONDS
+    : Math.floor((grant.expiresAt - now()) / 1000);
+  if (remaining <= 0) return { limitReached: false, expired: true };
+  return {
+    deviceId,
+    deviceHash,
+    cookie: guestDeviceCookie(deviceId, Math.min(remaining, GUEST_DEVICE_COOKIE_MAX_AGE_SECONDS))
+  };
+};
+
 export const validateGuestSession = async (event, options = {}) => {
   const sessionId = readCookie(event, GUEST_SESSION_COOKIE);
   if (!UUID_PATTERN.test(sessionId)) return null;
@@ -174,6 +211,11 @@ export const validateGuestSession = async (event, options = {}) => {
     if (session) await sessionStore.delete(`session:${sessionId}`);
     return null;
   }
+  const deviceId = readCookie(event, GUEST_DEVICE_COOKIE);
+  if (
+    session.deviceHash &&
+    (!UUID_PATTERN.test(deviceId) || session.deviceHash !== hashDeviceId(deviceId))
+  ) return null;
 
   const grantStore = await (options.getGrantStorage || options.getGrantStore || getGrantStore)();
   const grant = await grantStore.get(`grant:${session.grantId}`, { type: 'json' });
@@ -183,7 +225,7 @@ export const validateGuestSession = async (event, options = {}) => {
 
 export const createGuestSession = async (
   grant,
-  { getSessionStore = getGuestSessionStore, now = Date.now } = {}
+  { getSessionStore = getGuestSessionStore, now = Date.now, deviceHash = '' } = {}
 ) => {
   const createdAt = now();
   const grantRemaining = grant.expiresAt === null
@@ -197,6 +239,7 @@ export const createGuestSession = async (
     id: sessionId,
     email: grant.email,
     grantId: grant.id,
+    ...(deviceHash ? { deviceHash } : {}),
     resource: 'catalog-guest',
     createdAt,
     expiresAt: createdAt + maxAge * 1000
@@ -320,6 +363,7 @@ export const sendCatalogInvitationEmail = async (invitation, token, dependencies
   const inviterText = inviterEmail
     ? `\n\nINVITED BY\n${inviterName ? `${inviterName}\nPrime Line Distributors\n` : ''}${inviterEmail}`
     : '';
+  const linkUsageText = 'This invitation link must be opened within 48 hours. Once activated, it can be used on up to 3 devices while catalog access remains active.';
   const inviterHtml = inviterEmail
     ? `<div style="max-width:340px;margin:22px auto 0;padding:14px 18px;border:1px solid #eeeae3;background:#faf9f6;text-align:left;">
         <div style="margin-bottom:7px;color:#c4933b;font-size:10px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">Invited by</div>
@@ -330,7 +374,7 @@ export const sendCatalogInvitationEmail = async (invitation, token, dependencies
   return (dependencies.sendEmail || sendGuestEmail)({
     to: invitation.customerEmail,
     subject: 'Prime Line | Your Catalog Invitation',
-    text: `You have been invited to explore the Prime Line Specialty Foods Catalog.${inviterText}\n\nClick below to access the catalog: ${link}\n\nAccess duration: ${GUEST_DURATIONS[invitation.duration]}. Your access begins when you open the invitation.`,
+    text: `You have been invited to explore the Prime Line Specialty Foods Catalog.${inviterText}\n\nClick below to access the catalog: ${link}\n\nAccess duration: ${GUEST_DURATIONS[invitation.duration]}. Your access begins when you open the invitation.\n\n${linkUsageText}`,
     html: `
       <div style="margin:0;background:#f7f6f2;padding:40px 18px;font-family:Arial,Helvetica,sans-serif;color:#17284d;">
         <div style="max-width:540px;margin:0 auto;background:#fff;border:1px solid #e7e3dc;">
@@ -345,7 +389,7 @@ export const sendCatalogInvitationEmail = async (invitation, token, dependencies
             ${inviterHtml}
             <a href="${link}" style="display:inline-block;margin-top:12px;padding:14px 22px;background:#17284d;color:#fff;text-decoration:none;font-size:12px;font-weight:bold;letter-spacing:1px;">VIEW CATALOG</a>
           </div>
-          <div style="padding:16px 22px;text-align:center;border-top:1px solid #eeeae3;color:#969ba3;font-size:11px;line-height:1.5;">This invitation link expires in 48 hours and can be used once. If you did not expect this invitation, you can ignore this email.</div>
+          <div style="padding:16px 22px;text-align:center;border-top:1px solid #eeeae3;color:#969ba3;font-size:11px;line-height:1.5;">${linkUsageText} If you did not expect this invitation, you can ignore this email.</div>
         </div>
       </div>
     `

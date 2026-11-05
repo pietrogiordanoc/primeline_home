@@ -164,7 +164,7 @@ const initialize = async () => {
     linkPanel.hidden = false;
     renewPanel.hidden = true;
     linkDescription.textContent = linkPurpose === 'invite'
-      ? 'This single-use invitation expires 48 hours after it was sent. Your selected access duration starts when you continue.'
+      ? 'Open this invitation within 48 hours to start access. After activation, this link can be used on up to 3 devices until access expires.'
       : 'This single-use verification link confirms your existing catalog access. It does not extend the access expiration.';
     openButton.textContent = linkPurpose === 'invite' ? 'Open Catalog' : 'Verify and Open Catalog';
     return;
