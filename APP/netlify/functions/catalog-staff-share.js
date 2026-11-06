@@ -1,5 +1,5 @@
 import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
-import { isSameOrigin } from '../shared/admin-auth.js';
+import { ADMIN_EMAIL, isSameOrigin } from '../shared/admin-auth.js';
 import {
   checkGuestRateLimit,
   createGuestInvitationRecord,
@@ -14,7 +14,8 @@ import {
   normalizeStaffFullName,
   parseBody,
   saveEmployeeProfile,
-  sendCatalogInvitationEmail
+  sendCatalogInvitationEmail,
+  sendCatalogShareNotification
 } from '../shared/catalog-guest-access.js';
 
 export const createCatalogStaffShareHandler = (dependencies = {}) => async (event) => {
@@ -90,7 +91,22 @@ export const createCatalogStaffShareHandler = (dependencies = {}) => async (even
       await store.delete(`invitation:${created.invitation.id}`);
       return jsonResponse({ error: 'The invitation email could not be sent.' }, 502);
     }
-    return jsonResponse({ invited: true });
+
+    const notificationRecipients = [...new Set([profile.email.toLowerCase(), ADMIN_EMAIL.toLowerCase()])];
+    const notificationResults = await Promise.all(notificationRecipients.map(async (recipient) => {
+      try {
+        return await (dependencies.sendNotification || ((invitation, to) =>
+          sendCatalogShareNotification(invitation, to, dependencies)))(created.invitation, recipient);
+      } catch {
+        return false;
+      }
+    }));
+    const notificationsSent = notificationResults.every(Boolean);
+    if (!notificationsSent) console.error('One or more catalog sharing notifications could not be sent.');
+    return jsonResponse({
+      invited: true,
+      notificationsSent
+    });
   } catch {
     return jsonResponse({ error: 'The catalog invitation could not be sent.' }, 503);
   }

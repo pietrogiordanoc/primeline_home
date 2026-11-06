@@ -9,7 +9,8 @@ No private bucket, catalog-specific Supabase credentials, or storage setup is re
 ## Invitations, sessions, and revocation
 
 - Magic Links use URL fragments so ordinary page requests and referrers do not transmit the token. A GET only loads the confirmation page; redemption happens after the customer explicitly confirms.
-- Invitations expire after 48 hours unused. Customer access starts when redeemed and supports 24 hours, 7 days, 1 month, 3 months, or permanent access.
+- Invitations expire after 30 days unused. Customer access starts when redeemed and supports 24 hours, 7 days, 1 month, 3 months, or permanent access. The invitation can be reused on up to three devices while the grant is active.
+- The customer receives the access link. The verified inviting employee and Super Admin receive internal copies that identify the employee, customer, and access duration without including the access link. If an internal copy fails, customer access remains active and the sharing page reports the partial notification failure.
 - Renewal verification links expire after 15 minutes and do not extend the grant. Browser sessions last at most seven days and never outlive a finite grant.
 - Netlify Blobs stores invitation, grant, session, verification, and hashed token-claim records in separate stores. Replayed tokens are rejected after a claim is recorded.
 - Netlify Blobs does not provide conditional create/CAS writes. Sequential replays are rejected, but simultaneous redemption requests may race; strict concurrency-safe single-use requires an atomic claim service.

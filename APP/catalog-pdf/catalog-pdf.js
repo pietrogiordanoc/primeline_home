@@ -141,7 +141,10 @@ shareCatalogForm.addEventListener('submit', async (event) => {
     if (!response.ok) throw new Error(result.error || 'The invitation could not be sent.');
     document.querySelector('#customerEmail').value = '';
     document.querySelector('#guestDuration').value = '7-days';
-    shareCatalogStatus.textContent = 'The private invitation was sent.';
+    shareCatalogStatus.textContent = result.notificationsSent === false
+      ? 'The customer invitation was sent, but one or more internal notifications could not be sent.'
+      : 'The private invitation was sent.';
+    shareCatalogStatus.classList.toggle('is-error', result.notificationsSent === false);
   } catch (error) {
     shareCatalogStatus.textContent = error.message || 'The invitation could not be sent.';
     shareCatalogStatus.classList.add('is-error');
