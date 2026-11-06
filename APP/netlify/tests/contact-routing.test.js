@@ -289,8 +289,10 @@ test('rejects invalid public submission and honeypot without sending email', asy
     return { ok: true, status: 200 };
   };
   try {
-    const missing = await contactHandler(postEvent({ ...validSubmission, companyName: '' }));
-    assert.equal(missing.statusCode, 400);
+    for (const field of ['website', 'state']) {
+      const missing = await contactHandler(postEvent({ ...validSubmission, [field]: '' }));
+      assert.equal(missing.statusCode, 400, `expected ${field} to be required`);
+    }
     const invalidEmail = await contactHandler(postEvent({ ...validSubmission, email: 'not-an-email' }));
     assert.equal(invalidEmail.statusCode, 400);
     const spam = await contactHandler(postEvent({ ...validSubmission, contact_website: 'bot-filled' }));

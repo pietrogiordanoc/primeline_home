@@ -73,11 +73,11 @@ const validateSubmission = (payload) => {
     companyName: stringField(payload, 'companyName', 160, { required: true }),
     businessType: stringField(payload, 'businessType', 100, { required: true }),
     phone: stringField(payload, 'phone', 50, { required: true }),
-    website: stringField(payload, 'website', 2048),
+    website: stringField(payload, 'website', 2048, { required: true }),
     address1: stringField(payload, 'address1', 160, { required: true }),
     address2: stringField(payload, 'address2', 160),
     city: stringField(payload, 'city', 100, { required: true }),
-    state: stringField(payload, 'state', 100),
+    state: stringField(payload, 'state', 100, { required: true }),
     postalCode: stringField(payload, 'postalCode', 20, { required: true }),
     country: normalizeCountryCode(payload.country),
     message: stringField(payload, 'message', 5000, { required: true })

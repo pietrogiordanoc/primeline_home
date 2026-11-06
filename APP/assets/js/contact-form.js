@@ -38,11 +38,11 @@ if (contactData && contactForm) {
     stateSelect.required = isUnitedStates;
     provinceInput.hidden = isUnitedStates;
     provinceInput.disabled = isUnitedStates;
-    provinceInput.required = false;
-    stateLabel.textContent = isUnitedStates ? 'State' : 'State / Province (Optional)';
+    provinceInput.required = !isUnitedStates;
+    stateLabel.textContent = isUnitedStates ? 'State' : 'State / Province';
     stateHint.textContent = isUnitedStates
       ? 'Required for United States. Select a state or DC.'
-      : 'Enter a state, province, or region if applicable.';
+      : 'Enter a state, province, or region.';
   };
 
   country.addEventListener('change', () => updateStateField(true));
