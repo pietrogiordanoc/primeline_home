@@ -93,16 +93,6 @@ const validateSubmission = (payload) => {
   if (!EMAIL_PATTERN.test(result.email) || !isValidEmail(result.email)) {
     return { error: 'Please enter a valid email address.' };
   }
-  if (result.website) {
-    try {
-      const websiteUrl = new URL(result.website);
-      if (!['http:', 'https:'].includes(websiteUrl.protocol) || websiteUrl.username || websiteUrl.password) {
-        return { error: 'Please enter a valid website URL.' };
-      }
-    } catch {
-      return { error: 'Please enter a valid website URL.' };
-    }
-  }
   if (result.country === 'US') {
     const stateCode = normalizeUsState(result.state);
     if (!stateCode) return { error: 'Please choose a valid US state.' };

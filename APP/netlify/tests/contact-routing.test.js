@@ -25,7 +25,7 @@ const validSubmission = {
   companyName: 'Example Foods',
   businessType: 'Restaurant / Hotel',
   phone: '555-0100',
-  website: 'https://example.com',
+  website: 'example.com',
   address1: '10 Main Street',
   address2: '',
   city: 'New York',
