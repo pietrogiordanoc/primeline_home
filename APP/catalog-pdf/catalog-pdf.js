@@ -10,7 +10,14 @@ const staffDownloadButton = document.querySelector('#staffDownloadButton');
 const shareCatalogButton = document.querySelector('#shareCatalogButton');
 const shareCatalogDialog = document.querySelector('#shareCatalogDialog');
 const shareCatalogForm = document.querySelector('#shareCatalogForm');
+const shareCatalogFields = document.querySelector('#shareCatalogFields');
+const shareCatalogSuccess = document.querySelector('#shareCatalogSuccess');
+const shareCatalogSuccessMessage = document.querySelector('#shareCatalogSuccessMessage');
 const shareCatalogStatus = document.querySelector('#shareCatalogStatus');
+const shareCatalogEyebrow = shareCatalogForm.querySelector('.catalog-eyebrow');
+const shareCatalogTitle = document.querySelector('#shareCatalogTitle');
+const cancelShareCatalog = document.querySelector('#cancelShareCatalog');
+const doneShareCatalog = document.querySelector('#doneShareCatalog');
 const staffFullName = document.querySelector('#staffFullName');
 const staffCorporateEmail = document.querySelector('#staffCorporateEmail');
 let loadTimeout;
@@ -111,12 +118,23 @@ const loadStaffProfile = async () => {
 };
 
 shareCatalogButton.addEventListener('click', () => {
+  shareCatalogFields.hidden = false;
+  shareCatalogSuccess.hidden = true;
+  shareCatalogEyebrow.textContent = 'EMPLOYEE ACCESS';
+  shareCatalogTitle.textContent = 'Share the private catalog';
+  cancelShareCatalog.hidden = false;
+  shareCatalogForm.querySelector('button[type="submit"]').hidden = false;
+  doneShareCatalog.hidden = true;
   shareCatalogStatus.textContent = '';
+  shareCatalogStatus.classList.remove('is-error');
+  shareCatalogStatus.hidden = false;
+  shareCatalogSuccess.classList.remove('is-warning');
   shareCatalogDialog.showModal();
   loadStaffProfile();
 });
 
-document.querySelector('#cancelShareCatalog').addEventListener('click', () => shareCatalogDialog.close());
+cancelShareCatalog.addEventListener('click', () => shareCatalogDialog.close());
+doneShareCatalog.addEventListener('click', () => shareCatalogDialog.close());
 
 shareCatalogForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -139,12 +157,24 @@ shareCatalogForm.addEventListener('submit', async (event) => {
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'The invitation could not be sent.');
+    const customerEmail = document.querySelector('#customerEmail').value.trim();
+    const duration = document.querySelector('#guestDuration').selectedOptions[0].textContent;
     document.querySelector('#customerEmail').value = '';
     document.querySelector('#guestDuration').value = '7-days';
-    shareCatalogStatus.textContent = result.notificationsSent === false
-      ? 'The customer invitation was sent, but one or more internal notifications could not be sent.'
-      : 'The private invitation was sent.';
-    shareCatalogStatus.classList.toggle('is-error', result.notificationsSent === false);
+    shareCatalogFields.hidden = true;
+    shareCatalogSuccess.hidden = false;
+    shareCatalogEyebrow.textContent = 'SHARING COMPLETE';
+    shareCatalogTitle.textContent = 'Invitation sent';
+    cancelShareCatalog.hidden = true;
+    submitButton.hidden = true;
+    doneShareCatalog.hidden = false;
+    shareCatalogSuccessMessage.textContent = result.notificationsSent === false
+      ? `The catalog invitation was sent to ${customerEmail} with ${duration} access. One or more internal notifications could not be sent.`
+      : `The catalog invitation was sent to ${customerEmail} with ${duration} access.`;
+    shareCatalogSuccess.classList.toggle('is-warning', result.notificationsSent === false);
+    shareCatalogStatus.textContent = '';
+    shareCatalogStatus.hidden = true;
+    doneShareCatalog.focus();
   } catch (error) {
     shareCatalogStatus.textContent = error.message || 'The invitation could not be sent.';
     shareCatalogStatus.classList.add('is-error');

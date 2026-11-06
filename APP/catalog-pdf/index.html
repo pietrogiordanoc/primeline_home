@@ -64,24 +64,33 @@
     <form class="catalog-share-form" id="shareCatalogForm">
       <span class="catalog-eyebrow">EMPLOYEE ACCESS</span>
       <h2 id="shareCatalogTitle">Share the private catalog</h2>
-      <label for="staffFullName">Staff full name</label>
-      <input id="staffFullName" name="staffFullName" type="text" autocomplete="name" maxlength="120" required>
-      <label for="staffCorporateEmail">Verified corporate email</label>
-      <input id="staffCorporateEmail" type="email" autocomplete="email" readonly aria-readonly="true">
-      <label for="customerEmail">Customer email</label>
-      <input id="customerEmail" name="customerEmail" type="email" autocomplete="email" maxlength="254" required>
-      <label for="guestDuration">Access duration</label>
-      <select id="guestDuration" name="duration" required>
-        <option value="24-hours">24 Hours</option>
-        <option value="7-days" selected>7 Days</option>
-        <option value="1-month">1 Month</option>
-        <option value="3-months">3 Months</option>
-        <option value="permanent">Permanent</option>
-      </select>
+      <div class="catalog-share-fields" id="shareCatalogFields">
+        <label for="staffFullName">Staff full name</label>
+        <input id="staffFullName" name="staffFullName" type="text" autocomplete="name" maxlength="120" required>
+        <label for="staffCorporateEmail">Verified corporate email</label>
+        <input id="staffCorporateEmail" type="email" autocomplete="email" readonly aria-readonly="true">
+        <label for="customerEmail">Customer email</label>
+        <input id="customerEmail" name="customerEmail" type="email" autocomplete="email" maxlength="254" required>
+        <label for="guestDuration">Access duration</label>
+        <select id="guestDuration" name="duration" required>
+          <option value="24-hours">24 Hours</option>
+          <option value="7-days" selected>7 Days</option>
+          <option value="1-month">1 Month</option>
+          <option value="3-months">3 Months</option>
+          <option value="permanent">Permanent</option>
+        </select>
+      </div>
+      <div class="catalog-share-success" id="shareCatalogSuccess" role="status" aria-live="polite" hidden>
+        <span class="catalog-share-success-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></svg>
+        </span>
+        <p id="shareCatalogSuccessMessage"></p>
+      </div>
       <p class="catalog-share-status" id="shareCatalogStatus" role="status" aria-live="polite"></p>
       <div class="catalog-share-actions">
         <button class="catalog-header-button" id="cancelShareCatalog" type="button">Cancel</button>
         <button class="catalog-action" type="submit">Send private invitation</button>
+        <button class="catalog-action" id="doneShareCatalog" type="button" hidden>Done</button>
       </div>
     </form>
   </dialog>
