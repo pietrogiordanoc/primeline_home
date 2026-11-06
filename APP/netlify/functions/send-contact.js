@@ -120,6 +120,9 @@ const getFromAddress = () => {
 
 const buildEmail = (contact) => {
   const countryName = DATA.countries.find((country) => country.code === contact.country)?.name || contact.country;
+  const stateName = contact.country === 'US'
+    ? DATA.usStates.find((state) => state.code === contact.state)?.name || contact.state
+    : contact.state;
   const rows = [
     ['Inquiry Type', contact.inquiryType],
     ['First Name', contact.firstName],
@@ -132,7 +135,7 @@ const buildEmail = (contact) => {
     ['Address Line 1', contact.address1],
     ['Address Line 2', contact.address2 || 'Not provided'],
     ['City', contact.city],
-    ['State / Province', contact.state || 'Not provided'],
+    ['State / Province', stateName],
     ['ZIP / Postal Code', contact.postalCode],
     ['Country', countryName],
     ['Message', contact.message]

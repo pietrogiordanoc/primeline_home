@@ -331,6 +331,7 @@ test('sends a valid submission to the explicit fallback with escaped fields', as
     assert.equal(requestBody[0].subject, 'PRIME LINE | Contact Us — <Alex> Buyer | Example Foods');
     assert.match(requestBody[0].html, /&lt;Alex&gt;/);
     assert.match(requestBody[0].text, /Address Line 1: 10 Main Street/);
+    assert.match(requestBody[0].text, /State \/ Province: New York/);
   } finally {
     if (previous.apiKey === undefined) delete process.env.RESEND_API_KEY;
     else process.env.RESEND_API_KEY = previous.apiKey;
