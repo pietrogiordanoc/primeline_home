@@ -142,6 +142,8 @@ test('rejects invalid data, oversized requests and expired idempotency attempts 
       validInquiry({ division: 'Unknown' }),
       validInquiry({ careers_website: 'bot-filled' }),
       validInquiry({ resumeLink: 'javascript:alert(1)' }),
+      validInquiry({ professionalLinks: ['not a valid URL'] }),
+      validInquiry({ professionalLinks: 'not-an-array' }),
       validInquiry({ submissionId: undefined })
     ];
     for (const payload of invalidPayloads) {
@@ -155,6 +157,28 @@ test('rejects invalid data, oversized requests and expired idempotency attempts 
     const oversizedBody = validInquiry({ extra: 'x'.repeat(5 * 1024 * 1024) });
     assert.equal((await processCareerInquiryEvent(postEvent(oversizedBody))).statusCode, 413);
     assert.equal(fetchCalls, 0);
+  });
+});
+
+test('normalizes optional résumé and professional links and includes them in the internal email', async () => {
+  const requests = [];
+  const payload = validInquiry({
+    resumeLink: 'www.example.com/resume',
+    professionalLinks: ['linkedin.com/in/maria', 'https://instagram.com/maria', '']
+  });
+  await runWithResend(async (_url, options) => {
+    requests.push(JSON.parse(options.body));
+    return { ok: true, status: 200 };
+  }, async () => {
+    const response = await processCareerInquiryEvent(postEvent(payload));
+    assert.equal(response.statusCode, 200);
+    assert.equal(requests.length, 2);
+    assert.match(requests[0].text, /Résumé Link: https:\/\/www\.example\.com\/resume/);
+    assert.match(requests[0].text, /Professional & Social Links: https:\/\/linkedin\.com\/in\/maria\nhttps:\/\/instagram\.com\/maria/);
+    assert.match(requests[0].html, /https:\/\/www\.example\.com\/resume/);
+    assert.match(requests[0].html, /https:\/\/linkedin\.com\/in\/maria/);
+    assert.match(requests[0].html, /https:\/\/instagram\.com\/maria/);
+    assert.doesNotMatch(requests[1].text, /linkedin\.com|instagram\.com/);
   });
 });
 

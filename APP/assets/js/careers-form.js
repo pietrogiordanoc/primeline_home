@@ -10,7 +10,13 @@ if (careersForm) {
   const footerCareersTrigger = document.querySelector('footer .careers-trigger');
   const submitButton = careersForm.querySelector('button[type="submit"]');
   const resumeInput = careersForm.querySelector('#careerResume');
-  const resumeStatus = careersForm.querySelector('#careerResumeStatus');
+  const resumeFilename = careersForm.querySelector('#careerResumeFilename');
+  const resumeLinkInput = careersForm.querySelector('#careerResumeLink');
+  const additionalLinks = careersForm.querySelector('#careerAdditionalLinks');
+  const addLinkButton = careersForm.querySelector('#careerAddLink');
+  const feedbackDialog = document.querySelector('#careersFeedbackDialog');
+  const feedbackMessage = document.querySelector('#careersFeedbackMessage');
+  const feedbackClose = document.querySelector('#careersFeedbackClose');
   const successDialog = document.querySelector('#careersSuccessDialog');
   const successReference = document.querySelector('#careersSuccessReference');
   const successConfirmation = document.querySelector('#careersSuccessConfirmation');
@@ -20,11 +26,13 @@ if (careersForm) {
   const positionSelect = careersForm.querySelector('#careerPosition');
   const divisionSelect = careersForm.querySelector('#careerDivision');
   const MAX_RESUME_BYTES = 3 * 1024 * 1024;
+  const MAX_PROFESSIONAL_LINKS = 10;
   const SUBMISSION_STORAGE_KEY = 'primeLine.joinOurTeam.submissionId';
   const MAX_IDEMPOTENCY_AGE_MS = 23 * 60 * 60 * 1000;
   let optionsLoaded = false;
   let optionsLoading = false;
   let submissionId;
+  let feedbackReturnTarget = null;
 
   const createSubmissionId = () => `JI-${Date.now()}-${crypto.randomUUID()}`;
   const loadSubmissionId = () => {
@@ -64,6 +72,25 @@ if (careersForm) {
     const focusTarget = menuWasOpen ? menuToggle : footerCareersTrigger;
     window.setTimeout(() => focusTarget?.focus({ preventScroll: true }), 550);
   };
+
+  const closeFeedbackDialog = () => {
+    if (feedbackDialog.open) feedbackDialog.close();
+    feedbackReturnTarget?.focus({ preventScroll: true });
+    feedbackReturnTarget = null;
+  };
+
+  const showFeedbackDialog = (message, returnTarget) => {
+    feedbackMessage.textContent = message;
+    feedbackReturnTarget = returnTarget || null;
+    feedbackDialog.showModal();
+    feedbackClose.focus();
+  };
+
+  feedbackClose.addEventListener('click', closeFeedbackDialog);
+  feedbackDialog.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeFeedbackDialog();
+  });
 
   successCloseButton.addEventListener('click', closeSuccessDialog);
   successDialog.addEventListener('cancel', (event) => {
@@ -110,26 +137,117 @@ if (careersForm) {
     });
   };
 
-  const showResumeStatus = (message, className = '') => {
-    resumeStatus.textContent = message;
-    resumeStatus.classList.remove('is-success', 'is-error');
-    if (className) resumeStatus.classList.add(className);
+  const normalizeOptionalUrl = (value) => {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    try {
+      const url = new URL(candidate);
+      if (!['https:', 'http:'].includes(url.protocol)
+        || !url.hostname.includes('.')
+        || url.username
+        || url.password) return null;
+      return url.href;
+    } catch {
+      return null;
+    }
   };
 
   resumeInput.addEventListener('change', async () => {
     const file = resumeInput.files[0];
     if (!file) {
-      showResumeStatus('No résumé attached. If you upload one, it must be a PDF no larger than 3 MB.');
+      resumeFilename.textContent = 'No file selected';
       return;
     }
-    showResumeStatus('Checking your PDF résumé...');
     try {
       await validatePdf(file);
-      showResumeStatus(`PDF résumé ready to attach (${(file.size / (1024 * 1024)).toFixed(2)} MB).`, 'is-success');
+      resumeFilename.textContent = file.name;
     } catch (error) {
       resumeInput.value = '';
-      showResumeStatus(error.message, 'is-error');
+      resumeFilename.textContent = 'No file selected';
+      showFeedbackDialog(error.message, resumeInput);
     }
+  });
+
+  const setLinkError = (input, message) => {
+    const error = document.getElementById(input.dataset.errorId);
+    if (message) {
+      input.setAttribute('aria-invalid', 'true');
+      error.textContent = message;
+      error.hidden = false;
+    } else {
+      input.removeAttribute('aria-invalid');
+      error.hidden = true;
+    }
+  };
+
+  const validateLinkOnBlur = (input) => {
+    const normalized = normalizeOptionalUrl(input.value);
+    if (normalized === null) {
+      setLinkError(input, 'Enter a valid website address, such as www.example.com.');
+      return;
+    }
+    if (normalized) input.value = normalized;
+    setLinkError(input, '');
+  };
+
+  const addProfessionalLink = () => {
+    if (additionalLinks.children.length >= MAX_PROFESSIONAL_LINKS) return;
+    const number = additionalLinks.children.length + 1;
+    const row = document.createElement('div');
+    row.className = 'careers-additional-link-row';
+    const label = document.createElement('label');
+    label.textContent = `Website or profile ${number}`;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'professionalLinks';
+    input.inputMode = 'url';
+    input.maxLength = 2048;
+    input.placeholder = 'www.example.com';
+    input.autocomplete = 'url';
+    input.dataset.errorId = `careerProfessionalLinkError${number}`;
+    input.setAttribute('aria-describedby', input.dataset.errorId);
+    input.addEventListener('blur', () => validateLinkOnBlur(input));
+    input.addEventListener('input', () => {
+      if (input.hasAttribute('aria-invalid')) setLinkError(input, '');
+    });
+    label.append(input);
+    const error = document.createElement('span');
+    error.className = 'careers-field-error';
+    error.id = input.dataset.errorId;
+    error.hidden = true;
+    label.append(error);
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'careers-remove-link';
+    removeButton.textContent = 'Remove';
+    removeButton.setAttribute('aria-label', `Remove website or profile ${number}`);
+    removeButton.addEventListener('click', () => {
+      row.remove();
+      [...additionalLinks.querySelectorAll('label')].forEach((currentLabel, index) => {
+        const currentInput = currentLabel.querySelector('input');
+        const currentNumber = index + 1;
+        currentLabel.firstChild.textContent = `Website or profile ${currentNumber}`;
+        currentInput.dataset.errorId = `careerProfessionalLinkError${currentNumber}`;
+        currentInput.setAttribute('aria-describedby', currentInput.dataset.errorId);
+        currentLabel.querySelector('.careers-field-error').id = currentInput.dataset.errorId;
+        currentLabel.parentElement.querySelector('.careers-remove-link')
+          .setAttribute('aria-label', `Remove website or profile ${currentNumber}`);
+      });
+      addLinkButton.disabled = false;
+    });
+    row.append(label, removeButton);
+    additionalLinks.append(row);
+    if (additionalLinks.children.length >= MAX_PROFESSIONAL_LINKS) addLinkButton.disabled = true;
+  };
+
+  addLinkButton.addEventListener('click', addProfessionalLink);
+  [resumeLinkInput].forEach((input) => {
+    input.dataset.errorId = 'careerResumeLinkError';
+    input.addEventListener('blur', () => validateLinkOnBlur(input));
+    input.addEventListener('input', () => {
+      if (input.hasAttribute('aria-invalid')) setLinkError(input, '');
+    });
   });
 
   const populateOptions = (select, values, placeholder) => {
@@ -176,6 +294,16 @@ if (careersForm) {
   careersForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (careersForm.dataset.submitting === 'true' || !careersForm.reportValidity()) return;
+    const linkInputs = [resumeLinkInput, ...additionalLinks.querySelectorAll('input[name="professionalLinks"]')];
+    for (const input of linkInputs) {
+      const normalized = normalizeOptionalUrl(input.value);
+      if (normalized === null) {
+        setLinkError(input, 'Enter a valid website address, such as www.example.com.');
+        showFeedbackDialog('Please correct the invalid website or profile link before submitting.', input);
+        return;
+      }
+      if (normalized) input.value = normalized;
+    }
 
     careersForm.dataset.submitting = 'true';
     careersForm.setAttribute('aria-busy', 'true');
@@ -191,6 +319,9 @@ if (careersForm) {
       const payload = Object.fromEntries(formData.entries());
       delete payload.resume;
       payload.resume = resume;
+      payload.professionalLinks = [...additionalLinks.querySelectorAll('input[name="professionalLinks"]')]
+        .map((input) => input.value.trim())
+        .filter(Boolean);
       payload.submissionId = submissionId;
 
       const response = await fetch('/.netlify/functions/send-careers-inquiry', {
@@ -211,7 +342,7 @@ if (careersForm) {
       careersForm.reset();
       careersForm.hidden = true;
       status.hidden = true;
-      showResumeStatus('Maximum PDF file size: 3 MB. No résumé attached.');
+      resumeFilename.textContent = 'No file selected';
       successReference.textContent = result.reference;
       const confirmationAccepted = result.confirmation?.acceptedByResend === true;
       successConfirmation.textContent = confirmationAccepted

@@ -187,17 +187,30 @@
         <label for="careerMessage">Cover Letter or Message <span>(Optional)</span>
           <textarea id="careerMessage" name="message" rows="5" maxlength="2000" placeholder="Tell us why you are interested in joining Prime Line and anything you would like our team to know."></textarea>
         </label>
-        <div class="careers-resume">
-          <span class="careers-resume-heading">Résumé <span>(Optional)</span></span>
-          <p>PDF only. Your résumé is optional.</p>
-          <p class="careers-resume-status" id="careerResumeStatus" role="status" aria-live="polite">Maximum PDF file size: 3 MB. No résumé attached.</p>
-          <div class="careers-form-grid">
-            <label for="careerResume">Upload PDF Résumé<input id="careerResume" type="file" name="resume" accept=".pdf,application/pdf"></label>
-            <label for="careerResumeLink">Résumé Link<input id="careerResumeLink" type="url" name="resumeLink" autocomplete="url" maxlength="2048" placeholder="https://"></label>
-          </div>
+        <div class="careers-form-grid careers-materials">
+          <label for="careerResume">PDF Résumé <span>(Optional, up to 3 MB)</span>
+            <input id="careerResume" type="file" name="resume" accept=".pdf,application/pdf" aria-describedby="careerResumeFilename">
+            <span class="careers-resume-filename" id="careerResumeFilename" aria-live="polite">No file selected</span>
+          </label>
+          <label for="careerResumeLink">Résumé Link <span>(Optional)</span>
+            <input id="careerResumeLink" type="text" name="resumeLink" inputmode="url" autocomplete="url" maxlength="2048" placeholder="www.example.com" aria-describedby="careerResumeLinkError">
+            <span class="careers-field-error" id="careerResumeLinkError" hidden>Enter a valid website address, such as www.example.com.</span>
+          </label>
         </div>
+        <section class="careers-professional-links" aria-labelledby="careerLinksHeading">
+          <h3 id="careerLinksHeading">Professional &amp; Social Links (Optional)</h3>
+          <div class="careers-additional-links" id="careerAdditionalLinks"></div>
+          <button type="button" class="careers-add-link" id="careerAddLink">Add Link +</button>
+        </section>
         <button type="submit" class="btn btn--dark">Send Your Inquiry</button>
       </form>
+      <dialog class="careers-feedback-dialog" id="careersFeedbackDialog" aria-labelledby="careersFeedbackTitle" aria-describedby="careersFeedbackMessage">
+        <div class="careers-feedback-content">
+          <h2 id="careersFeedbackTitle">Please check this field</h2>
+          <p id="careersFeedbackMessage"></p>
+          <button type="button" id="careersFeedbackClose">OK</button>
+        </div>
+      </dialog>
       <dialog class="careers-success-dialog" id="careersSuccessDialog" aria-labelledby="careersSuccessTitle" aria-describedby="careersSuccessMessage">
         <div class="careers-success-content">
           <img class="careers-success-logo" src="images/Logo1500.png" alt="Prime Line">
@@ -528,6 +541,6 @@
 <script src="assets/js/contact-form-data.js?v=20261028-1"></script>
 <script src="assets/js/contact-form.js?v=20261028-1"></script>
 <script src="assets/js/main.js?v=20261111-1"></script>
-<script src="assets/js/careers-form.js?v=20261111-2"></script>
+<script src="assets/js/careers-form.js?v=20261111-3"></script>
 </body>
 </html>

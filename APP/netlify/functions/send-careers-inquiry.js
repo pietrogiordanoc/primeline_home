@@ -10,6 +10,7 @@ import {
 
 const MAX_REQUEST_BYTES = 5 * 1024 * 1024;
 const MAX_RESUME_BYTES = 3 * 1024 * 1024;
+const MAX_PROFESSIONAL_LINKS = 10;
 const MAX_IDEMPOTENCY_AGE_MS = 23 * 60 * 60 * 1000;
 const SENDER_EMAIL = 'info@primelinedist.com';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,14 +52,37 @@ const stringField = (payload, name, maxLength, { required = false } = {}) => {
   return trimmed;
 };
 
-const validResumeLink = (value) => {
-  if (!value) return true;
+const normalizeOptionalUrl = (value) => {
+  if (!value) return '';
+  const candidate = /^https?:\/\//i.test(value) ? value : `https://${value}`;
   try {
-    const url = new URL(value);
-    return url.protocol === 'https:' || url.protocol === 'http:';
+    const url = new URL(candidate);
+    if (!['https:', 'http:'].includes(url.protocol)
+      || !url.hostname.includes('.')
+      || url.username
+      || url.password) return null;
+    return url.href;
   } catch {
-    return false;
+    return null;
   }
+};
+
+const parseProfessionalLinks = (value) => {
+  if (value === undefined || value === null) return { links: [] };
+  if (!Array.isArray(value) || value.length > MAX_PROFESSIONAL_LINKS) {
+    return { error: 'Please provide up to 10 valid professional or social links.' };
+  }
+  const links = [];
+  for (const entry of value) {
+    if (typeof entry !== 'string') return { error: 'Please provide valid professional or social links.' };
+    const trimmed = entry.trim();
+    if (!trimmed) continue;
+    if (trimmed.length > 2048) return { error: 'Professional and social links must be 2048 characters or fewer.' };
+    const normalized = normalizeOptionalUrl(trimmed);
+    if (!normalized) return { error: 'Please provide valid professional or social links.' };
+    links.push(normalized);
+  }
+  return { links };
 };
 
 export const parseResume = async (value) => {
@@ -113,7 +137,11 @@ const validateSubmission = async (payload, careersConfig) => {
   if (!DATE_PATTERN.test(inquiry.startDate) || Number.isNaN(Date.parse(`${inquiry.startDate}T00:00:00Z`))) {
     return { error: 'Please provide a valid available start date.' };
   }
-  if (!validResumeLink(inquiry.resumeLink)) return { error: 'Please provide a valid résumé link.' };
+  inquiry.resumeLink = normalizeOptionalUrl(inquiry.resumeLink);
+  if (inquiry.resumeLink === null) return { error: 'Please provide a valid résumé link.' };
+  const professionalLinksResult = parseProfessionalLinks(payload.professionalLinks);
+  if (professionalLinksResult.error) return professionalLinksResult;
+  inquiry.professionalLinks = professionalLinksResult.links;
   const resumeResult = await parseResume(payload.resume);
   if (resumeResult.error) return resumeResult;
   return { inquiry, resume: resumeResult.resume };
@@ -165,7 +193,8 @@ const buildEmail = (inquiry, reference) => {
     ['Available Start Date', inquiry.startDate],
     ['Current Employment Status', inquiry.employmentStatus],
     ['Cover Letter or Message', inquiry.message || 'Not provided'],
-    ['Résumé Link', inquiry.resumeLink || 'Not provided']
+    ['Résumé Link', inquiry.resumeLink || 'Not provided'],
+    ['Professional & Social Links', inquiry.professionalLinks?.join('\n') || 'Not provided']
   ];
   const escapedRows = rows.map(([label, value]) => `
     <tr>
