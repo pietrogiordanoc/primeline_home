@@ -3,14 +3,73 @@ const careersForm = document.querySelector('.careers-form');
 if (careersForm) {
   const status = document.querySelector('.careers-form-status');
   const panel = document.querySelector('.careers-panel-inner');
+  const careersPanelClose = document.querySelector('.careers-panel-close');
+  const navPanel = document.querySelector('.nav-panel');
+  const navPanelClose = document.querySelector('.nav-panel-close');
+  const menuToggle = document.querySelector('.menu-toggle');
+  const footerCareersTrigger = document.querySelector('footer .careers-trigger');
   const submitButton = careersForm.querySelector('button[type="submit"]');
   const resumeInput = careersForm.querySelector('#careerResume');
   const resumeStatus = careersForm.querySelector('#careerResumeStatus');
+  const successDialog = document.querySelector('#careersSuccessDialog');
+  const successReference = document.querySelector('#careersSuccessReference');
+  const successConfirmation = document.querySelector('#careersSuccessConfirmation');
+  const successDeliveryNote = document.querySelector('#careersSuccessDeliveryNote');
+  const successResume = document.querySelector('#careersSuccessResume');
+  const successCloseButton = document.querySelector('#careersSuccessClose');
   const positionSelect = careersForm.querySelector('#careerPosition');
   const divisionSelect = careersForm.querySelector('#careerDivision');
   const MAX_RESUME_BYTES = 3 * 1024 * 1024;
+  const SUBMISSION_STORAGE_KEY = 'primeLine.joinOurTeam.submissionId';
+  const MAX_IDEMPOTENCY_AGE_MS = 23 * 60 * 60 * 1000;
   let optionsLoaded = false;
   let optionsLoading = false;
+  let submissionId;
+
+  const createSubmissionId = () => `JI-${Date.now()}-${crypto.randomUUID()}`;
+  const loadSubmissionId = () => {
+    try {
+      const saved = sessionStorage.getItem(SUBMISSION_STORAGE_KEY);
+      const match = saved?.match(/^JI-(\d{13})-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+      if (match) {
+        const age = Date.now() - Number(match[1]);
+        if (age >= -60_000 && age <= MAX_IDEMPOTENCY_AGE_MS) return saved;
+      }
+      const nextId = createSubmissionId();
+      sessionStorage.setItem(SUBMISSION_STORAGE_KEY, nextId);
+      return nextId;
+    } catch (error) {
+      console.warn('Join Our Team retry protection could not use session storage.', { name: error.name });
+      return createSubmissionId();
+    }
+  };
+
+  submissionId = loadSubmissionId();
+
+  const startNewSubmission = () => {
+    submissionId = createSubmissionId();
+    try {
+      sessionStorage.setItem(SUBMISSION_STORAGE_KEY, submissionId);
+    } catch (error) {
+      console.warn('Join Our Team retry protection could not update session storage.', { name: error.name });
+    }
+  };
+
+  const closeSuccessDialog = () => {
+    if (successDialog.open) successDialog.close();
+    careersForm.hidden = false;
+    careersPanelClose?.click();
+    const menuWasOpen = navPanel?.classList.contains('is-open') === true;
+    if (menuWasOpen) navPanelClose?.click();
+    const focusTarget = menuWasOpen ? menuToggle : footerCareersTrigger;
+    window.setTimeout(() => focusTarget?.focus({ preventScroll: true }), 550);
+  };
+
+  successCloseButton.addEventListener('click', closeSuccessDialog);
+  successDialog.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeSuccessDialog();
+  });
 
   const showStatus = (message, className) => {
     status.textContent = message;
@@ -25,7 +84,7 @@ if (careersForm) {
     if (!file.name.toLocaleLowerCase('en-US').endsWith('.pdf') || (file.type && file.type !== 'application/pdf')) {
       throw new Error('Only PDF résumés are accepted.');
     }
-    if (file.size > MAX_RESUME_BYTES) throw new Error('This PDF is too large. The maximum file size is 3 MB.');
+    if (file.size > MAX_RESUME_BYTES) throw new Error('Maximum PDF file size: 3 MB.');
     const signature = new Uint8Array(await file.slice(0, 5).arrayBuffer());
     if (new TextDecoder().decode(signature) !== '%PDF-') {
       throw new Error('This file is not a valid PDF document.');
@@ -34,11 +93,18 @@ if (careersForm) {
   };
 
   const readResume = async (file) => {
-    if (!file) return null;
+    if (!file || !file.name) return null;
     await validatePdf(file);
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve({ name: file.name, dataUrl: reader.result });
+      reader.onload = () => {
+        if (typeof reader.result !== 'string') {
+          reject(new Error('Your PDF résumé could not be read. Please try again.'));
+          return;
+        }
+        const dataUrl = reader.result.replace(/^data:[^;]+;base64,/, 'data:application/pdf;base64,');
+        resolve({ name: file.name, dataUrl });
+      };
       reader.onerror = () => reject(new Error('Your PDF résumé could not be read. Please try again.'));
       reader.readAsDataURL(file);
     });
@@ -125,24 +191,44 @@ if (careersForm) {
       const payload = Object.fromEntries(formData.entries());
       delete payload.resume;
       payload.resume = resume;
+      payload.submissionId = submissionId;
 
       const response = await fetch('/.netlify/functions/send-careers-inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
-      if (!response.ok || result.sent !== true) {
-        throw new Error(result.error || 'Your inquiry could not be sent. Please try again.');
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error('We could not confirm receipt. Your information is still here; please try again.');
+      }
+      if (!response.ok || result?.sent !== true || !/^JI-\d{8}-[A-Z0-9]{4}$/.test(result.reference || '')) {
+        throw new Error(result?.error || 'Your inquiry could not be sent. Please try again.');
       }
 
       careersForm.reset();
-      showStatus(
-        `Thank you — we’ve received your inquiry. Reference: ${result.reference}. Our team will review your information and contact you if there is a fit.${result.resumeReceived ? ' Your PDF résumé was received and attached.' : ''}`,
-        'is-success'
-      );
+      careersForm.hidden = true;
+      status.hidden = true;
+      showResumeStatus('Maximum PDF file size: 3 MB. No résumé attached.');
+      successReference.textContent = result.reference;
+      const confirmationAccepted = result.confirmation?.acceptedByResend === true;
+      successConfirmation.textContent = confirmationAccepted
+        ? 'A confirmation email has been sent to your email address.'
+        : 'Your application was received successfully. Please keep your application reference for your records.';
+      successDeliveryNote.hidden = !confirmationAccepted;
+      successResume.hidden = result.resumeReceived !== true;
+      startNewSubmission();
+      successDialog.showModal();
+      successCloseButton.focus();
     } catch (error) {
-      showStatus(error.message || 'Your inquiry could not be sent. Please check your connection and try again.', 'is-error');
+      showStatus(
+        error instanceof TypeError
+          ? 'A temporary connection problem prevented submission. Your information is still here; please try again.'
+          : error.message || 'Your application could not be submitted. Your information is still here; please try again.',
+        'is-error'
+      );
     } finally {
       delete careersForm.dataset.submitting;
       careersForm.removeAttribute('aria-busy');

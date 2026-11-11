@@ -1,4 +1,5 @@
-import { randomBytes } from 'node:crypto';
+import { createHash } from 'node:crypto';
+import { PDFDocument } from 'pdf-lib';
 import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import {
   DEFAULT_CAREERS_ROUTING_CONFIG,
@@ -9,10 +10,15 @@ import {
 
 const MAX_REQUEST_BYTES = 5 * 1024 * 1024;
 const MAX_RESUME_BYTES = 3 * 1024 * 1024;
+const MAX_IDEMPOTENCY_AGE_MS = 23 * 60 * 60 * 1000;
 const SENDER_EMAIL = 'info@primelinedist.com';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const EMPLOYMENT_STATUSES = new Set(['Employed', 'Self-Employed', 'Unemployed', 'Student']);
+const APPLICATION_TYPES = Object.freeze({
+  joinOurTeam: { referencePrefix: 'JI', subjectLabel: 'Join Our Team' },
+  fullJobInquiry: { referencePrefix: 'FJI', subjectLabel: 'Full Job Inquiry' }
+});
 
 const json = (body, statusCode = 200, extraHeaders = {}) => ({
   statusCode,
@@ -55,7 +61,7 @@ const validResumeLink = (value) => {
   }
 };
 
-export const parseResume = (value) => {
+export const parseResume = async (value) => {
   if (!value) return { resume: null };
   if (!value || typeof value !== 'object' || Array.isArray(value)) return { error: 'Invalid résumé upload.' };
   const name = stringField(value, 'name', 180, { required: true });
@@ -67,13 +73,19 @@ export const parseResume = (value) => {
   }
   const content = Buffer.from(match[2], 'base64');
   if (content.toString('base64') !== match[2]) return { error: 'The selected file is not a valid PDF document.' };
-  if (!content.length || content.length > MAX_RESUME_BYTES) return { error: 'Please upload a résumé no larger than 3 MB.' };
+  if (!content.length || content.length > MAX_RESUME_BYTES) return { error: 'Maximum PDF file size: 3 MB.' };
   if (content.subarray(0, 5).toString('ascii') !== '%PDF-') return { error: 'The selected file is not a valid PDF document.' };
+  try {
+    const pdf = await PDFDocument.load(content);
+    if (!pdf.getPageCount()) return { error: 'The selected file is not a valid PDF document.' };
+  } catch {
+    return { error: 'The selected file is not a valid PDF document.' };
+  }
   const safeName = name.replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '') || 'resume';
   return { resume: { filename: safeName, content: content.toString('base64') } };
 };
 
-const validateSubmission = (payload, careersConfig) => {
+const validateSubmission = async (payload, careersConfig) => {
   const inquiry = {
     name: stringField(payload, 'name', 160, { required: true }),
     email: stringField(payload, 'email', 254, { required: true }),
@@ -102,7 +114,7 @@ const validateSubmission = (payload, careersConfig) => {
     return { error: 'Please provide a valid available start date.' };
   }
   if (!validResumeLink(inquiry.resumeLink)) return { error: 'Please provide a valid résumé link.' };
-  const resumeResult = parseResume(payload.resume);
+  const resumeResult = await parseResume(payload.resume);
   if (resumeResult.error) return resumeResult;
   return { inquiry, resume: resumeResult.resume };
 };
@@ -113,16 +125,33 @@ const getFromAddress = () => {
   return address.toLowerCase() === SENDER_EMAIL ? `Prime Line <${SENDER_EMAIL}>` : null;
 };
 
-const createReference = () => {
-  const date = new Date().toISOString().slice(0, 10).replaceAll('-', '');
+const createReference = (submissionId, type = 'joinOurTeam') => {
+  const applicationType = APPLICATION_TYPES[type];
+  const timestamp = Number(submissionId.match(/^[A-Z]+-(\d{13})-/)?.[1]);
+  const date = new Date(timestamp).toISOString().slice(0, 10).replaceAll('-', '');
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const suffix = Array.from(randomBytes(4), (byte) => alphabet[byte % alphabet.length]).join('');
-  return `JI-${date}-${suffix}`;
+  const entropy = createHash('sha256').update(submissionId).digest();
+  const suffix = Array.from(entropy.subarray(0, 4), (byte) => alphabet[byte % alphabet.length]).join('');
+  return `${applicationType.referencePrefix}-${date}-${suffix}`;
 };
 
-export const buildCareerSubject = (inquiry, reference) => {
+export const buildApplicationSubject = (type, inquiry, reference) => {
+  const applicationType = APPLICATION_TYPES[type];
+  if (!applicationType) throw new Error('Unsupported application type.');
   const name = sanitizeSubjectPart(inquiry?.name).slice(0, 120) || 'New Applicant';
-  return `PRIME LINE | Job Application | ${name} | ${reference}`;
+  return `PRIME LINE | ${applicationType.subjectLabel} | ${name} | ${reference}`;
+};
+
+export const buildCareerSubject = (inquiry, reference) => buildApplicationSubject('joinOurTeam', inquiry, reference);
+
+const getSubmissionId = (value) => {
+  if (typeof value !== 'string') return null;
+  const match = value.match(/^JI-(\d{13})-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i);
+  if (!match) return null;
+  const timestamp = Number(match[1]);
+  const age = Date.now() - timestamp;
+  if (!Number.isSafeInteger(timestamp) || age < -60_000 || age > MAX_IDEMPOTENCY_AGE_MS) return null;
+  return value;
 };
 
 const buildEmail = (inquiry, reference) => {
@@ -146,7 +175,7 @@ const buildEmail = (inquiry, reference) => {
   `).join('');
   return {
     text: [
-      'PRIME LINE | Job Application',
+      'PRIME LINE | Join Our Team',
       `Reference: ${reference}`,
       '',
       ...rows.map(([label, value]) => `${label}: ${value}`)
@@ -164,6 +193,82 @@ const buildEmail = (inquiry, reference) => {
           </div>
           <div style="padding:18px 24px;text-align:center;border-top:1px solid #eeeae3;color:#737984;font-size:11px;line-height:1.5;">
             Prime Line<br>Importers of Selected Specialty Foods
+          </div>
+        </div>
+      </div>
+    `
+  };
+};
+
+export const buildCareerDelivery = (inquiry, reference, recipients, resume) => {
+  const email = buildEmail(inquiry, reference);
+  const delivery = {
+    from: `Prime Line <${SENDER_EMAIL}>`,
+    to: [recipients[0]],
+    reply_to: inquiry.email,
+    subject: buildApplicationSubject('joinOurTeam', inquiry, reference),
+    text: email.text,
+    html: email.html
+  };
+  if (recipients.length > 1) delivery.bcc = recipients.slice(1);
+  if (resume) delivery.attachments = [resume];
+  return delivery;
+};
+
+const buildApplicantConfirmation = (inquiry, reference) => {
+  const firstName = inquiry.name.trim().split(/\s+/)[0] || 'Applicant';
+  return {
+    subject: `PRIME LINE | Application Received | ${reference}`,
+    text: `Dear ${firstName},
+
+Thank you for your interest in joining Prime Line!
+
+We're pleased to confirm that your application has been successfully received.
+
+Our team will review your information as opportunities become available that match your experience and interests.
+
+What Happens Next?
+
+There is no need to submit the same application again. Your information has already been received, and submitting additional copies will not speed up the review process.
+
+Please understand that, due to the number of applications we receive, we may not be able to respond individually to every candidate.
+
+However, your interest is genuinely appreciated. If your qualifications align with an available opportunity, a member of our team may contact you directly.
+
+Thank you again for considering Prime Line. We wish you every success in your professional journey!
+
+Warm regards,
+
+Prime Line Recruitment Team
+
+www.primelinedist.com
+
+Application Reference: ${reference}
+
+This is an automated confirmation. No reply is required.`,
+    html: `
+      <div style="margin:0;background:#f7f6f2;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#17284d;">
+        <div style="width:100%;max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e7e3dc;border-radius:8px;overflow:hidden;">
+          <div style="padding:24px;text-align:center;border-bottom:1px solid #eeeae3;">
+            <img src="https://primelinedist.com/images/Logo1500.png" width="160" alt="Prime Line" style="display:block;width:160px;max-width:100%;height:auto;margin:0 auto;">
+          </div>
+          <div style="padding:28px 32px;font-size:15px;line-height:1.65;">
+            <p style="margin:0 0 16px;">Dear ${escapeHtml(firstName)},</p>
+            <p style="margin:0 0 14px;">Thank you for your interest in joining Prime Line!</p>
+            <p style="margin:0 0 14px;">We're pleased to confirm that your application has been successfully received.</p>
+            <p style="margin:0 0 20px;">Our team will review your information as opportunities become available that match your experience and interests.</p>
+            <h1 style="margin:0 0 8px;font-size:17px;line-height:1.4;color:#17284d;">What Happens Next?</h1>
+            <p style="margin:0 0 14px;">There is no need to submit the same application again. Your information has already been received, and submitting additional copies will not speed up the review process.</p>
+            <p style="margin:0 0 14px;">Please understand that, due to the number of applications we receive, we may not be able to respond individually to every candidate.</p>
+            <p style="margin:0 0 14px;">However, your interest is genuinely appreciated. If your qualifications align with an available opportunity, a member of our team may contact you directly.</p>
+            <p style="margin:0 0 18px;">Thank you again for considering Prime Line. We wish you every success in your professional journey!</p>
+            <p style="margin:0 0 14px;">Warm regards,<br><strong>Prime Line Recruitment Team</strong></p>
+            <p style="margin:0 0 20px;"><a href="http://www.primelinedist.com" style="color:#17284d;">www.primelinedist.com</a></p>
+            <div style="padding:13px 15px;background:#f4f6f8;border-radius:4px;">
+              <span style="display:block;color:#737984;font-size:10px;font-weight:700;letter-spacing:1px;">APPLICATION REFERENCE</span>
+              <strong style="display:block;margin-top:4px;font-size:17px;letter-spacing:.04em;">${escapeHtml(reference)}</strong>
+            </div>
+            <p style="margin:16px 0 0;color:#737984;font-size:11px;">This is an automated confirmation. No reply is required.</p>
           </div>
         </div>
       </div>
@@ -199,6 +304,10 @@ export const processCareerInquiryEvent = async (event) => {
   if (typeof payload.careers_website !== 'string' || payload.careers_website.trim()) {
     return json({ error: 'Invalid submission.' }, 400);
   }
+  const submissionId = getSubmissionId(payload.submissionId);
+  if (!submissionId) {
+    return json({ error: 'This submission attempt has expired or is invalid. Reload the form to try again.' }, 409);
+  }
 
   let config;
   try {
@@ -208,7 +317,7 @@ export const processCareerInquiryEvent = async (event) => {
     config = DEFAULT_CAREERS_ROUTING_CONFIG;
   }
 
-  const validation = validateSubmission(payload, config);
+  const validation = await validateSubmission(payload, config);
   if (validation.error) return json({ error: validation.error }, 400);
   const { inquiry, resume } = validation;
 
@@ -217,38 +326,67 @@ export const processCareerInquiryEvent = async (event) => {
   if (!apiKey || !from) return json({ error: 'Email sending is not configured. Please try again later.' }, 503);
 
   const recipients = resolveRecipients({ country: 'US', state: '' }, config);
-  const reference = createReference();
-  const email = buildEmail(inquiry, reference);
-  const delivery = {
-    from,
-    to: [recipients[0]],
-    reply_to: inquiry.email,
-    subject: buildCareerSubject(inquiry, reference),
-    text: email.text,
-    html: email.html
-  };
-  if (recipients.length > 1) delivery.bcc = recipients.slice(1);
-  if (resume) delivery.attachments = [resume];
+  const reference = createReference(submissionId);
+  const delivery = buildCareerDelivery(inquiry, reference, recipients, resume);
 
-  let response;
+  let internalResponse;
   try {
-    response = await fetch('https://api.resend.com/emails', {
+    internalResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Idempotency-Key': `join-our-team/${submissionId}/internal`
       },
       body: JSON.stringify(delivery)
     });
-  } catch (error) {
-    console.error('Career inquiry email delivery request failed.', error);
+  } catch {
+    console.error('Join Our Team internal email request failed.');
     return json({ error: 'Your inquiry could not be sent. Please try again later.' }, 502);
   }
-  if (!response.ok) {
-    console.error('Career inquiry email delivery failed.', { status: response.status });
+  if (!internalResponse.ok) {
+    console.error('Join Our Team internal email was not accepted by Resend.', { status: internalResponse.status });
     return json({ error: 'Your inquiry could not be sent. Please try again later.' }, 502);
   }
-  return json({ sent: true, reference, resumeReceived: Boolean(resume) });
+
+  const confirmation = buildApplicantConfirmation(inquiry, reference);
+  let confirmationAccepted = false;
+  try {
+    const confirmationResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': `join-our-team/${submissionId}/confirmation`
+      },
+      body: JSON.stringify({
+        from,
+        to: [inquiry.email],
+        reply_to: SENDER_EMAIL,
+        subject: confirmation.subject,
+        text: confirmation.text,
+        html: confirmation.html
+      })
+    });
+    if (confirmationResponse.ok) {
+      confirmationAccepted = true;
+    } else {
+      console.error('Join Our Team applicant confirmation was not accepted by Resend.', { status: confirmationResponse.status });
+    }
+  } catch {
+    console.error('Join Our Team applicant confirmation request failed.');
+  }
+
+  return json({
+    sent: true,
+    internalAcceptedByResend: true,
+    reference,
+    resumeReceived: Boolean(resume),
+    confirmation: {
+      acceptedByResend: confirmationAccepted,
+      deliveryConfirmed: false
+    }
+  });
 };
 
 export default adaptNetlifyHandler(processCareerInquiryEvent);

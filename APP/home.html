@@ -189,8 +189,8 @@
         </label>
         <div class="careers-resume">
           <span class="careers-resume-heading">Résumé <span>(Optional)</span></span>
-          <p>PDF only, up to 3 MB. Your résumé is optional.</p>
-          <p class="careers-resume-status" id="careerResumeStatus" role="status" aria-live="polite">No résumé attached. If you upload one, it must be a PDF no larger than 3 MB.</p>
+          <p>PDF only. Your résumé is optional.</p>
+          <p class="careers-resume-status" id="careerResumeStatus" role="status" aria-live="polite">Maximum PDF file size: 3 MB. No résumé attached.</p>
           <div class="careers-form-grid">
             <label for="careerResume">Upload PDF Résumé<input id="careerResume" type="file" name="resume" accept=".pdf,application/pdf"></label>
             <label for="careerResumeLink">Résumé Link<input id="careerResumeLink" type="url" name="resumeLink" autocomplete="url" maxlength="2048" placeholder="https://"></label>
@@ -198,6 +198,25 @@
         </div>
         <button type="submit" class="btn btn--dark">Send Your Inquiry</button>
       </form>
+      <dialog class="careers-success-dialog" id="careersSuccessDialog" aria-labelledby="careersSuccessTitle" aria-describedby="careersSuccessMessage">
+        <div class="careers-success-content">
+          <img class="careers-success-logo" src="images/Logo1500.png" alt="Prime Line">
+          <span class="careers-success-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="m5 12.5 4.2 4.2L19 7"/></svg>
+          </span>
+          <h2 id="careersSuccessTitle">Thank You for Applying!</h2>
+          <p class="careers-success-message" id="careersSuccessMessage">Your application has been successfully received by Prime Line.</p>
+          <div class="careers-success-reference">
+            <span>APPLICATION REFERENCE</span>
+            <strong id="careersSuccessReference"></strong>
+          </div>
+          <p class="careers-success-confirmation" id="careersSuccessConfirmation"></p>
+          <p class="careers-success-delivery-note" id="careersSuccessDeliveryNote" hidden>Resend accepted the confirmation email request. Delivery to your mailbox cannot be confirmed.</p>
+          <p class="careers-success-next-step">There is no need to submit another application for the same position. If your qualifications match an available opportunity, our team may contact you.</p>
+          <p class="careers-success-resume" id="careersSuccessResume" hidden>Your PDF résumé was received.</p>
+          <button class="careers-success-close" id="careersSuccessClose" type="button" autofocus>Close &amp; Return to Website</button>
+        </div>
+      </dialog>
     </div>
   </aside>
 
@@ -509,6 +528,6 @@
 <script src="assets/js/contact-form-data.js?v=20261028-1"></script>
 <script src="assets/js/contact-form.js?v=20261028-1"></script>
 <script src="assets/js/main.js?v=20261111-1"></script>
-<script src="assets/js/careers-form.js?v=20261111-1"></script>
+<script src="assets/js/careers-form.js?v=20261111-2"></script>
 </body>
 </html>
