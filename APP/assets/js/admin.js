@@ -10,6 +10,7 @@ const emailInput = document.querySelector('#adminEmail');
 const codeInput = document.querySelector('#adminCode');
 const authStatus = document.querySelector('#authStatus');
 const signOutButton = document.querySelector('#signOutButton');
+const adminSessionActions = document.querySelector('#adminSessionActions');
 const changeEmailButton = document.querySelector('#changeEmailButton');
 const contactConfig = document.querySelector('#contactConfig');
 const careersRoutingConfig = document.querySelector('#careersRoutingConfig');
@@ -440,6 +441,7 @@ const showStatus = (message, isError = false) => {
 
 const showSignedOut = () => {
   dashboard.hidden = true;
+  adminSessionActions.hidden = true;
   if (!authDialog.open) authDialog.showModal();
   emailForm.hidden = false;
   codeForm.hidden = true;
@@ -456,6 +458,7 @@ const loadSession = async () => {
   const result = await response.json();
   if (result.authenticated !== true) return false;
   dashboard.hidden = false;
+  adminSessionActions.hidden = false;
   loadedAdminTabs.clear();
   if (authDialog.open) authDialog.close();
   await activateAdminTab('contactTab');

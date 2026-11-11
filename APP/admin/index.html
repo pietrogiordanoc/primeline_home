@@ -13,19 +13,16 @@
   <header class="admin-header">
     <a class="admin-brand" href="../home.html" aria-label="Prime Line home">
       <img src="../images/Logo1500.png" alt="Prime Line">
+      <span>Administration</span>
     </a>
-    <span class="eyebrow">Private Administration</span>
+    <div class="admin-session-actions" id="adminSessionActions" hidden>
+      <span>SUPER ADMIN</span>
+      <button class="admin-signout" id="signOutButton" type="button">Sign Out</button>
+    </div>
   </header>
 
   <main class="admin-main">
-    <section class="admin-dashboard" id="dashboard" hidden aria-labelledby="dashboardTitle">
-      <div class="admin-dashboard-heading">
-        <div>
-          <span class="eyebrow">Prime Line</span>
-          <h1 id="dashboardTitle">Prime Line Admin</h1>
-        </div>
-        <button class="admin-signout" id="signOutButton" type="button">Sign out</button>
-      </div>
+    <section class="admin-dashboard" id="dashboard" hidden aria-label="Administration dashboard">
       <nav class="admin-tabs" role="tablist" aria-label="Admin sections">
         <button class="admin-tab" id="contactTab" type="button" role="tab" aria-selected="true" aria-controls="contactConfig" tabindex="0">Contact Us</button>
         <button class="admin-tab" id="careersTab" type="button" role="tab" aria-selected="false" aria-controls="careersRoutingConfig" tabindex="-1">Join Our Team</button>
