@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import careersInquiry, {
   buildCareerSubject,
+  parseResume,
   processCareerInquiryEvent,
-  resolveCareerState
 } from '../functions/send-careers-inquiry.js';
 
 const validInquiry = {
@@ -36,18 +36,11 @@ test('builds a Job Application subject with the applicant name before the final 
   );
 });
 
-test('maps each Careers division to its configured state routing rule', () => {
-  assert.equal(resolveCareerState('Florida'), 'FL');
-  assert.equal(resolveCareerState('Central Florida'), 'FL');
-  assert.equal(resolveCareerState('Orlando, Florida'), 'FL');
-  assert.equal(resolveCareerState('New York, New York'), 'NY');
-  assert.equal(resolveCareerState('Las Vegas, Nevada'), 'NV');
-  assert.equal(resolveCareerState('Los Angeles, California'), 'CA');
-});
-
 test('rejects invalid public inquiries before sending email', async () => {
   const previousFetch = globalThis.fetch;
+  const previousError = console.error;
   let fetchCalls = 0;
+  console.error = () => {};
   globalThis.fetch = async () => {
     fetchCalls += 1;
     return { ok: true, status: 200 };
@@ -65,7 +58,36 @@ test('rejects invalid public inquiries before sending email', async () => {
     assert.equal(fetchCalls, 0);
   } finally {
     globalThis.fetch = previousFetch;
+    console.error = previousError;
   }
+});
+
+test('accepts only valid PDF résumés at or below 3 MB', () => {
+  const validPdf = {
+    name: 'Maria Resume.pdf',
+    dataUrl: 'data:application/pdf;base64,JVBERi0xLjQK'
+  };
+  assert.deepEqual(parseResume(validPdf), {
+    resume: {
+      filename: 'Maria-Resume.pdf',
+      content: 'JVBERi0xLjQK'
+    }
+  });
+  assert.match(parseResume({
+    name: 'resume.doc',
+    dataUrl: 'data:application/msword;base64,JVBERi0xLjQK'
+  }).error, /Only PDF/);
+  assert.match(parseResume({
+    name: 'resume.pdf',
+    dataUrl: 'data:application/pdf;base64,SGVsbG8='
+  }).error, /valid PDF/);
+
+  const oversizedPdf = Buffer.alloc(3 * 1024 * 1024 + 1);
+  Buffer.from('%PDF-1.7').copy(oversizedPdf);
+  assert.match(parseResume({
+    name: 'large.pdf',
+    dataUrl: `data:application/pdf;base64,${oversizedPdf.toString('base64')}`
+  }).error, /3 MB/);
 });
 
 test('delivers an inquiry to the configured general and location recipients without exposing recipients', async () => {
@@ -96,6 +118,7 @@ test('delivers an inquiry to the configured general and location recipients with
     assert.equal(requestBody.reply_to, 'maria@example.com');
     assert.match(requestBody.subject, /^PRIME LINE \| Job Application \| Maria Garcia \| JI-\d{8}-[A-Z0-9]{4}$/);
     assert.match(requestBody.html, /Los Angeles, California/);
+    assert.equal(result.resumeReceived, false);
   } finally {
     if (previous.apiKey === undefined) delete process.env.RESEND_API_KEY;
     else process.env.RESEND_API_KEY = previous.apiKey;
@@ -142,6 +165,7 @@ test('includes an optional résumé as a Resend attachment', async () => {
       filename: 'Maria-Garcia-Resume.pdf',
       content: 'JVBERi0xLjQK'
     }]);
+    assert.equal((await response.json()).resumeReceived, true);
   } finally {
     if (previous.apiKey === undefined) delete process.env.RESEND_API_KEY;
     else process.env.RESEND_API_KEY = previous.apiKey;

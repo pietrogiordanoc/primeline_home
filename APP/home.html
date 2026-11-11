@@ -189,9 +189,10 @@
         </label>
         <div class="careers-resume">
           <span class="careers-resume-heading">Résumé <span>(Optional)</span></span>
-          <p>Upload a PDF, DOC, or DOCX file, or share a link to your résumé.</p>
+          <p>PDF only, up to 3 MB. Your résumé is optional.</p>
+          <p class="careers-resume-status" id="careerResumeStatus" role="status" aria-live="polite">No résumé attached. If you upload one, it must be a PDF no larger than 3 MB.</p>
           <div class="careers-form-grid">
-            <label for="careerResume">Upload Résumé<input id="careerResume" type="file" name="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></label>
+            <label for="careerResume">Upload PDF Résumé<input id="careerResume" type="file" name="resume" accept=".pdf,application/pdf"></label>
             <label for="careerResumeLink">Résumé Link<input id="careerResumeLink" type="url" name="resumeLink" autocomplete="url" maxlength="2048" placeholder="https://"></label>
           </div>
         </div>

@@ -1,49 +1,25 @@
 import { randomBytes } from 'node:crypto';
 import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import {
-  CAREERS_ROUTING_CONFIG_KEY,
-  DEFAULT_ROUTING_CONFIG,
+  DEFAULT_CAREERS_ROUTING_CONFIG,
+  loadCareersRoutingConfig,
   isValidEmail,
-  loadRoutingConfig,
   resolveRecipients
 } from '../shared/contact-routing.js';
 
-const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
+const MAX_REQUEST_BYTES = 5 * 1024 * 1024;
 const MAX_RESUME_BYTES = 3 * 1024 * 1024;
 const SENDER_EMAIL = 'info@primelinedist.com';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const POSITION_OPTIONS = new Set([
-  'Accounts Payable',
-  'Administration',
-  'Coffee Service',
-  'Driver',
-  'Receiving Clerk',
-  'Warehouse Receiving Clerk — New York',
-  'Warehouse Selector',
-  'Customer Service / Administrative Assistant — New York',
-  'Other / General Inquiry'
-]);
-const DIVISION_STATES = new Map([
-  ['Florida', 'FL'],
-  ['Central Florida', 'FL'],
-  ['Orlando, Florida', 'FL'],
-  ['New York, New York', 'NY'],
-  ['Las Vegas, Nevada', 'NV'],
-  ['Los Angeles, California', 'CA']
-]);
 const EMPLOYMENT_STATUSES = new Set(['Employed', 'Self-Employed', 'Unemployed', 'Student']);
-const ALLOWED_RESUME_TYPES = new Set([
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-]);
 
-const json = (body, statusCode = 200) => ({
+const json = (body, statusCode = 200, extraHeaders = {}) => ({
   statusCode,
   headers: {
     'Content-Type': 'application/json; charset=utf-8',
-    'Cache-Control': 'no-store'
+    'Cache-Control': 'no-store',
+    ...extraHeaders
   },
   body: JSON.stringify(body)
 });
@@ -79,21 +55,25 @@ const validResumeLink = (value) => {
   }
 };
 
-const parseResume = (value) => {
+export const parseResume = (value) => {
   if (!value) return { resume: null };
   if (!value || typeof value !== 'object' || Array.isArray(value)) return { error: 'Invalid résumé upload.' };
   const name = stringField(value, 'name', 180, { required: true });
-  const dataUrl = stringField(value, 'dataUrl', Math.ceil(MAX_RESUME_BYTES * 4 / 3) + 1024, { required: true });
+  const dataUrl = stringField(value, 'dataUrl', MAX_REQUEST_BYTES, { required: true });
   if (!name || !dataUrl) return { error: 'Invalid résumé upload.' };
   const match = dataUrl.match(/^data:([^;]+);base64,([A-Za-z0-9+/=]+)$/);
-  if (!match || !ALLOWED_RESUME_TYPES.has(match[1])) return { error: 'Upload a PDF, DOC, or DOCX résumé.' };
+  if (!match || match[1] !== 'application/pdf' || !name.toLocaleLowerCase('en-US').endsWith('.pdf')) {
+    return { error: 'Only PDF résumés are accepted.' };
+  }
   const content = Buffer.from(match[2], 'base64');
+  if (content.toString('base64') !== match[2]) return { error: 'The selected file is not a valid PDF document.' };
   if (!content.length || content.length > MAX_RESUME_BYTES) return { error: 'Please upload a résumé no larger than 3 MB.' };
+  if (content.subarray(0, 5).toString('ascii') !== '%PDF-') return { error: 'The selected file is not a valid PDF document.' };
   const safeName = name.replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '') || 'resume';
   return { resume: { filename: safeName, content: content.toString('base64') } };
 };
 
-const validateSubmission = (payload) => {
+const validateSubmission = (payload, careersConfig) => {
   const inquiry = {
     name: stringField(payload, 'name', 160, { required: true }),
     email: stringField(payload, 'email', 254, { required: true }),
@@ -111,7 +91,11 @@ const validateSubmission = (payload) => {
   if (!EMAIL_PATTERN.test(inquiry.email) || !isValidEmail(inquiry.email)) {
     return { error: 'Please enter a valid email address.' };
   }
-  if (!POSITION_OPTIONS.has(inquiry.position) || !DIVISION_STATES.has(inquiry.division) || !EMPLOYMENT_STATUSES.has(inquiry.employmentStatus)) {
+  if (
+    !careersConfig.positions.includes(inquiry.position)
+    || !careersConfig.divisions.includes(inquiry.division)
+    || !EMPLOYMENT_STATUSES.has(inquiry.employmentStatus)
+  ) {
     return { error: 'Please choose valid application details.' };
   }
   if (!DATE_PATTERN.test(inquiry.startDate) || Number.isNaN(Date.parse(`${inquiry.startDate}T00:00:00Z`))) {
@@ -135,8 +119,6 @@ const createReference = () => {
   const suffix = Array.from(randomBytes(4), (byte) => alphabet[byte % alphabet.length]).join('');
   return `JI-${date}-${suffix}`;
 };
-
-export const resolveCareerState = (division) => DIVISION_STATES.get(division) || '';
 
 export const buildCareerSubject = (inquiry, reference) => {
   const name = sanitizeSubjectPart(inquiry?.name).slice(0, 120) || 'New Applicant';
@@ -190,6 +172,19 @@ const buildEmail = (inquiry, reference) => {
 };
 
 export const processCareerInquiryEvent = async (event) => {
+  if (event.httpMethod === 'GET') {
+    try {
+      const config = await loadCareersRoutingConfig();
+      return json(
+        { positions: config.positions, divisions: config.divisions },
+        200,
+        { 'Cache-Control': 'public, max-age=300' }
+      );
+    } catch (error) {
+      console.error('Join Our Team form options could not be loaded.', error);
+      return json({ error: 'Job application options are temporarily unavailable.' }, 503);
+    }
+  }
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed.' }, 405);
   const body = typeof event.body === 'string' ? event.body : '';
   if (Buffer.byteLength(body, 'utf8') > MAX_REQUEST_BYTES) return json({ error: 'The request is too large.' }, 413);
@@ -205,7 +200,15 @@ export const processCareerInquiryEvent = async (event) => {
     return json({ error: 'Invalid submission.' }, 400);
   }
 
-  const validation = validateSubmission(payload);
+  let config;
+  try {
+    config = await loadCareersRoutingConfig();
+  } catch (error) {
+    console.error('Join Our Team configuration could not be loaded.', error);
+    config = DEFAULT_CAREERS_ROUTING_CONFIG;
+  }
+
+  const validation = validateSubmission(payload, config);
   if (validation.error) return json({ error: validation.error }, 400);
   const { inquiry, resume } = validation;
 
@@ -213,13 +216,7 @@ export const processCareerInquiryEvent = async (event) => {
   const from = getFromAddress();
   if (!apiKey || !from) return json({ error: 'Email sending is not configured. Please try again later.' }, 503);
 
-  let config = DEFAULT_ROUTING_CONFIG;
-  try {
-    config = await loadRoutingConfig(undefined, CAREERS_ROUTING_CONFIG_KEY);
-  } catch (error) {
-    console.error('Inquiry routing configuration unavailable; using the explicit fallback recipient.', error);
-  }
-  const recipients = resolveRecipients({ country: 'US', state: resolveCareerState(inquiry.division) }, config);
+  const recipients = resolveRecipients({ country: 'US', state: '' }, config);
   const reference = createReference();
   const email = buildEmail(inquiry, reference);
   const delivery = {
@@ -251,7 +248,7 @@ export const processCareerInquiryEvent = async (event) => {
     console.error('Career inquiry email delivery failed.', { status: response.status });
     return json({ error: 'Your inquiry could not be sent. Please try again later.' }, 502);
   }
-  return json({ sent: true, reference });
+  return json({ sent: true, reference, resumeReceived: Boolean(resume) });
 };
 
 export default adaptNetlifyHandler(processCareerInquiryEvent);

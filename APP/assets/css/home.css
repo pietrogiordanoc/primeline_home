@@ -500,6 +500,14 @@
   font-size: 12px;
   line-height: 1.5;
 }
+.careers-resume-status{
+  margin:0 0 12px;
+  color:var(--pl-ink-soft);
+  font-size:12px;
+  line-height:1.5;
+}
+.careers-resume-status.is-error{ color:#a33a32; }
+.careers-resume-status.is-success{ color:#286347; }
 .careers-form input[type="file"]{
   padding: 8px 0;
   font-size: 12px;

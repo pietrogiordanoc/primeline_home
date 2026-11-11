@@ -16,6 +16,8 @@ const careersRoutingConfig = document.querySelector('#careersRoutingConfig');
 const careersRoutingStatus = document.querySelector('#careersRoutingStatus');
 const careersRecipientsList = document.querySelector('#careersRecipientsList');
 const newCareersRecipientEmail = document.querySelector('#newCareersRecipientEmail');
+const careersPositionsInput = document.querySelector('#careersPositions');
+const careersDivisionsInput = document.querySelector('#careersDivisions');
 const saveCareersRoutingButton = document.querySelector('#saveCareersRouting');
 const contactConfigStatus = document.querySelector('#contactConfigStatus');
 const generalRecipientsList = document.querySelector('#generalRecipientsList');
@@ -34,6 +36,8 @@ let careersRouting = null;
 let editingRuleId = null;
 let savedSnapshot = '';
 let savedCareersRecipients = '';
+let savedCareersPositions = '';
+let savedCareersDivisions = '';
 let ruleEditorDirty = false;
 let selectedStateCodes = new Set();
 
@@ -217,6 +221,8 @@ const renderCareersRecipients = () => {
 const updateCareersRoutingDirtyStatus = () => {
   if (!careersRouting) return;
   const changed = JSON.stringify(careersRouting.generalRecipients) !== savedCareersRecipients
+    || careersPositionsInput.value !== savedCareersPositions
+    || careersDivisionsInput.value !== savedCareersDivisions
     || Boolean(newCareersRecipientEmail.value.trim());
   if (changed) setCareersRoutingStatus('Unsaved changes — save before leaving this page.', false, true);
   else setCareersRoutingStatus('All changes are saved.');
@@ -236,6 +242,10 @@ const loadCareersRouting = async () => {
     careersRouting = result;
     renderCareersRecipients();
     savedCareersRecipients = JSON.stringify(result.generalRecipients);
+    careersPositionsInput.value = result.positions.join('\n');
+    careersDivisionsInput.value = result.divisions.join('\n');
+    savedCareersPositions = careersPositionsInput.value;
+    savedCareersDivisions = careersDivisionsInput.value;
     setCareersRoutingStatus(result.updatedAt
       ? `Last saved: ${new Date(result.updatedAt).toLocaleString()}`
       : 'Using the initial default recipient. Save to confirm configuration.');
@@ -259,10 +269,17 @@ document.querySelector('#addCareersRecipientForm').addEventListener('submit', (e
   updateCareersRoutingDirtyStatus();
 });
 
+careersPositionsInput.addEventListener('input', updateCareersRoutingDirtyStatus);
+careersDivisionsInput.addEventListener('input', updateCareersRoutingDirtyStatus);
 newCareersRecipientEmail.addEventListener('input', updateCareersRoutingDirtyStatus);
 document.querySelector('#reloadCareersRouting').addEventListener('click', () => {
   const hasChanges = careersRouting
-    && (JSON.stringify(careersRouting.generalRecipients) !== savedCareersRecipients || newCareersRecipientEmail.value.trim());
+    && (
+      JSON.stringify(careersRouting.generalRecipients) !== savedCareersRecipients
+      || careersPositionsInput.value !== savedCareersPositions
+      || careersDivisionsInput.value !== savedCareersDivisions
+      || newCareersRecipientEmail.value.trim()
+    );
   if (hasChanges && !window.confirm('Discard unsaved Join Our Team recipient changes and reload?')) return;
   newCareersRecipientEmail.value = '';
   loadCareersRouting();
@@ -270,6 +287,12 @@ document.querySelector('#reloadCareersRouting').addEventListener('click', () => 
 
 saveCareersRoutingButton.addEventListener('click', async () => {
   if (!careersRouting || saveCareersRoutingButton.disabled) return;
+  const positions = careersPositionsInput.value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+  const divisions = careersDivisionsInput.value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+  if (!positions.length || !divisions.length) {
+    setCareersRoutingStatus('Keep at least one position and one division or location.', true);
+    return;
+  }
   if (!careersRouting.generalRecipients.some((recipient) => recipient.enabled)) {
     setCareersRoutingStatus('At least one Join Our Team recipient must remain enabled.', true);
     return;
@@ -283,13 +306,19 @@ saveCareersRoutingButton.addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         generalRecipients: careersRouting.generalRecipients,
-        stateRules: []
+        stateRules: [],
+        positions,
+        divisions
       })
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Join Our Team recipients could not be saved.');
     careersRouting = result;
     savedCareersRecipients = JSON.stringify(result.generalRecipients);
+    careersPositionsInput.value = result.positions.join('\n');
+    careersDivisionsInput.value = result.divisions.join('\n');
+    savedCareersPositions = careersPositionsInput.value;
+    savedCareersDivisions = careersDivisionsInput.value;
     renderCareersRecipients();
     setCareersRoutingStatus(`Saved: ${new Date(result.updatedAt).toLocaleString()}`);
   } catch (error) {
@@ -514,6 +543,8 @@ document.querySelector('#reloadContactConfig').addEventListener('click', () => {
 window.addEventListener('beforeunload', (event) => {
   const careersDirty = careersRouting && (
     JSON.stringify(careersRouting.generalRecipients) !== savedCareersRecipients
+    || careersPositionsInput.value !== savedCareersPositions
+    || careersDivisionsInput.value !== savedCareersDivisions
     || Boolean(newCareersRecipientEmail.value.trim())
   );
   if (!isConfigDirty() && !careersDirty) return;
@@ -624,6 +655,8 @@ changeEmailButton.addEventListener('click', () => {
 signOutButton.addEventListener('click', async () => {
   const careersDirty = careersRouting && (
     JSON.stringify(careersRouting.generalRecipients) !== savedCareersRecipients
+    || careersPositionsInput.value !== savedCareersPositions
+    || careersDivisionsInput.value !== savedCareersDivisions
     || Boolean(newCareersRecipientEmail.value.trim())
   );
   if ((isConfigDirty() || careersDirty) && !window.confirm('You have unsaved changes. Sign out and discard them?')) return;

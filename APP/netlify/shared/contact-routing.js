@@ -17,6 +17,34 @@ export const DEFAULT_ROUTING_CONFIG = Object.freeze({
   stateRules: Object.freeze([])
 });
 
+export const DEFAULT_CAREERS_POSITIONS = Object.freeze([
+  'Accounts Payable',
+  'Administration',
+  'Coffee Service',
+  'Driver',
+  'Receiving Clerk',
+  'Warehouse Receiving Clerk — New York',
+  'Warehouse Selector',
+  'Customer Service / Administrative Assistant — New York',
+  'Other / General Inquiry'
+]);
+
+export const DEFAULT_CAREERS_DIVISIONS = Object.freeze([
+  'Florida',
+  'Central Florida',
+  'Orlando, Florida',
+  'New York, New York',
+  'Las Vegas, Nevada',
+  'Los Angeles, California'
+]);
+
+export const DEFAULT_CAREERS_ROUTING_CONFIG = Object.freeze({
+  generalRecipients: DEFAULT_ROUTING_CONFIG.generalRecipients,
+  stateRules: DEFAULT_ROUTING_CONFIG.stateRules,
+  positions: DEFAULT_CAREERS_POSITIONS,
+  divisions: DEFAULT_CAREERS_DIVISIONS
+});
+
 export const isValidEmail = (value) =>
   typeof value === 'string' &&
   value.length <= 254 &&
@@ -194,6 +222,78 @@ const normalizeStoredConfig = (document) => {
     throw new Error('Saved contact routing configuration is invalid.');
   }
   return { ...result.config, updatedAt: document.updatedAt };
+};
+
+const normalizeCareersOptions = (values, defaults, label) => {
+  if (!Array.isArray(values) || values.length < 1 || values.length > 50) {
+    return { error: `Keep between 1 and 50 ${label.toLowerCase()} options.` };
+  }
+  const seen = new Set();
+  const options = [];
+  for (const value of values) {
+    if (typeof value !== 'string') return { error: `${label} options must be text.` };
+    const option = value.trim().replace(/\s+/g, ' ');
+    const normalized = option.toLocaleLowerCase('en-US');
+    if (!option || option.length > 120 || seen.has(normalized)) {
+      return { error: `${label} options must be non-empty, unique, and no longer than 120 characters.` };
+    }
+    seen.add(normalized);
+    options.push(option);
+  }
+  return { options: options.length ? options : [...defaults] };
+};
+
+export const validateCareersRoutingConfig = (input) => {
+  const routing = validateRoutingConfig(input);
+  if (!routing.ok) return routing;
+  const positions = normalizeCareersOptions(
+    input.positions === undefined ? DEFAULT_CAREERS_POSITIONS : input.positions,
+    DEFAULT_CAREERS_POSITIONS,
+    'Position'
+  );
+  if (positions.error) return { ok: false, error: positions.error };
+  const divisions = normalizeCareersOptions(
+    input.divisions === undefined ? DEFAULT_CAREERS_DIVISIONS : input.divisions,
+    DEFAULT_CAREERS_DIVISIONS,
+    'Division or location'
+  );
+  if (divisions.error) return { ok: false, error: divisions.error };
+  return {
+    ok: true,
+    config: { ...routing.config, positions: positions.options, divisions: divisions.options }
+  };
+};
+
+export const loadCareersRoutingConfig = async (store) => {
+  const blobStore = store || await getContactRoutingStore();
+  const document = await blobStore.get(CAREERS_ROUTING_CONFIG_KEY, { type: 'json' });
+  if (!document) {
+    return {
+      ...DEFAULT_CAREERS_ROUTING_CONFIG,
+      generalRecipients: [...DEFAULT_CAREERS_ROUTING_CONFIG.generalRecipients],
+      stateRules: [...DEFAULT_CAREERS_ROUTING_CONFIG.stateRules],
+      positions: [...DEFAULT_CAREERS_ROUTING_CONFIG.positions],
+      divisions: [...DEFAULT_CAREERS_ROUTING_CONFIG.divisions],
+      updatedAt: null
+    };
+  }
+  const validation = validateCareersRoutingConfig(document);
+  if (!validation.ok || typeof document.updatedAt !== 'string' || Number.isNaN(Date.parse(document.updatedAt))) {
+    throw new Error('Saved Join Our Team configuration is invalid.');
+  }
+  return { ...validation.config, updatedAt: document.updatedAt };
+};
+
+export const saveCareersRoutingConfig = async (config, store, context) => {
+  if (!isProductionContext(context)) {
+    throw new Error('Join Our Team configuration can only be changed in production.');
+  }
+  const validation = validateCareersRoutingConfig(config);
+  if (!validation.ok) throw new Error(validation.error);
+  const document = { ...validation.config, updatedAt: new Date().toISOString() };
+  const blobStore = store || await getContactRoutingStore();
+  await blobStore.setJSON(CAREERS_ROUTING_CONFIG_KEY, document);
+  return document;
 };
 
 export const loadRoutingConfig = async (store, configKey = CONTACT_ROUTING_CONFIG_KEY) => {

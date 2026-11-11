@@ -4,11 +4,16 @@ import {
   CAREERS_ROUTING_CONFIG_KEY,
   CONTACT_ROUTING_CONFIG_KEY,
   CONTACT_ROUTING_STORE_NAME,
+  DEFAULT_CAREERS_DIVISIONS,
+  DEFAULT_CAREERS_POSITIONS,
   isProductionContext,
+  loadCareersRoutingConfig,
   loadRoutingConfig,
   normalizeUsState,
   resolveRecipients,
+  saveCareersRoutingConfig,
   saveRoutingConfig,
+  validateCareersRoutingConfig,
   validateRoutingConfig
 } from '../shared/contact-routing.js';
 import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
@@ -115,17 +120,48 @@ test('stores Contact and Careers routing documents independently in the same Blo
   };
   const careersConfig = {
     generalRecipients: [{ id: 'careers-general', email: 'hr@example.com', enabled: true }],
-    stateRules: []
+    stateRules: [],
+    positions: ['Driver', 'Warehouse Associate'],
+    divisions: ['Orlando, Florida']
   };
 
   await saveRoutingConfig(contactConfig, store, { deploy: { context: 'production' } });
-  await saveRoutingConfig(careersConfig, store, { deploy: { context: 'production' } }, CAREERS_ROUTING_CONFIG_KEY);
+  await saveCareersRoutingConfig(careersConfig, store, { deploy: { context: 'production' } });
 
   assert.equal(blobs.size, 2);
   assert.deepEqual((await loadRoutingConfig(store)).generalRecipients, contactConfig.generalRecipients);
-  assert.deepEqual((await loadRoutingConfig(store, CAREERS_ROUTING_CONFIG_KEY)).generalRecipients, careersConfig.generalRecipients);
+  const savedCareers = await loadCareersRoutingConfig(store);
+  assert.deepEqual(savedCareers.generalRecipients, careersConfig.generalRecipients);
+  assert.deepEqual(savedCareers.positions, careersConfig.positions);
+  assert.deepEqual(savedCareers.divisions, careersConfig.divisions);
   assert.equal(blobs.has(CONTACT_ROUTING_CONFIG_KEY), true);
   assert.equal(blobs.has(CAREERS_ROUTING_CONFIG_KEY), true);
+});
+
+test('validates Join Our Team option lists and defaults older saved documents', async () => {
+  const base = {
+    generalRecipients: [{ id: 'hr', email: 'hr@example.com', enabled: true }],
+    stateRules: [],
+    positions: ['Driver', 'Warehouse Associate'],
+    divisions: ['Orlando, Florida']
+  };
+  assert.equal(validateCareersRoutingConfig(base).ok, true);
+  assert.equal(validateCareersRoutingConfig({
+    ...base,
+    positions: ['Driver', ' driver ']
+  }).ok, false);
+  assert.equal(validateCareersRoutingConfig({ ...base, divisions: [] }).ok, false);
+
+  const legacyDocument = {
+    generalRecipients: base.generalRecipients,
+    stateRules: [],
+    updatedAt: '2026-11-11T00:00:00.000Z'
+  };
+  const loaded = await loadCareersRoutingConfig(createMemoryStore(new Map([
+    [CAREERS_ROUTING_CONFIG_KEY, legacyDocument]
+  ])));
+  assert.deepEqual(loaded.positions, DEFAULT_CAREERS_POSITIONS);
+  assert.deepEqual(loaded.divisions, DEFAULT_CAREERS_DIVISIONS);
 });
 
 test('migrates saved single-state rules to states arrays without losing settings', async () => {
