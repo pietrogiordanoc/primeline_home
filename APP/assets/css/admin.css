@@ -9,6 +9,10 @@
 .admin-module{ display:flex; align-items:center; justify-content:space-between; gap:24px; padding:28px 30px; border-top:3px solid var(--pl-gold); background:#fff; box-shadow:0 12px 36px rgba(13,24,48,.06); }
 .admin-module h2{ margin-top:6px; color:var(--pl-navy); font-size:clamp(22px,4vw,30px); }
 .admin-module p,.admin-config-block>p,.admin-config-heading p{ margin-top:8px; color:var(--pl-ink-soft); font-size:13px; line-height:1.55; }
+.admin-tabs{ display:flex; gap:4px; margin-top:24px; border-bottom:1px solid var(--pl-line); }
+.admin-tab{ min-height:48px; padding:12px 20px; border:0; border-bottom:3px solid transparent; background:transparent; color:var(--pl-ink-soft); font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+.admin-tab[aria-selected="true"]{ border-bottom-color:var(--pl-gold); color:var(--pl-navy); }
+.admin-tab:focus-visible{ outline:2px solid var(--pl-gold); outline-offset:-2px; }
 .admin-coming-soon{ padding:7px 12px; background:var(--pl-cream-dark); color:var(--pl-navy); font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
 .admin-config{ display:grid; gap:24px; margin-top:24px; }
 .admin-config-heading{ display:flex; align-items:center; justify-content:space-between; gap:20px; }
@@ -98,6 +102,8 @@
 .admin-config-status.is-dirty{ color:var(--pl-navy); font-weight:600; }
 .admin-save-state{ display:flex; align-items:center; gap:14px; }
 @media(max-width:560px){
+  .admin-tabs{ overflow-x:auto; }
+  .admin-tab{ flex:1 0 auto; padding:12px 14px; }
   .admin-header{ gap:16px; }
   .admin-brand img{ width:126px; }
   .admin-header .eyebrow{ font-size:9px; text-align:right; }

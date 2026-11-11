@@ -28,13 +28,19 @@
       </div>
       <section class="admin-module" aria-labelledby="contactModuleTitle">
         <div>
-          <span class="eyebrow">Module</span>
-          <h2 id="contactModuleTitle">Inquiry Routing</h2>
-          <p>Manage recipients separately for Contact Us and Join Our Team inquiries.</p>
+          <span class="eyebrow">Administration</span>
+          <h2 id="contactModuleTitle">Manage your website tools</h2>
+          <p>Select a tab to manage Contact Us, Join Our Team, or Catalog PDF separately.</p>
         </div>
       </section>
 
-      <section class="admin-config" id="contactConfig" hidden aria-labelledby="contactConfigTitle">
+      <nav class="admin-tabs" role="tablist" aria-label="Admin sections">
+        <button class="admin-tab" id="contactTab" type="button" role="tab" aria-selected="true" aria-controls="contactConfig" tabindex="0">Contact Us</button>
+        <button class="admin-tab" id="careersTab" type="button" role="tab" aria-selected="false" aria-controls="careersRoutingConfig" tabindex="-1">Join Our Team</button>
+        <button class="admin-tab" id="catalogTab" type="button" role="tab" aria-selected="false" aria-controls="guestAccessConfig" tabindex="-1">Catalog PDF</button>
+      </nav>
+
+      <section class="admin-config" id="contactConfig" role="tabpanel" tabindex="0" aria-labelledby="contactTab contactConfigTitle">
         <div class="admin-config-heading">
           <div>
             <span class="eyebrow">Website Inquiries</span>
@@ -113,7 +119,7 @@
         </div>
       </section>
 
-      <section class="admin-config" id="careersRoutingConfig" hidden aria-labelledby="careersRoutingTitle">
+      <section class="admin-config" id="careersRoutingConfig" role="tabpanel" tabindex="0" hidden aria-labelledby="careersTab careersRoutingTitle">
         <div class="admin-config-heading">
           <div>
             <span class="eyebrow">Join Our Team</span>
@@ -161,12 +167,12 @@
         </div>
       </section>
 
-      <section class="admin-config" id="guestAccessConfig" aria-labelledby="guestAccessTitle">
+      <section class="admin-config" id="guestAccessConfig" role="tabpanel" tabindex="0" hidden aria-labelledby="catalogTab guestAccessTitle">
         <div class="admin-config-block">
           <div class="admin-config-heading">
             <div>
               <span class="eyebrow">Catalog</span>
-              <h2 id="guestAccessTitle">Catalog Guest Access</h2>
+              <h2 id="guestAccessTitle">Catalog PDF Guest Access</h2>
               <p>Review invitations and grants, reissue unused invitations, or revoke active access.</p>
             </div>
             <button class="admin-secondary-button" id="reloadGuestAccess" type="button">Reload</button>

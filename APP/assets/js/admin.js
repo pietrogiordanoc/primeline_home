@@ -13,6 +13,8 @@ const signOutButton = document.querySelector('#signOutButton');
 const changeEmailButton = document.querySelector('#changeEmailButton');
 const contactConfig = document.querySelector('#contactConfig');
 const careersRoutingConfig = document.querySelector('#careersRoutingConfig');
+const adminTabs = [...document.querySelectorAll('.admin-tab')];
+const adminTabPanels = adminTabs.map((tab) => document.querySelector(`#${tab.getAttribute('aria-controls')}`));
 const careersRoutingStatus = document.querySelector('#careersRoutingStatus');
 const careersRecipientsList = document.querySelector('#careersRecipientsList');
 const newCareersRecipientEmail = document.querySelector('#newCareersRecipientEmail');
@@ -40,6 +42,7 @@ let savedCareersPositions = '';
 let savedCareersDivisions = '';
 let ruleEditorDirty = false;
 let selectedStateCodes = new Set();
+const loadedAdminTabs = new Set();
 
 const newId = () => crypto.randomUUID();
 
@@ -158,7 +161,6 @@ const renderRoutingConfig = () => {
 };
 
 const loadContactConfig = async () => {
-  contactConfig.hidden = false;
   setContactStatus('Loading saved routing configuration...');
   try {
     const response = await fetch('/api/admin/contact-routing', {
@@ -229,7 +231,6 @@ const updateCareersRoutingDirtyStatus = () => {
 };
 
 const loadCareersRouting = async () => {
-  careersRoutingConfig.hidden = false;
   setCareersRoutingStatus('Loading Join Our Team recipients...');
   try {
     const response = await fetch('/api/admin/contact-routing?form=careers', {
@@ -254,6 +255,37 @@ const loadCareersRouting = async () => {
     setCareersRoutingStatus(error.message || 'Join Our Team recipients could not be loaded.', true);
   }
 };
+
+const activateAdminTab = async (tabId) => {
+  const selectedTab = adminTabs.find((tab) => tab.id === tabId);
+  if (!selectedTab) return;
+  adminTabs.forEach((tab, index) => {
+    const active = tab === selectedTab;
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+    adminTabPanels[index].hidden = !active;
+  });
+  if (loadedAdminTabs.has(tabId)) return;
+  loadedAdminTabs.add(tabId);
+  if (tabId === 'contactTab') await loadContactConfig();
+  if (tabId === 'careersTab') await loadCareersRouting();
+  if (tabId === 'catalogTab') await initializeCatalogGuestAdmin();
+};
+
+adminTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => activateAdminTab(tab.id));
+  tab.addEventListener('keydown', (event) => {
+    let nextIndex;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % adminTabs.length;
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + adminTabs.length) % adminTabs.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = adminTabs.length - 1;
+    else return;
+    event.preventDefault();
+    adminTabs[nextIndex].focus();
+    activateAdminTab(adminTabs[nextIndex].id);
+  });
+});
 
 document.querySelector('#addCareersRecipientForm').addEventListener('submit', (event) => {
   event.preventDefault();
@@ -424,10 +456,9 @@ const loadSession = async () => {
   const result = await response.json();
   if (result.authenticated !== true) return false;
   dashboard.hidden = false;
+  loadedAdminTabs.clear();
   if (authDialog.open) authDialog.close();
-  loadContactConfig();
-  loadCareersRouting();
-  await initializeCatalogGuestAdmin();
+  await activateAdminTab('contactTab');
   return true;
 };
 
