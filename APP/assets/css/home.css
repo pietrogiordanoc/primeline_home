@@ -399,14 +399,46 @@
   overflow: hidden;
 }
 .careers-form{
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  display: block;
 }
 .careers-form[hidden]{ display:none; }
-.careers-form > label,
-.careers-form > button,
-.careers-resume{ grid-column: 1 / -1; }
+.careers-form-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr);
+  align-items:stretch;
+  gap:20px;
+}
+.careers-applicant-info{
+  min-width:0;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-content:start;
+  gap:10px 14px;
+}
+.careers-applicant-info > h3,
+.careers-introduction > h3{
+  grid-column:1 / -1;
+  margin:0 0 2px;
+  color:var(--pl-navy);
+  font:600 14px/1.35 var(--font-sans);
+}
+.careers-applicant-info > label[for="careerName"],
+.careers-applicant-info > .careers-form-grid,
+.careers-applicant-info > .careers-professional-links{
+  grid-column:1 / -1;
+}
+.careers-introduction{
+  min-width:0;
+  padding:18px 20px;
+  border-left:2px solid var(--pl-gold);
+  background:#f8f8f6;
+}
+.careers-introduction p{
+  margin:0 0 16px;
+  color:var(--pl-ink-soft);
+  font-size:12px;
+  line-height:1.55;
+}
 .careers-form label,
 .careers-employment-status{
   min-width: 0;
@@ -442,11 +474,15 @@
 .careers-form select:focus{ outline: none; border-color: var(--pl-navy); }
 .careers-form select{ cursor: pointer; }
 .careers-form textarea{ min-height: 82px; }
+.careers-introduction textarea{
+  min-height:240px;
+  padding:10px 2px;
+  line-height:1.55;
+}
 .careers-form-grid{
-  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 10px 14px;
 }
 .careers-form label span,
 .careers-resume-heading span{
@@ -525,7 +561,6 @@
 }
 .careers-form [aria-invalid="true"]{ border-color:#a33a32; }
 .careers-professional-links{
-  grid-column:1 / -1;
   display:grid;
   gap:9px;
 }
@@ -574,7 +609,7 @@
   overflow: hidden;
 }
 .careers-form > button[type="submit"]{
-  margin-top: 4px;
+  margin-top: 14px;
   justify-self: start;
   padding: 12px 30px;
 }
@@ -1491,6 +1526,14 @@
 @container (max-width: 479px){
   .contact-form,
   .contact-form-grid{ grid-template-columns: minmax(0, 1fr); }
+}
+
+@container (max-width: 620px){
+  .careers-form-layout{ grid-template-columns: minmax(0, 1fr); }
+  .careers-applicant-info,
+  .careers-form-grid{ grid-template-columns: minmax(0, 1fr); }
+  .careers-introduction{ padding: 16px; }
+  .careers-introduction textarea{ min-height: 180px; }
 }
 
 /* ---------- Banner contextual caption (fallback for categories without full copy) ---------- */

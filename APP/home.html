@@ -7,7 +7,7 @@
 <meta name="description" content="Prime Line - Importers of Selected Specialty Foods.">
 <link rel="icon" type="image/gif" href="images/favicon.gif">
 <link rel="stylesheet" href="assets/css/base.css?v=20261028-1">
-<link rel="stylesheet" href="assets/css/home.css?v=20261111-1">
+<link rel="stylesheet" href="assets/css/home.css?v=20261111-2">
 <link rel="stylesheet" href="assets/css/category-vegetables.css?v=20261028-1">
 <link rel="stylesheet" href="assets/css/cheese.css">
 <link rel="stylesheet" href="assets/css/cured-meats.css?v=20261016-1">
@@ -140,68 +140,77 @@
         <div class="careers-form-honeypot" aria-hidden="true">
           <label>Leave this field empty<input type="text" name="careers_website" tabindex="-1" autocomplete="off"></label>
         </div>
-        <label for="careerName">Full Name<input id="careerName" type="text" name="name" autocomplete="name" maxlength="160" required></label>
-        <div class="careers-form-grid">
-          <label for="careerEmail">Email Address<input id="careerEmail" type="email" name="email" autocomplete="email" maxlength="254" required></label>
-          <label for="careerPhone">Phone Number<input id="careerPhone" type="tel" name="phone" autocomplete="tel" maxlength="50" required></label>
-        </div>
-        <div class="careers-form-grid">
-          <label for="careerPosition">Position of Interest
-            <select id="careerPosition" name="position" required>
-              <option value="" selected disabled>Select a position</option>
-              <option>Accounts Payable</option>
-              <option>Administration</option>
-              <option>Coffee Service</option>
-              <option>Driver</option>
-              <option>Receiving Clerk</option>
-              <option>Warehouse Receiving Clerk — New York</option>
-              <option>Warehouse Selector</option>
-              <option>Customer Service / Administrative Assistant — New York</option>
-              <option>Other / General Inquiry</option>
-            </select>
-          </label>
-          <label for="careerDivision">Division or Location of Interest
-            <select id="careerDivision" name="division" required>
-              <option value="" selected disabled>Select a division or location</option>
-              <option>Florida</option>
-              <option>Central Florida</option>
-              <option>Orlando, Florida</option>
-              <option>New York, New York</option>
-              <option>Las Vegas, Nevada</option>
-              <option>Los Angeles, California</option>
-            </select>
-          </label>
-        </div>
-        <div class="careers-form-grid">
-          <label for="careerStartDate">Available Start Date<input id="careerStartDate" type="date" name="startDate" required></label>
-          <fieldset class="careers-employment-status">
-            <legend>Current Employment Status</legend>
-            <div class="careers-radio-grid">
-              <label><input type="radio" name="employmentStatus" value="Employed" required> Employed</label>
-              <label><input type="radio" name="employmentStatus" value="Self-Employed"> Self-Employed</label>
-              <label><input type="radio" name="employmentStatus" value="Unemployed"> Unemployed</label>
-              <label><input type="radio" name="employmentStatus" value="Student"> Student</label>
+        <div class="careers-form-layout">
+          <section class="careers-applicant-info" aria-labelledby="careerApplicantHeading">
+            <h3 id="careerApplicantHeading">Applicant Information</h3>
+            <label for="careerName">Full Name<input id="careerName" type="text" name="name" autocomplete="name" maxlength="160" required></label>
+            <div class="careers-form-grid">
+              <label for="careerEmail">Email Address<input id="careerEmail" type="email" name="email" autocomplete="email" maxlength="254" required></label>
+              <label for="careerPhone">Phone Number<input id="careerPhone" type="tel" name="phone" autocomplete="tel" maxlength="50" required></label>
             </div>
-          </fieldset>
+            <div class="careers-form-grid">
+              <label for="careerPosition">Position of Interest
+                <select id="careerPosition" name="position" required>
+                  <option value="" selected disabled>Select a position</option>
+                  <option>Accounts Payable</option>
+                  <option>Administration</option>
+                  <option>Coffee Service</option>
+                  <option>Driver</option>
+                  <option>Receiving Clerk</option>
+                  <option>Warehouse Receiving Clerk — New York</option>
+                  <option>Warehouse Selector</option>
+                  <option>Customer Service / Administrative Assistant — New York</option>
+                  <option>Other / General Inquiry</option>
+                </select>
+              </label>
+              <label for="careerDivision">Division or Location of Interest
+                <select id="careerDivision" name="division" required>
+                  <option value="" selected disabled>Select a division or location</option>
+                  <option>Florida</option>
+                  <option>Central Florida</option>
+                  <option>Orlando, Florida</option>
+                  <option>New York, New York</option>
+                  <option>Las Vegas, Nevada</option>
+                  <option>Los Angeles, California</option>
+                </select>
+              </label>
+            </div>
+            <div class="careers-form-grid">
+              <label for="careerStartDate">Available Start Date<input id="careerStartDate" type="date" name="startDate" required></label>
+              <fieldset class="careers-employment-status">
+                <legend>Current Employment Status</legend>
+                <div class="careers-radio-grid">
+                  <label><input type="radio" name="employmentStatus" value="Employed" required> Employed</label>
+                  <label><input type="radio" name="employmentStatus" value="Self-Employed"> Self-Employed</label>
+                  <label><input type="radio" name="employmentStatus" value="Unemployed"> Unemployed</label>
+                  <label><input type="radio" name="employmentStatus" value="Student"> Student</label>
+                </div>
+              </fieldset>
+            </div>
+            <div class="careers-form-grid careers-materials">
+              <label for="careerResume">PDF Résumé <span>(Optional, up to 3 MB)</span>
+                <input id="careerResume" type="file" name="resume" accept=".pdf,application/pdf" aria-describedby="careerResumeFilename">
+                <span class="careers-resume-filename" id="careerResumeFilename" aria-live="polite">No file selected</span>
+              </label>
+              <label for="careerResumeLink">Résumé Link <span>(Optional)</span>
+                <input id="careerResumeLink" type="text" name="resumeLink" inputmode="url" autocomplete="url" maxlength="2048" placeholder="www.example.com" aria-describedby="careerResumeLinkError">
+                <span class="careers-field-error" id="careerResumeLinkError" hidden>Enter a valid website address, such as www.example.com.</span>
+              </label>
+            </div>
+            <section class="careers-professional-links" aria-labelledby="careerLinksHeading">
+              <h3 id="careerLinksHeading">Professional &amp; Social Links (Optional)</h3>
+              <div class="careers-additional-links" id="careerAdditionalLinks"></div>
+              <button type="button" class="careers-add-link" id="careerAddLink">Add Link +</button>
+            </section>
+          </section>
+          <section class="careers-introduction" aria-labelledby="careerIntroductionHeading">
+            <h3 id="careerIntroductionHeading">Personal Introduction</h3>
+            <p>Share your experience, what motivates you, and why you are interested in Prime Line.</p>
+            <label for="careerMessage">Cover Letter or Message <span>(Optional)</span>
+              <textarea id="careerMessage" name="message" rows="9" maxlength="2000" placeholder="Tell us a little about yourself..."></textarea>
+            </label>
+          </section>
         </div>
-        <label for="careerMessage">Cover Letter or Message <span>(Optional)</span>
-          <textarea id="careerMessage" name="message" rows="5" maxlength="2000" placeholder="Tell us why you are interested in joining Prime Line and anything you would like our team to know."></textarea>
-        </label>
-        <div class="careers-form-grid careers-materials">
-          <label for="careerResume">PDF Résumé <span>(Optional, up to 3 MB)</span>
-            <input id="careerResume" type="file" name="resume" accept=".pdf,application/pdf" aria-describedby="careerResumeFilename">
-            <span class="careers-resume-filename" id="careerResumeFilename" aria-live="polite">No file selected</span>
-          </label>
-          <label for="careerResumeLink">Résumé Link <span>(Optional)</span>
-            <input id="careerResumeLink" type="text" name="resumeLink" inputmode="url" autocomplete="url" maxlength="2048" placeholder="www.example.com" aria-describedby="careerResumeLinkError">
-            <span class="careers-field-error" id="careerResumeLinkError" hidden>Enter a valid website address, such as www.example.com.</span>
-          </label>
-        </div>
-        <section class="careers-professional-links" aria-labelledby="careerLinksHeading">
-          <h3 id="careerLinksHeading">Professional &amp; Social Links (Optional)</h3>
-          <div class="careers-additional-links" id="careerAdditionalLinks"></div>
-          <button type="button" class="careers-add-link" id="careerAddLink">Add Link +</button>
-        </section>
         <button type="submit" class="btn btn--dark">Send Your Inquiry</button>
       </form>
       <dialog class="careers-feedback-dialog" id="careersFeedbackDialog" aria-labelledby="careersFeedbackTitle" aria-describedby="careersFeedbackMessage">
@@ -540,7 +549,7 @@
 
 <script src="assets/js/contact-form-data.js?v=20261028-1"></script>
 <script src="assets/js/contact-form.js?v=20261028-1"></script>
-<script src="assets/js/main.js?v=20261111-1"></script>
+<script src="assets/js/main.js?v=20261111-2"></script>
 <script src="assets/js/careers-form.js?v=20261111-3"></script>
 </body>
 </html>

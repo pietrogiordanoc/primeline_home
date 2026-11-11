@@ -141,17 +141,23 @@ document.addEventListener('DOMContentLoaded', () => {
     accountFormsPanel,
     careersPanel
   ].filter(Boolean);
+  const contentCurtainPanels = [...curtainPanels, masterlinkPanel].filter(Boolean);
 
   const contactInfo = document.querySelector('.contact-info');
   let mobileContactView = 'contact';
   let menuReturnFocus = null;
   let scrollLocked = false;
   let savedScrollY = 0;
+  let curtainSwitchId = 0;
+  let curtainTransitionReadyAt = 0;
+  let curtainSwitchTimer = null;
+  let contactCloseTimer = null;
+  let menuCloseTimer = null;
 
   const syncCurtainState = () => {
     const isMobile = mobileCurtainQuery.matches;
     const menuIsOpen = navPanel?.classList.contains('is-open') === true;
-    const openPanels = curtainPanels.filter((panel) => panel.classList.contains('is-open'));
+    const openPanels = contentCurtainPanels.filter((panel) => panel.classList.contains('is-open'));
     const contactPairOpen = contactPanel?.classList.contains('is-open')
       && locationsPanel?.classList.contains('is-open');
     let activeMobilePanel = openPanels[0] || null;
@@ -160,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
       activeMobilePanel = mobileContactView === 'locations' ? locationsPanel : contactPanel;
     }
 
-    curtainPanels.forEach((panel) => {
+    contentCurtainPanels.forEach((panel) => {
       const isOpen = panel.classList.contains('is-open');
       panel.setAttribute('aria-hidden', String(!isOpen || (isMobile && panel !== activeMobilePanel)));
     });
@@ -221,25 +227,76 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const openNavigation = () => {
+    if (menuCloseTimer !== null) {
+      clearTimeout(menuCloseTimer);
+      menuCloseTimer = null;
+    }
     navPanel?.classList.add('is-open');
     navOverlay?.classList.add('is-open');
     syncCurtainState();
   };
 
   const openContentCurtain = (panel, trigger, additionalPanels = []) => {
+    const requestId = ++curtainSwitchId;
+    if (curtainSwitchTimer !== null) {
+      clearTimeout(curtainSwitchTimer);
+      curtainSwitchTimer = null;
+    }
+    if (contactCloseTimer !== null) {
+      clearTimeout(contactCloseTimer);
+      contactCloseTimer = null;
+    }
     if (trigger && navPanel?.contains(trigger)) menuReturnFocus = trigger;
     openNavigation();
-    [panel, ...additionalPanels].forEach((item) => {
-      item?.classList.add('is-open');
-      item?.setAttribute('aria-hidden', 'false');
+    const nextPanels = new Set([panel, ...additionalPanels].filter(Boolean));
+    const closingPanels = contentCurtainPanels.filter((item) => (
+      item.classList.contains('is-open') && !nextPanels.has(item)
+    ));
+
+    closingPanels.forEach((item) => {
+      item.classList.remove('is-open');
+      item.setAttribute('aria-hidden', 'true');
     });
+    if (closingPanels.includes(contactPanel) || closingPanels.includes(locationsPanel)) {
+      contactInfo?.classList.remove('is-open');
+      mobileContactView = 'contact';
+    }
+    if (closingPanels.includes(catalogPanel)) setCatalogChooser(false);
     syncCurtainState();
 
-    if (mobileCurtainQuery.matches) {
-      const closeButton = panel === contactPanel
-        ? contactMobileClose
-        : panel?.querySelector('button[aria-label^="Close"]');
-      closeButton?.focus({ preventScroll: true });
+    if (closingPanels.length) curtainTransitionReadyAt = Date.now() + curtainTransitionMs;
+    const openRequestedPanels = () => {
+      curtainSwitchTimer = null;
+      if (requestId !== curtainSwitchId) return;
+      contentCurtainPanels.forEach((item) => {
+        if (nextPanels.has(item)) return;
+        item.classList.remove('is-open');
+        item.setAttribute('aria-hidden', 'true');
+      });
+      nextPanels.forEach((item) => {
+        item.classList.add('is-open');
+        item.setAttribute('aria-hidden', 'false');
+      });
+      if (nextPanels.has(contactPanel)) {
+        mobileContactView = 'contact';
+        contactInfo?.classList.add('is-open');
+      }
+      syncCurtainState();
+      if (mobileCurtainQuery.matches) {
+        const closeButton = panel === contactPanel
+          ? contactMobileClose
+          : panel?.querySelector('button[aria-label^="Close"]');
+        closeButton?.focus({ preventScroll: true });
+      }
+    };
+    const waitForClose = Math.max(0, curtainTransitionReadyAt - Date.now());
+    if (waitForClose) curtainSwitchTimer = setTimeout(openRequestedPanels, waitForClose);
+    else openRequestedPanels();
+  };
+
+  const markCurtainClosing = (panel) => {
+    if (panel?.classList.contains('is-open')) {
+      curtainTransitionReadyAt = Math.max(curtainTransitionReadyAt, Date.now() + curtainTransitionMs);
     }
   };
 
@@ -247,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!mobileCurtainQuery.matches) return;
     setTimeout(() => {
       if (!navPanel?.classList.contains('is-open')) return;
-      if (curtainPanels.some((panel) => panel.classList.contains('is-open'))) return;
+      if (contentCurtainPanels.some((panel) => panel.classList.contains('is-open'))) return;
       const target = menuReturnFocus && navPanel.contains(menuReturnFocus)
         ? menuReturnFocus
         : navPanelClose;
@@ -272,10 +329,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Collapses locations, then contact, one step at a time - never all at once.
   const closeContact = (onClosed) => {
+    curtainSwitchId += 1;
+    if (curtainSwitchTimer !== null) {
+      clearTimeout(curtainSwitchTimer);
+      curtainSwitchTimer = null;
+    }
+    if (contactCloseTimer !== null) clearTimeout(contactCloseTimer);
+    markCurtainClosing(locationsPanel);
     locationsPanel?.classList.remove('is-open');
     mobileContactView = 'contact';
     syncCurtainState();
-    setTimeout(() => {
+    contactCloseTimer = setTimeout(() => {
+      contactCloseTimer = null;
+      markCurtainClosing(contactPanel);
       contactPanel?.classList.remove('is-open');
       contactInfo?.classList.remove('is-open');
       syncCurtainState();
@@ -285,6 +351,12 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeAbout = (onClosed) => {
+    curtainSwitchId += 1;
+    if (curtainSwitchTimer !== null) {
+      clearTimeout(curtainSwitchTimer);
+      curtainSwitchTimer = null;
+    }
+    markCurtainClosing(aboutPanel);
     aboutPanel?.classList.remove('is-open');
     syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
@@ -298,7 +370,13 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeCatalog = (onClosed) => {
+    curtainSwitchId += 1;
+    if (curtainSwitchTimer !== null) {
+      clearTimeout(curtainSwitchTimer);
+      curtainSwitchTimer = null;
+    }
     setCatalogChooser(false);
+    markCurtainClosing(catalogPanel);
     catalogPanel?.classList.remove('is-open');
     syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
@@ -306,12 +384,24 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeMasterlink = (onClosed) => {
+    curtainSwitchId += 1;
+    if (curtainSwitchTimer !== null) {
+      clearTimeout(curtainSwitchTimer);
+      curtainSwitchTimer = null;
+    }
+    markCurtainClosing(masterlinkPanel);
     masterlinkPanel?.classList.remove('is-open');
     masterlinkPanel?.setAttribute('aria-hidden', 'true');
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
   };
 
   const closeCatalogPdf = (onClosed) => {
+    curtainSwitchId += 1;
+    if (curtainSwitchTimer !== null) {
+      clearTimeout(curtainSwitchTimer);
+      curtainSwitchTimer = null;
+    }
+    markCurtainClosing(catalogPdfPanel);
     catalogPdfPanel?.classList.remove('is-open');
     syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
@@ -319,6 +409,12 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeOrderEntry = (onClosed) => {
+    curtainSwitchId += 1;
+    if (curtainSwitchTimer !== null) {
+      clearTimeout(curtainSwitchTimer);
+      curtainSwitchTimer = null;
+    }
+    markCurtainClosing(orderEntryPanel);
     orderEntryPanel?.classList.remove('is-open');
     syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
@@ -326,6 +422,12 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeAccountForms = (onClosed) => {
+    curtainSwitchId += 1;
+    if (curtainSwitchTimer !== null) {
+      clearTimeout(curtainSwitchTimer);
+      curtainSwitchTimer = null;
+    }
+    markCurtainClosing(accountFormsPanel);
     accountFormsPanel?.classList.remove('is-open');
     syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
@@ -333,6 +435,12 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeCareers = (onClosed) => {
+    curtainSwitchId += 1;
+    if (curtainSwitchTimer !== null) {
+      clearTimeout(curtainSwitchTimer);
+      curtainSwitchTimer = null;
+    }
+    markCurtainClosing(careersPanel);
     careersPanel?.classList.remove('is-open');
     syncCurtainState();
     if (onClosed) setTimeout(onClosed, curtainTransitionMs);
@@ -346,6 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     // Staggered close: any inner curtain first, then the menu itself.
     const closeMenu = () => {
+      if (menuCloseTimer !== null) clearTimeout(menuCloseTimer);
       const hadContactOpen = contactPanel?.classList.contains('is-open');
       const hadAboutOpen = aboutPanel?.classList.contains('is-open');
       const hadCatalogOpen = catalogPanel?.classList.contains('is-open');
@@ -362,12 +471,21 @@ document.addEventListener('DOMContentLoaded', () => {
       closeOrderEntry();
       closeAccountForms();
       closeCareers();
-      setTimeout(() => {
+      const requestId = ++curtainSwitchId;
+      const closeMenuAfter = () => {
+        menuCloseTimer = null;
+        if (requestId !== curtainSwitchId) return;
         navPanel.classList.remove('is-open');
         navOverlay.classList.remove('is-open');
         syncCurtainState();
         if (mobileCurtainQuery.matches) menuToggle.focus({ preventScroll: true });
-      }, (hadContactOpen || hadAboutOpen || hadCatalogOpen || hadMasterlinkOpen || hadCatalogPdfOpen || hadOrderEntryOpen || hadAccountFormsOpen || hadCareersOpen) ? 420 : 0);
+      };
+      const hadContentOpen = hadContactOpen || hadAboutOpen || hadCatalogOpen || hadMasterlinkOpen
+        || hadCatalogPdfOpen || hadOrderEntryOpen || hadAccountFormsOpen || hadCareersOpen;
+      menuCloseTimer = setTimeout(
+        closeMenuAfter,
+        hadContactOpen ? curtainTransitionMs + 200 : hadContentOpen ? curtainTransitionMs : 0
+      );
     };
     menuToggle.addEventListener('click', openMenu);
     navOverlay.addEventListener('click', closeMenu);
@@ -385,30 +503,10 @@ document.addEventListener('DOMContentLoaded', () => {
         closeCareers();
         return;
       }
-      const showCareers = () => openContentCurtain(careersPanel, trigger);
-      if (contactPanel?.classList.contains('is-open')) {
-        closeContact(showCareers);
-      } else if (aboutPanel?.classList.contains('is-open')) {
-        closeAbout(showCareers);
-      } else if (catalogPanel?.classList.contains('is-open')) {
-        closeCatalog(showCareers);
-      } else if (masterlinkPanel?.classList.contains('is-open')) {
-        closeMasterlink(showCareers);
-      } else if (catalogPdfPanel?.classList.contains('is-open')) {
-        closeCatalogPdf(showCareers);
-      } else if (orderEntryPanel?.classList.contains('is-open')) {
-        closeOrderEntry(showCareers);
-      } else if (accountFormsPanel?.classList.contains('is-open')) {
-        closeAccountForms(showCareers);
-      } else {
-        showCareers();
-      }
+      openContentCurtain(careersPanel, trigger);
     };
     careersTriggers.forEach((trigger) => trigger.addEventListener('click', openCareers));
     careersPanelClose?.addEventListener('click', closeCareers);
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeCareers();
-    });
     if (new URLSearchParams(window.location.search).get('open') === 'careers') {
       const url = new URL(window.location.href);
       url.searchParams.delete('open');
@@ -426,26 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeContact();
         return;
       }
-      const showContact = () => {
-        mobileContactView = 'contact';
-        openContentCurtain(contactPanel, trigger, [locationsPanel]);
-        contactInfo?.classList.add('is-open');
-      };
-      if (aboutPanel?.classList.contains('is-open')) {
-        closeAbout(showContact);
-      } else if (catalogPanel?.classList.contains('is-open')) {
-        closeCatalog(showContact);
-      } else if (masterlinkPanel?.classList.contains('is-open')) {
-        closeMasterlink(showContact);
-      } else if (catalogPdfPanel?.classList.contains('is-open')) {
-        closeCatalogPdf(showContact);
-      } else if (orderEntryPanel?.classList.contains('is-open')) {
-        closeOrderEntry(showContact);
-      } else if (accountFormsPanel?.classList.contains('is-open')) {
-        closeAccountForms(showContact);
-      } else {
-        showContact();
-      }
+      openContentCurtain(contactPanel, trigger, [locationsPanel]);
     };
     contactTriggers.forEach((trigger) => trigger.addEventListener('click', openContact));
     contactPanelClose?.addEventListener('click', closeContact);
@@ -467,9 +546,6 @@ document.addEventListener('DOMContentLoaded', () => {
           : (currentIndex + (e.key === 'ArrowRight' ? 1 : -1) + contactMobileTabs.length) % contactMobileTabs.length;
       const nextTab = contactMobileTabs[nextIndex];
       setMobileContactView(nextTab.dataset.contactView === 'locations' ? 'locations' : 'contact', true);
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeContact();
     });
     const contactForm = contactPanel.querySelector('.contact-form');
     const contactFormStatus = contactPanel.querySelector('.contact-form-status');
@@ -542,30 +618,10 @@ document.addEventListener('DOMContentLoaded', () => {
         closeAbout();
         return;
       }
-      const showAbout = () => {
-        openContentCurtain(aboutPanel, trigger);
-      };
-      if (contactPanel?.classList.contains('is-open')) {
-        closeContact(showAbout);
-      } else if (catalogPanel?.classList.contains('is-open')) {
-        closeCatalog(showAbout);
-      } else if (masterlinkPanel?.classList.contains('is-open')) {
-        closeMasterlink(showAbout);
-      } else if (catalogPdfPanel?.classList.contains('is-open')) {
-        closeCatalogPdf(showAbout);
-      } else if (orderEntryPanel?.classList.contains('is-open')) {
-        closeOrderEntry(showAbout);
-      } else if (accountFormsPanel?.classList.contains('is-open')) {
-        closeAccountForms(showAbout);
-      } else {
-        showAbout();
-      }
+      openContentCurtain(aboutPanel, trigger);
     };
     aboutTriggers.forEach((trigger) => trigger.addEventListener('click', openAbout));
     aboutPanelClose?.addEventListener('click', closeAbout);
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeAbout();
-    });
   }
 
   // Login and Register share one catalog preview curtain, then continue to the selected destination.
@@ -579,32 +635,12 @@ document.addEventListener('DOMContentLoaded', () => {
         catalogPanel.querySelector('.catalog-login')?.setAttribute('data-destination', destination || '');
         catalogPanel.querySelector('.catalog-register')?.setAttribute('data-destination', destination || '');
       };
-      const switchToCatalog = () => {
-        if (contactPanel?.classList.contains('is-open')) {
-          closeContact(() => {
-            if (aboutPanel?.classList.contains('is-open')) closeAbout(showCatalog);
-            else showCatalog();
-          });
-        } else if (aboutPanel?.classList.contains('is-open')) {
-          closeAbout(showCatalog);
-        } else if (masterlinkPanel?.classList.contains('is-open')) {
-          closeMasterlink(showCatalog);
-        } else if (catalogPdfPanel?.classList.contains('is-open')) {
-          closeCatalogPdf(showCatalog);
-        } else if (orderEntryPanel?.classList.contains('is-open')) {
-          closeOrderEntry(showCatalog);
-        } else if (accountFormsPanel?.classList.contains('is-open')) {
-          closeAccountForms(showCatalog);
-        } else {
-          showCatalog();
-        }
-      };
       if (catalogPanel.classList.contains('is-open')) {
         setCatalogChooser(false);
         catalogPanel.querySelector('.catalog-login')?.setAttribute('data-destination', destination || '');
         catalogPanel.querySelector('.catalog-register')?.setAttribute('data-destination', destination || '');
       } else {
-        switchToCatalog();
+        showCatalog();
       }
     };
     catalogTriggers.forEach((trigger) => trigger.addEventListener('click', openCatalog));
@@ -750,32 +786,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (masterlinkPanel && masterlinkTriggers.length) {
     const openMasterlink = (e) => {
       e.preventDefault();
-      const showMasterlink = () => {
-        navPanel?.classList.add('is-open');
-        navOverlay?.classList.add('is-open');
-        navPanel?.setAttribute('aria-hidden', 'false');
-        masterlinkPanel.classList.add('is-open');
-        masterlinkPanel.setAttribute('aria-hidden', 'false');
-      };
       if (masterlinkPanel.classList.contains('is-open')) {
         closeMasterlink();
-      } else if (contactPanel?.classList.contains('is-open')) {
-        closeContact(() => {
-          if (aboutPanel?.classList.contains('is-open')) closeAbout(showMasterlink);
-          else showMasterlink();
-        });
-      } else if (aboutPanel?.classList.contains('is-open')) {
-        closeAbout(showMasterlink);
-      } else if (catalogPanel?.classList.contains('is-open')) {
-        closeCatalog(showMasterlink);
-      } else if (catalogPdfPanel?.classList.contains('is-open')) {
-        closeCatalogPdf(showMasterlink);
-      } else if (orderEntryPanel?.classList.contains('is-open')) {
-        closeOrderEntry(showMasterlink);
-      } else if (accountFormsPanel?.classList.contains('is-open')) {
-        closeAccountForms(showMasterlink);
       } else {
-        showMasterlink();
+        openContentCurtain(masterlinkPanel, e.currentTarget);
       }
     };
     masterlinkTriggers.forEach((trigger) => trigger.addEventListener('click', openMasterlink));
@@ -798,6 +812,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (catalogSessionCheckInProgress) return;
+      const requestId = ++curtainSwitchId;
+      if (curtainSwitchTimer !== null) {
+        clearTimeout(curtainSwitchTimer);
+        curtainSwitchTimer = null;
+      }
       catalogSessionCheckInProgress = true;
       trigger.setAttribute('aria-busy', 'true');
       const sessionStatus = catalogPanel.querySelector('.catalog-session-status');
@@ -844,11 +863,17 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       } catch {
-        if (sessionStatus) {
+        if (requestId === curtainSwitchId && sessionStatus) {
           sessionStatus.textContent = 'We could not verify your existing access. Please try again.';
           sessionStatus.classList.add('is-error');
           sessionStatus.hidden = false;
         }
+        catalogSessionCheckInProgress = false;
+        trigger.removeAttribute('aria-busy');
+        return;
+      }
+
+      if (requestId !== curtainSwitchId) {
         catalogSessionCheckInProgress = false;
         trigger.removeAttribute('aria-busy');
         return;
@@ -869,21 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      if (contactPanel?.classList.contains('is-open')) {
-        closeContact(showCatalogPdf);
-      } else if (aboutPanel?.classList.contains('is-open')) {
-        closeAbout(showCatalogPdf);
-      } else if (catalogPanel?.classList.contains('is-open')) {
-        closeCatalog(showCatalogPdf);
-      } else if (masterlinkPanel?.classList.contains('is-open')) {
-        closeMasterlink(showCatalogPdf);
-      } else if (orderEntryPanel?.classList.contains('is-open')) {
-        closeOrderEntry(showCatalogPdf);
-      } else if (accountFormsPanel?.classList.contains('is-open')) {
-        closeAccountForms(showCatalogPdf);
-      } else {
-        showCatalogPdf();
-      }
+      showCatalogPdf();
     };
     catalogPdfTriggers.forEach((trigger) => trigger.addEventListener('click', openCatalogPdf));
     catalogPdfPanelClose?.addEventListener('click', closeCatalogPdf);
@@ -898,25 +909,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const openOrderEntry = (e) => {
       e.preventDefault();
       const trigger = e.currentTarget;
-      const showOrderEntry = () => {
-        openContentCurtain(orderEntryPanel, trigger);
-      };
       if (orderEntryPanel.classList.contains('is-open')) {
         closeOrderEntry();
-      } else if (contactPanel?.classList.contains('is-open')) {
-        closeContact(showOrderEntry);
-      } else if (aboutPanel?.classList.contains('is-open')) {
-        closeAbout(showOrderEntry);
-      } else if (catalogPanel?.classList.contains('is-open')) {
-        closeCatalog(showOrderEntry);
-      } else if (masterlinkPanel?.classList.contains('is-open')) {
-        closeMasterlink(showOrderEntry);
-      } else if (catalogPdfPanel?.classList.contains('is-open')) {
-        closeCatalogPdf(showOrderEntry);
-      } else if (accountFormsPanel?.classList.contains('is-open')) {
-        closeAccountForms(showOrderEntry);
       } else {
-        showOrderEntry();
+        openContentCurtain(orderEntryPanel, trigger);
       }
     };
     orderEntryTriggers.forEach((trigger) => trigger.addEventListener('click', openOrderEntry));
@@ -927,25 +923,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const openAccountForms = (e) => {
       e.preventDefault();
       const trigger = e.currentTarget;
-      const showAccountForms = () => {
-        openContentCurtain(accountFormsPanel, trigger);
-      };
       if (accountFormsPanel.classList.contains('is-open')) {
         closeAccountForms();
-      } else if (contactPanel?.classList.contains('is-open')) {
-        closeContact(showAccountForms);
-      } else if (aboutPanel?.classList.contains('is-open')) {
-        closeAbout(showAccountForms);
-      } else if (catalogPanel?.classList.contains('is-open')) {
-        closeCatalog(showAccountForms);
-      } else if (masterlinkPanel?.classList.contains('is-open')) {
-        closeMasterlink(showAccountForms);
-      } else if (catalogPdfPanel?.classList.contains('is-open')) {
-        closeCatalogPdf(showAccountForms);
-      } else if (orderEntryPanel?.classList.contains('is-open')) {
-        closeOrderEntry(showAccountForms);
       } else {
-        showAccountForms();
+        openContentCurtain(accountFormsPanel, trigger);
       }
     };
     accountFormsTriggers.forEach((trigger) => trigger.addEventListener('click', openAccountForms));
