@@ -2,18 +2,15 @@
 .admin-header{ display:flex; align-items:center; justify-content:space-between; padding:22px var(--gutter); background:var(--pl-navy-deep); color:#fff; }
 .admin-brand img{ width:150px; filter:brightness(0) invert(1); }
 .admin-header .eyebrow{ color:var(--pl-gold-soft); }
-.admin-main{ width:min(100%,1040px); margin:0 auto; padding:clamp(42px,8vw,92px) var(--gutter); }
+.admin-main{ width:min(100%,1040px); margin:0 auto; padding:clamp(24px,4vw,48px) var(--gutter); }
 .admin-dashboard[hidden],.admin-auth-form[hidden],.admin-config[hidden]{ display:none; }
-.admin-dashboard-heading{ display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:30px; }
-.admin-dashboard h1{ margin-top:8px; color:var(--pl-navy); font-size:clamp(34px,6vw,52px); }
-.admin-module{ display:flex; align-items:center; justify-content:space-between; gap:24px; padding:28px 30px; border-top:3px solid var(--pl-gold); background:#fff; box-shadow:0 12px 36px rgba(13,24,48,.06); }
-.admin-module h2{ margin-top:6px; color:var(--pl-navy); font-size:clamp(22px,4vw,30px); }
-.admin-module p,.admin-config-block>p,.admin-config-heading p{ margin-top:8px; color:var(--pl-ink-soft); font-size:13px; line-height:1.55; }
-.admin-tabs{ display:flex; gap:4px; margin-top:24px; border-bottom:1px solid var(--pl-line); }
+.admin-dashboard-heading{ display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:12px; }
+.admin-dashboard h1{ margin-top:3px; color:var(--pl-navy); font-size:clamp(28px,4vw,36px); }
+.admin-config-block>p,.admin-config-heading p{ margin-top:8px; color:var(--pl-ink-soft); font-size:13px; line-height:1.55; }
+.admin-tabs{ display:flex; gap:4px; margin-top:0; border-bottom:1px solid var(--pl-line); }
 .admin-tab{ min-height:48px; padding:12px 20px; border:0; border-bottom:3px solid transparent; background:transparent; color:var(--pl-ink-soft); font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
 .admin-tab[aria-selected="true"]{ border-bottom-color:var(--pl-gold); color:var(--pl-navy); }
 .admin-tab:focus-visible{ outline:2px solid var(--pl-gold); outline-offset:-2px; }
-.admin-coming-soon{ padding:7px 12px; background:var(--pl-cream-dark); color:var(--pl-navy); font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
 .admin-config{ display:grid; gap:24px; margin-top:24px; }
 .admin-config-heading{ display:flex; align-items:center; justify-content:space-between; gap:20px; }
 .admin-config-heading h2{ margin-top:5px; color:var(--pl-navy); font-size:28px; }
@@ -108,7 +105,6 @@
   .admin-brand img{ width:126px; }
   .admin-header .eyebrow{ font-size:9px; text-align:right; }
   .admin-dashboard-heading{ align-items:flex-start; }
-  .admin-module{ align-items:flex-start; flex-direction:column; padding:22px; }
   .admin-config-block{ padding:22px; }
   .admin-careers-options{ grid-template-columns:minmax(0,1fr); }
   .admin-recipient-row,.admin-rule-row{ align-items:flex-start; flex-wrap:wrap; }
