@@ -12,6 +12,11 @@ const authStatus = document.querySelector('#authStatus');
 const signOutButton = document.querySelector('#signOutButton');
 const changeEmailButton = document.querySelector('#changeEmailButton');
 const contactConfig = document.querySelector('#contactConfig');
+const careersRoutingConfig = document.querySelector('#careersRoutingConfig');
+const careersRoutingStatus = document.querySelector('#careersRoutingStatus');
+const careersRecipientsList = document.querySelector('#careersRecipientsList');
+const newCareersRecipientEmail = document.querySelector('#newCareersRecipientEmail');
+const saveCareersRoutingButton = document.querySelector('#saveCareersRouting');
 const contactConfigStatus = document.querySelector('#contactConfigStatus');
 const generalRecipientsList = document.querySelector('#generalRecipientsList');
 const newRecipientEmail = document.querySelector('#newRecipientEmail');
@@ -25,8 +30,10 @@ const selectedStateChips = document.querySelector('#selectedStateChips');
 const ruleStateText = document.querySelector('#ruleStateText');
 const ruleRecipientsInput = document.querySelector('#ruleRecipients');
 let routingConfig = null;
+let careersRouting = null;
 let editingRuleId = null;
 let savedSnapshot = '';
+let savedCareersRecipients = '';
 let ruleEditorDirty = false;
 let selectedStateCodes = new Set();
 
@@ -168,6 +175,130 @@ const loadContactConfig = async () => {
   }
 };
 
+const setCareersRoutingStatus = (message, isError = false, isDirty = false) => {
+  careersRoutingStatus.textContent = message;
+  careersRoutingStatus.classList.toggle('is-error', isError);
+  careersRoutingStatus.classList.toggle('is-dirty', isDirty);
+};
+
+const renderCareersRecipients = () => {
+  careersRecipientsList.replaceChildren();
+  careersRouting.generalRecipients.forEach((recipient) => {
+    const row = document.createElement('div');
+    row.className = 'admin-recipient-row';
+    const email = document.createElement('span');
+    email.className = 'admin-recipient-email';
+    email.textContent = recipient.email;
+    const enabledLabel = document.createElement('label');
+    enabledLabel.className = 'admin-toggle-label';
+    const enabled = document.createElement('input');
+    enabled.type = 'checkbox';
+    enabled.checked = recipient.enabled;
+    enabled.setAttribute('aria-label', `Enable ${recipient.email} for Join Our Team`);
+    enabled.addEventListener('change', () => {
+      recipient.enabled = enabled.checked;
+      updateCareersRoutingDirtyStatus();
+    });
+    enabledLabel.append(enabled, document.createTextNode(' Enabled'));
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'admin-text-button';
+    remove.textContent = 'Remove';
+    remove.addEventListener('click', () => {
+      careersRouting.generalRecipients = careersRouting.generalRecipients.filter((item) => item.id !== recipient.id);
+      renderCareersRecipients();
+      updateCareersRoutingDirtyStatus();
+    });
+    row.append(email, enabledLabel, remove);
+    careersRecipientsList.append(row);
+  });
+};
+
+const updateCareersRoutingDirtyStatus = () => {
+  if (!careersRouting) return;
+  const changed = JSON.stringify(careersRouting.generalRecipients) !== savedCareersRecipients
+    || Boolean(newCareersRecipientEmail.value.trim());
+  if (changed) setCareersRoutingStatus('Unsaved changes — save before leaving this page.', false, true);
+  else setCareersRoutingStatus('All changes are saved.');
+};
+
+const loadCareersRouting = async () => {
+  careersRoutingConfig.hidden = false;
+  setCareersRoutingStatus('Loading Join Our Team recipients...');
+  try {
+    const response = await fetch('/api/admin/contact-routing?form=careers', {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store'
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Join Our Team recipients are unavailable.');
+    careersRouting = result;
+    renderCareersRecipients();
+    savedCareersRecipients = JSON.stringify(result.generalRecipients);
+    setCareersRoutingStatus(result.updatedAt
+      ? `Last saved: ${new Date(result.updatedAt).toLocaleString()}`
+      : 'Using the initial default recipient. Save to confirm configuration.');
+  } catch (error) {
+    careersRouting = null;
+    setCareersRoutingStatus(error.message || 'Join Our Team recipients could not be loaded.', true);
+  }
+};
+
+document.querySelector('#addCareersRecipientForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!careersRouting) return;
+  const email = newCareersRecipientEmail.value.trim();
+  if (careersRouting.generalRecipients.some((recipient) => recipient.email.toLowerCase() === email.toLowerCase())) {
+    setCareersRoutingStatus('That recipient is already in the Join Our Team list.', true);
+    return;
+  }
+  careersRouting.generalRecipients.push({ id: newId(), email, enabled: true });
+  newCareersRecipientEmail.value = '';
+  renderCareersRecipients();
+  updateCareersRoutingDirtyStatus();
+});
+
+newCareersRecipientEmail.addEventListener('input', updateCareersRoutingDirtyStatus);
+document.querySelector('#reloadCareersRouting').addEventListener('click', () => {
+  const hasChanges = careersRouting
+    && (JSON.stringify(careersRouting.generalRecipients) !== savedCareersRecipients || newCareersRecipientEmail.value.trim());
+  if (hasChanges && !window.confirm('Discard unsaved Join Our Team recipient changes and reload?')) return;
+  newCareersRecipientEmail.value = '';
+  loadCareersRouting();
+});
+
+saveCareersRoutingButton.addEventListener('click', async () => {
+  if (!careersRouting || saveCareersRoutingButton.disabled) return;
+  if (!careersRouting.generalRecipients.some((recipient) => recipient.enabled)) {
+    setCareersRoutingStatus('At least one Join Our Team recipient must remain enabled.', true);
+    return;
+  }
+  saveCareersRoutingButton.disabled = true;
+  setCareersRoutingStatus('Saving Join Our Team recipients...');
+  try {
+    const response = await fetch('/api/admin/contact-routing?form=careers', {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        generalRecipients: careersRouting.generalRecipients,
+        stateRules: []
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Join Our Team recipients could not be saved.');
+    careersRouting = result;
+    savedCareersRecipients = JSON.stringify(result.generalRecipients);
+    renderCareersRecipients();
+    setCareersRoutingStatus(`Saved: ${new Date(result.updatedAt).toLocaleString()}`);
+  } catch (error) {
+    setCareersRoutingStatus(error.message || 'Join Our Team recipients could not be saved.', true);
+  } finally {
+    saveCareersRoutingButton.disabled = false;
+  }
+});
+
 const selectedUsStates = () =>
   contactData.usStates.filter((state) => selectedStateCodes.has(state.code)).map((state) => state.code);
 
@@ -266,6 +397,7 @@ const loadSession = async () => {
   dashboard.hidden = false;
   if (authDialog.open) authDialog.close();
   loadContactConfig();
+  loadCareersRouting();
   await initializeCatalogGuestAdmin();
   return true;
 };
@@ -380,7 +512,11 @@ document.querySelector('#reloadContactConfig').addEventListener('click', () => {
 });
 
 window.addEventListener('beforeunload', (event) => {
-  if (!isConfigDirty()) return;
+  const careersDirty = careersRouting && (
+    JSON.stringify(careersRouting.generalRecipients) !== savedCareersRecipients
+    || Boolean(newCareersRecipientEmail.value.trim())
+  );
+  if (!isConfigDirty() && !careersDirty) return;
   event.preventDefault();
   event.returnValue = '';
 });
@@ -486,7 +622,11 @@ changeEmailButton.addEventListener('click', () => {
 });
 
 signOutButton.addEventListener('click', async () => {
-  if (isConfigDirty() && !window.confirm('You have unsaved changes. Sign out and discard them?')) return;
+  const careersDirty = careersRouting && (
+    JSON.stringify(careersRouting.generalRecipients) !== savedCareersRecipients
+    || Boolean(newCareersRecipientEmail.value.trim())
+  );
+  if ((isConfigDirty() || careersDirty) && !window.confirm('You have unsaved changes. Sign out and discard them?')) return;
   signOutButton.disabled = true;
   try {
     const response = await fetch('/api/admin/logout', {

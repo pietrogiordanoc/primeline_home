@@ -4,6 +4,11 @@
   functions = "netlify/functions"
 
 [[redirects]]
+  from = "/fullcareer/*"
+  to = "/home?open=careers"
+  status = 301
+
+[[redirects]]
   from = "/api/access/request-code"
   to = "/.netlify/functions/request-code"
   status = 200
@@ -21,6 +26,11 @@
 [[redirects]]
   from = "/api/careers/submit-application"
   to = "/.netlify/functions/submit-application"
+  status = 200
+
+[[redirects]]
+  from = "/api/careers/send-inquiry"
+  to = "/.netlify/functions/send-careers-inquiry"
   status = 200
 
 [[redirects]]

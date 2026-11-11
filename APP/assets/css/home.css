@@ -226,6 +226,7 @@
 }
 .side-drawers .nav-panel,
 .side-drawers .contact-panel,
+.side-drawers .careers-panel,
 .side-drawers .locations-panel,
 .side-drawers .about-panel,
 .side-drawers .catalog-panel,
@@ -249,6 +250,21 @@
   box-shadow: 20px 0 50px rgba(13,24,48,.1);
 }
 .contact-panel.is-open{ width: 52vw; }
+.careers-panel{
+  position: relative;
+  height: 100%;
+  flex: 0 0 auto;
+  width: 0;
+  min-width: 0;
+  background: #fff;
+  overflow: hidden;
+  container-type: inline-size;
+  transition: width .45s var(--ease);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 20px 0 50px rgba(13,24,48,.1);
+}
+.careers-panel.is-open{ width: 52vw; }
 .contact-panel-close{
   position: sticky;
   top: 0;
@@ -264,7 +280,31 @@
   background: #fff;
 }
 .contact-panel-close:hover{ color: var(--pl-navy); }
+.careers-panel-close{
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  align-self: flex-end;
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--pl-ink-soft);
+  padding: 22px 28px 8px;
+  background: #fff;
+}
+.careers-panel-close:hover{ color: var(--pl-navy); }
 .contact-panel-inner{
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 44px 44px;
+  width: 100%;
+}
+.careers-panel-inner{
   box-sizing: border-box;
   flex: 1 1 auto;
   min-height: 0;
@@ -277,7 +317,17 @@
   font-size: 30px;
   margin: 10px 0 14px;
 }
+.careers-panel-inner h2{
+  font-size: 30px;
+  margin: 10px 0 14px;
+}
 .contact-panel-inner > p:not(.contact-form-status){
+  color: var(--pl-ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.careers-panel-inner > p:not(.careers-form-status){
   color: var(--pl-ink-soft);
   font-size: 14px;
   line-height: 1.6;
@@ -347,6 +397,142 @@
   width: 1px;
   height: 1px;
   overflow: hidden;
+}
+.careers-form{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.careers-form > label,
+.careers-form > button,
+.careers-resume{ grid-column: 1 / -1; }
+.careers-form label,
+.careers-employment-status{
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--pl-ink-soft);
+}
+.careers-form input,
+.careers-form textarea,
+.careers-form select{
+  box-sizing: border-box;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--pl-ink);
+  border: none;
+  border-bottom: 1px solid var(--pl-line);
+  border-radius: 0;
+  padding: 7px 2px;
+  background: transparent;
+  resize: vertical;
+  transition: border-color .25s var(--ease);
+}
+.careers-form input:focus,
+.careers-form textarea:focus,
+.careers-form select:focus{ outline: none; border-color: var(--pl-navy); }
+.careers-form select{ cursor: pointer; }
+.careers-form textarea{ min-height: 112px; }
+.careers-form-grid{
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.careers-form label span,
+.careers-resume-heading span{
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.careers-employment-status{
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.careers-employment-status legend,
+.careers-resume-heading{
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--pl-ink-soft);
+}
+.careers-radio-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 14px;
+  margin-top: 8px;
+}
+.careers-radio-grid label{
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--pl-ink);
+}
+.careers-radio-grid input{
+  width: auto;
+  margin: 0;
+  accent-color: var(--pl-navy);
+}
+.careers-resume{
+  padding: 18px;
+  border: 1px solid var(--pl-line);
+  background: var(--pl-cream);
+}
+.careers-resume p{
+  margin: 7px 0 14px;
+  color: var(--pl-ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.careers-form input[type="file"]{
+  padding: 8px 0;
+  font-size: 12px;
+}
+.careers-form-honeypot{
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.careers-form button{
+  margin-top: 4px;
+  justify-self: start;
+  padding: 12px 30px;
+}
+.careers-form button:disabled{ opacity: .65; cursor: wait; }
+.careers-form-status{
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  border-left: 2px solid transparent;
+}
+.careers-form-status.is-success{
+  color: #286347;
+  background: #f3f7f3;
+  border-left-color: #286347;
+}
+.careers-form-status.is-error{
+  color: #a33a32;
+  background: #fcf3f2;
+  border-left-color: #a33a32;
 }
 .contact-form-status{
   margin: 0 0 14px;
@@ -1133,7 +1319,16 @@
     height: 100vh;
     height: 100dvh;
   }
+  .careers-panel.is-open{
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 4;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+  }
   .contact-panel-inner{ padding: 0 28px 32px; }
+  .careers-panel-inner{ padding: 0 28px 32px; }
   .contact-panel-inner > p{ margin-bottom: 28px; }
   .contact-form{ gap: 18px 16px; }
   .contact-form label{ gap: 8px; }
@@ -1143,6 +1338,13 @@
   .contact-form textarea{ height: auto; min-height: 0; }
   .contact-form-grid{ gap: 16px; }
   .contact-form button{ margin-top: 10px; padding: 15px 34px; }
+  .careers-form{ gap: 18px 16px; }
+  .careers-form label{ gap: 8px; }
+  .careers-form input,
+  .careers-form textarea,
+  .careers-form select{ padding: 8px 2px; }
+  .careers-form-grid{ gap: 16px; }
+  .careers-form button{ margin-top: 10px; padding: 15px 34px; }
   .side-drawers:has(.contact-panel.is-open) .locations-panel{
     width: 0;
     visibility: hidden;
@@ -1366,6 +1568,7 @@
     outline-offset: -3px;
   }
   .side-drawers > .contact-panel.is-open,
+  .side-drawers > .careers-panel.is-open,
   .side-drawers > .about-panel.is-open,
   .side-drawers > .catalog-panel.is-open,
   .side-drawers > .catalog-pdf-panel.is-open,
@@ -1385,18 +1588,29 @@
   .side-drawers > .contact-panel.is-open{
     overflow: hidden;
   }
-  .contact-panel-close{ display: none; }
+  .side-drawers > .careers-panel.is-open{ overflow: hidden; }
+  .contact-panel-close,
+  .careers-panel-close{ display: none; }
   .contact-panel-inner{
     width: 100%;
     padding: 78px clamp(18px, 5vw, 32px) 32px;
   }
+  .careers-panel-inner{
+    width: 100%;
+    padding: 78px clamp(18px, 5vw, 32px) 32px;
+  }
   .contact-form,
-  .contact-form-grid{ grid-template-columns: minmax(0, 1fr); }
+  .contact-form-grid,
+  .careers-form,
+  .careers-form-grid{ grid-template-columns: minmax(0, 1fr); }
   .contact-form-grid{ gap: 12px; }
   .contact-form label{ min-width: 0; }
   .contact-form input,
   .contact-form textarea,
-  .contact-form select{ max-width: 100%; }
+  .contact-form select,
+  .careers-form input,
+  .careers-form textarea,
+  .careers-form select{ max-width: 100%; }
   .side-drawers.is-contact-mobile .locations-panel.is-open{
     position: fixed;
     z-index: 4;

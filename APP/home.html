@@ -7,7 +7,7 @@
 <meta name="description" content="Prime Line - Importers of Selected Specialty Foods.">
 <link rel="icon" type="image/gif" href="images/favicon.gif">
 <link rel="stylesheet" href="assets/css/base.css?v=20261028-1">
-<link rel="stylesheet" href="assets/css/home.css?v=20261030-1">
+<link rel="stylesheet" href="assets/css/home.css?v=20261111-1">
 <link rel="stylesheet" href="assets/css/category-vegetables.css?v=20261028-1">
 <link rel="stylesheet" href="assets/css/cheese.css">
 <link rel="stylesheet" href="assets/css/cured-meats.css?v=20261016-1">
@@ -57,7 +57,7 @@
       <li><a href="https://www.primelinecoffee.com/" target="_blank" rel="noopener noreferrer">Coffee Division</a></li>
       <li><a href="#" class="order-entry-trigger">Order Entry</a></li>
       <li><a href="#" class="account-forms-trigger">New Account Setup Forms</a></li>
-      <li><a href="#" class="careers-trigger">Careers</a></li>
+      <li><a href="#" class="careers-trigger">Join Our Team</a></li>
       <li><a href="#" class="contact-trigger">Contact Us</a></li>
       <li hidden><a href="#" class="masterlink-trigger">Masterlink</a></li>
     </ul>
@@ -125,6 +125,77 @@
         </div>
         <label for="contactMessage">Message<textarea id="contactMessage" name="message" rows="4" maxlength="5000" required></textarea></label>
         <button type="submit" class="btn btn--dark">Send Message</button>
+      </form>
+    </div>
+  </aside>
+
+  <aside class="careers-panel" id="careersPanel" aria-hidden="true">
+    <button type="button" class="careers-panel-close" aria-label="Close Careers">&times;</button>
+    <div class="careers-panel-inner">
+      <span class="eyebrow">Careers</span>
+      <h2>Join Our Team</h2>
+      <p>Thank you for your interest in working with Prime Line. Tell us about yourself and the opportunity you are interested in.</p>
+      <p class="careers-form-status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+      <form class="careers-form">
+        <div class="careers-form-honeypot" aria-hidden="true">
+          <label>Leave this field empty<input type="text" name="careers_website" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <label for="careerName">Full Name<input id="careerName" type="text" name="name" autocomplete="name" maxlength="160" required></label>
+        <div class="careers-form-grid">
+          <label for="careerEmail">Email Address<input id="careerEmail" type="email" name="email" autocomplete="email" maxlength="254" required></label>
+          <label for="careerPhone">Phone Number<input id="careerPhone" type="tel" name="phone" autocomplete="tel" maxlength="50" required></label>
+        </div>
+        <div class="careers-form-grid">
+          <label for="careerPosition">Position of Interest
+            <select id="careerPosition" name="position" required>
+              <option value="" selected disabled>Select a position</option>
+              <option>Accounts Payable</option>
+              <option>Administration</option>
+              <option>Coffee Service</option>
+              <option>Driver</option>
+              <option>Receiving Clerk</option>
+              <option>Warehouse Receiving Clerk — New York</option>
+              <option>Warehouse Selector</option>
+              <option>Customer Service / Administrative Assistant — New York</option>
+              <option>Other / General Inquiry</option>
+            </select>
+          </label>
+          <label for="careerDivision">Division or Location of Interest
+            <select id="careerDivision" name="division" required>
+              <option value="" selected disabled>Select a division or location</option>
+              <option>Florida</option>
+              <option>Central Florida</option>
+              <option>Orlando, Florida</option>
+              <option>New York, New York</option>
+              <option>Las Vegas, Nevada</option>
+              <option>Los Angeles, California</option>
+            </select>
+          </label>
+        </div>
+        <div class="careers-form-grid">
+          <label for="careerStartDate">Available Start Date<input id="careerStartDate" type="date" name="startDate" required></label>
+          <fieldset class="careers-employment-status">
+            <legend>Current Employment Status</legend>
+            <div class="careers-radio-grid">
+              <label><input type="radio" name="employmentStatus" value="Employed" required> Employed</label>
+              <label><input type="radio" name="employmentStatus" value="Self-Employed"> Self-Employed</label>
+              <label><input type="radio" name="employmentStatus" value="Unemployed"> Unemployed</label>
+              <label><input type="radio" name="employmentStatus" value="Student"> Student</label>
+            </div>
+          </fieldset>
+        </div>
+        <label for="careerMessage">Cover Letter or Message <span>(Optional)</span>
+          <textarea id="careerMessage" name="message" rows="5" maxlength="2000" placeholder="Tell us why you are interested in joining Prime Line and anything you would like our team to know."></textarea>
+        </label>
+        <div class="careers-resume">
+          <span class="careers-resume-heading">Résumé <span>(Optional)</span></span>
+          <p>Upload a PDF, DOC, or DOCX file, or share a link to your résumé.</p>
+          <div class="careers-form-grid">
+            <label for="careerResume">Upload Résumé<input id="careerResume" type="file" name="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></label>
+            <label for="careerResumeLink">Résumé Link<input id="careerResumeLink" type="url" name="resumeLink" autocomplete="url" maxlength="2048" placeholder="https://"></label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn--dark">Send Your Inquiry</button>
       </form>
     </div>
   </aside>
@@ -404,7 +475,7 @@
         <li><a href="#" class="about-trigger">About Us</a></li>
         <li><a href="https://www.primelinecoffee.com/" target="_blank" rel="noopener noreferrer">Coffee Division</a></li>
         <li><a href="#" class="account-forms-trigger">New Account Setup Forms</a></li>
-        <li><a href="#" class="careers-trigger">Careers</a></li>
+        <li><a href="#" class="careers-trigger">Join Our Team</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -434,16 +505,9 @@
   <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 14 7-7 7 7M12 8v12"/></svg>
 </button>
 
-<div class="careers-modal" aria-hidden="true">
-  <section class="careers-modal-content" role="dialog" aria-modal="true" aria-labelledby="careers-title">
-    <button type="button" class="careers-modal-close" aria-label="Close Careers form">&times;</button>
-    <h2 id="careers-title">Careers</h2>
-    <div class="careers-form-container"></div>
-  </section>
-</div>
-
 <script src="assets/js/contact-form-data.js?v=20261028-1"></script>
 <script src="assets/js/contact-form.js?v=20261028-1"></script>
-<script src="assets/js/main.js?v=20261030-3"></script>
+<script src="assets/js/main.js?v=20261111-1"></script>
+<script src="assets/js/careers-form.js?v=20261111-1"></script>
 </body>
 </html>

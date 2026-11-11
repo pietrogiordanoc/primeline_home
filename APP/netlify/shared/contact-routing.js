@@ -3,6 +3,7 @@ import '../../assets/js/contact-form-data.js';
 const DEFAULT_EMAIL = 'info@primelinedist.com';
 export const CONTACT_ROUTING_STORE_NAME = 'prime-line-contact-routing';
 export const CONTACT_ROUTING_CONFIG_KEY = 'contact-routing-config';
+export const CAREERS_ROUTING_CONFIG_KEY = 'careers-routing-config';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATA = globalThis.PRIME_LINE_CONTACT_DATA;
@@ -195,14 +196,19 @@ const normalizeStoredConfig = (document) => {
   return { ...result.config, updatedAt: document.updatedAt };
 };
 
-export const loadRoutingConfig = async (store) => {
+export const loadRoutingConfig = async (store, configKey = CONTACT_ROUTING_CONFIG_KEY) => {
   const blobStore = store || await getContactRoutingStore();
-  const document = await blobStore.get(CONTACT_ROUTING_CONFIG_KEY, { type: 'json' });
+  const document = await blobStore.get(configKey, { type: 'json' });
   if (!document) return { ...DEFAULT_ROUTING_CONFIG, updatedAt: null };
   return normalizeStoredConfig(document);
 };
 
-export const saveRoutingConfig = async (config, store, context) => {
+export const saveRoutingConfig = async (
+  config,
+  store,
+  context,
+  configKey = CONTACT_ROUTING_CONFIG_KEY
+) => {
   if (!isProductionContext(context)) {
     throw new Error('Contact routing configuration can only be changed in production.');
   }
@@ -214,6 +220,6 @@ export const saveRoutingConfig = async (config, store, context) => {
     updatedAt: new Date().toISOString()
   };
   const blobStore = store || await getContactRoutingStore();
-  await blobStore.setJSON(CONTACT_ROUTING_CONFIG_KEY, document);
+  await blobStore.setJSON(configKey, document);
   return document;
 };

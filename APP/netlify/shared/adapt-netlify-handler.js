@@ -4,6 +4,7 @@ export const adaptNetlifyHandler = (handler) => async (request, context) => {
   const event = {
     httpMethod: request.method,
     headers,
+    queryStringParameters: Object.fromEntries(new URL(request.url).searchParams.entries()),
     body: request.body === null ? null : await request.text(),
     isBase64Encoded: false
   };

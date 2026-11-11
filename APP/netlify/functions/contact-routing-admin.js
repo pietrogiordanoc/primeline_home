@@ -5,6 +5,8 @@ import {
   requireAdminRequest
 } from '../shared/admin-auth.js';
 import {
+  CAREERS_ROUTING_CONFIG_KEY,
+  CONTACT_ROUTING_CONFIG_KEY,
   isProductionContext,
   loadRoutingConfig,
   saveRoutingConfig,
@@ -12,6 +14,12 @@ import {
 } from '../shared/contact-routing.js';
 
 const MAX_CONFIG_BYTES = 1024 * 1024;
+const getConfigKey = (event) => {
+  const form = event.queryStringParameters?.form || 'contact';
+  if (form === 'contact') return CONTACT_ROUTING_CONFIG_KEY;
+  if (form === 'careers') return CAREERS_ROUTING_CONFIG_KEY;
+  return null;
+};
 
 const handler = async (event, context) => {
   if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT') {
@@ -32,12 +40,15 @@ const handler = async (event, context) => {
     );
   }
 
+  const configKey = getConfigKey(event);
+  if (!configKey) return jsonResponse({ error: 'Unknown inquiry form.' }, 400);
+
   if (event.httpMethod === 'GET') {
     try {
-      return jsonResponse(await loadRoutingConfig());
+      return jsonResponse(await loadRoutingConfig(undefined, configKey));
     } catch (error) {
-      console.error('Contact routing configuration could not be loaded.', error);
-      return jsonResponse({ error: 'Contact routing configuration is unavailable.' }, 503);
+      console.error('Inquiry routing configuration could not be loaded.', error);
+      return jsonResponse({ error: 'Inquiry routing configuration is unavailable.' }, 503);
     }
   }
 
@@ -56,10 +67,10 @@ const handler = async (event, context) => {
   if (!validation.ok) return jsonResponse({ error: validation.error }, 400);
 
   try {
-    return jsonResponse(await saveRoutingConfig(validation.config, undefined, context));
+    return jsonResponse(await saveRoutingConfig(validation.config, undefined, context, configKey));
   } catch (error) {
-    console.error('Contact routing configuration could not be saved.', error);
-    return jsonResponse({ error: 'Contact routing configuration could not be saved.' }, 503);
+    console.error('Inquiry routing configuration could not be saved.', error);
+    return jsonResponse({ error: 'Inquiry routing configuration could not be saved.' }, 503);
   }
 };
 

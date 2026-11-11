@@ -126,8 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const accountFormsPanel = document.querySelector('.account-forms-panel');
   const accountFormsPanelClose = accountFormsPanel?.querySelector('.account-forms-panel-close');
   const accountFormsTriggers = document.querySelectorAll('.account-forms-trigger');
-  const careersModal = document.querySelector('.careers-modal');
-  const careersModalClose = careersModal?.querySelector('.careers-modal-close');
+  const careersPanel = document.querySelector('.careers-panel');
+  const careersPanelClose = careersPanel?.querySelector('.careers-panel-close');
   const careersTriggers = document.querySelectorAll('.careers-trigger');
   const curtainTransitionMs = 500;
   const mobileCurtainQuery = window.matchMedia('(max-width: 767px)');
@@ -138,7 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
     catalogPanel,
     catalogPdfPanel,
     orderEntryPanel,
-    accountFormsPanel
+    accountFormsPanel,
+    careersPanel
   ].filter(Boolean);
 
   const contactInfo = document.querySelector('.contact-info');
@@ -331,6 +332,13 @@ document.addEventListener('DOMContentLoaded', () => {
     else restoreMenuFocus();
   };
 
+  const closeCareers = (onClosed) => {
+    careersPanel?.classList.remove('is-open');
+    syncCurtainState();
+    if (onClosed) setTimeout(onClosed, curtainTransitionMs);
+    else restoreMenuFocus();
+  };
+
   if (menuToggle && navPanel && navOverlay) {
     const openMenu = () => {
       openNavigation();
@@ -345,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const hadCatalogPdfOpen = catalogPdfPanel?.classList.contains('is-open');
       const hadOrderEntryOpen = orderEntryPanel?.classList.contains('is-open');
       const hadAccountFormsOpen = accountFormsPanel?.classList.contains('is-open');
+      const hadCareersOpen = careersPanel?.classList.contains('is-open');
       closeContact();
       closeAbout();
       closeCatalog();
@@ -352,12 +361,13 @@ document.addEventListener('DOMContentLoaded', () => {
       closeCatalogPdf();
       closeOrderEntry();
       closeAccountForms();
+      closeCareers();
       setTimeout(() => {
         navPanel.classList.remove('is-open');
         navOverlay.classList.remove('is-open');
         syncCurtainState();
         if (mobileCurtainQuery.matches) menuToggle.focus({ preventScroll: true });
-      }, (hadContactOpen || hadAboutOpen || hadCatalogOpen || hadMasterlinkOpen || hadCatalogPdfOpen || hadOrderEntryOpen || hadAccountFormsOpen) ? 420 : 0);
+      }, (hadContactOpen || hadAboutOpen || hadCatalogOpen || hadMasterlinkOpen || hadCatalogPdfOpen || hadOrderEntryOpen || hadAccountFormsOpen || hadCareersOpen) ? 420 : 0);
     };
     menuToggle.addEventListener('click', openMenu);
     navOverlay.addEventListener('click', closeMenu);
@@ -367,55 +377,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (careersModal && careersTriggers.length) {
-    let careersTriggerToRestore = null;
-    let careersFormLoaded = false;
-    const careersFormContainer = careersModal.querySelector('.careers-form-container');
-    const loadCareersForm = () => {
-      if (careersFormLoaded || !careersFormContainer) return;
-      careersFormLoaded = true;
-      if (window.location.protocol === 'file:') {
-        const fallback = document.createElement('div');
-        fallback.className = 'careers-form-fallback';
-        const message = document.createElement('p');
-        message.textContent = 'The application form cannot be embedded when this page is opened directly from a file. Open it in a new tab instead.';
-        const link = document.createElement('a');
-        link.href = 'https://form.123formbuilder.com/5066781';
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = 'Open job application form';
-        fallback.append(message, link);
-        careersFormContainer.append(fallback);
+  if (careersPanel && careersTriggers.length) {
+    const openCareers = (e) => {
+      e.preventDefault();
+      const trigger = e.currentTarget;
+      if (careersPanel.classList.contains('is-open')) {
+        closeCareers();
         return;
       }
-      const formFrame = document.createElement('iframe');
-      formFrame.src = 'https://form.123formbuilder.com/5066781';
-      formFrame.title = 'Job Application Form';
-      formFrame.loading = 'lazy';
-      careersFormContainer.append(formFrame);
+      const showCareers = () => openContentCurtain(careersPanel, trigger);
+      if (contactPanel?.classList.contains('is-open')) {
+        closeContact(showCareers);
+      } else if (aboutPanel?.classList.contains('is-open')) {
+        closeAbout(showCareers);
+      } else if (catalogPanel?.classList.contains('is-open')) {
+        closeCatalog(showCareers);
+      } else if (masterlinkPanel?.classList.contains('is-open')) {
+        closeMasterlink(showCareers);
+      } else if (catalogPdfPanel?.classList.contains('is-open')) {
+        closeCatalogPdf(showCareers);
+      } else if (orderEntryPanel?.classList.contains('is-open')) {
+        closeOrderEntry(showCareers);
+      } else if (accountFormsPanel?.classList.contains('is-open')) {
+        closeAccountForms(showCareers);
+      } else {
+        showCareers();
+      }
     };
-    const closeCareersModal = () => {
-      careersModal.classList.remove('is-open');
-      careersModal.setAttribute('aria-hidden', 'true');
-      careersTriggerToRestore?.focus();
-    };
-    careersTriggers.forEach((trigger) => {
-      trigger.addEventListener('click', (e) => {
-        e.preventDefault();
-        careersTriggerToRestore = trigger;
-        loadCareersForm();
-        careersModal.classList.add('is-open');
-        careersModal.setAttribute('aria-hidden', 'false');
-        careersModalClose?.focus();
-      });
-    });
-    careersModalClose?.addEventListener('click', closeCareersModal);
-    careersModal.addEventListener('click', (e) => {
-      if (e.target === careersModal) closeCareersModal();
-    });
+    careersTriggers.forEach((trigger) => trigger.addEventListener('click', openCareers));
+    careersPanelClose?.addEventListener('click', closeCareers);
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && careersModal.classList.contains('is-open')) closeCareersModal();
+      if (e.key === 'Escape') closeCareers();
     });
+    if (new URLSearchParams(window.location.search).get('open') === 'careers') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('open');
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+      openCareers({ preventDefault: () => {}, currentTarget: careersTriggers[0] });
+    }
   }
 
   // Contact opens as a second curtain alongside the menu, with locations as a third. Clicking another curtain closes this one first.

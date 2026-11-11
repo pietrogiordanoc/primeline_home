@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  CAREERS_ROUTING_CONFIG_KEY,
   CONTACT_ROUTING_CONFIG_KEY,
   CONTACT_ROUTING_STORE_NAME,
   isProductionContext,
@@ -105,6 +106,28 @@ test('saves and reads the single configuration document across store instances',
   assert.equal(blobs.has(CONTACT_ROUTING_CONFIG_KEY), true);
 });
 
+test('stores Contact and Careers routing documents independently in the same Blob store', async () => {
+  const blobs = new Map();
+  const store = createMemoryStore(blobs);
+  const contactConfig = {
+    generalRecipients: [{ id: 'contact-general', email: 'contact@example.com', enabled: true }],
+    stateRules: []
+  };
+  const careersConfig = {
+    generalRecipients: [{ id: 'careers-general', email: 'hr@example.com', enabled: true }],
+    stateRules: []
+  };
+
+  await saveRoutingConfig(contactConfig, store, { deploy: { context: 'production' } });
+  await saveRoutingConfig(careersConfig, store, { deploy: { context: 'production' } }, CAREERS_ROUTING_CONFIG_KEY);
+
+  assert.equal(blobs.size, 2);
+  assert.deepEqual((await loadRoutingConfig(store)).generalRecipients, contactConfig.generalRecipients);
+  assert.deepEqual((await loadRoutingConfig(store, CAREERS_ROUTING_CONFIG_KEY)).generalRecipients, careersConfig.generalRecipients);
+  assert.equal(blobs.has(CONTACT_ROUTING_CONFIG_KEY), true);
+  assert.equal(blobs.has(CAREERS_ROUTING_CONFIG_KEY), true);
+});
+
 test('migrates saved single-state rules to states arrays without losing settings', async () => {
   const legacyDocument = {
     generalRecipients: [{ id: 'legacy-general', email: 'all@example.com', enabled: false }, {
@@ -162,19 +185,19 @@ test('surfaces Blob read and write failures', async () => {
   );
 });
 
-test('Netlify handler adapter forwards production and preview deploy contexts', async () => {
-  const handler = adaptNetlifyHandler(async (_event, context) =>
-    new Response(context.deploy.context)
+test('Netlify handler adapter forwards production context and URL query parameters', async () => {
+  const handler = adaptNetlifyHandler(async (event, context) =>
+    new Response(`${context.deploy.context}:${event.queryStringParameters.form}`)
   );
-  const request = new Request('https://primelinedist.com/api/admin/contact-routing');
+  const request = new Request('https://primelinedist.com/api/admin/contact-routing?form=careers');
 
   assert.equal(
     await (await handler(request, { deploy: { context: 'production' } })).text(),
-    'production'
+    'production:careers'
   );
   assert.equal(
-    await (await handler(request, { deploy: { context: 'deploy-preview' } })).text(),
-    'deploy-preview'
+    await (await handler(new Request('https://primelinedist.com/api/admin/contact-routing?form=contact'), { deploy: { context: 'deploy-preview' } })).text(),
+    'deploy-preview:contact'
   );
 });
 
