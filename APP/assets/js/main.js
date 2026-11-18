@@ -2280,7 +2280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function defaultDetailTemplate(data) {
       const action = data.title === 'Crafted for the Art of Pastry'
-        ? '<a class="btn btn--dark banner-caption-action" href="home.html?category=baking_and_pastry#categoryDetail">Explore the Full Collection</a>'
+        ? '<a class="btn btn--dark banner-caption-action" href="/?category=baking_and_pastry#categoryDetail">Explore the Full Collection</a>'
         : '';
       return `
         <section class="banner-caption">

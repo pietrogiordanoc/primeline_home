@@ -5,7 +5,7 @@
 
 [[redirects]]
   from = "/fullcareer/*"
-  to = "/home?open=careers"
+  to = "/?open=careers"
   status = 301
 
 [[redirects]]
