@@ -918,6 +918,7 @@
 .catalog-choice-pdf .catalog-choice-copy{ background: #fff; }
 .catalog-choice-copy strong{ color: var(--pl-navy); font-family: var(--font-serif); font-size: 21px; }
 .catalog-choice-copy > span:not(.catalog-choice-link){ color: var(--pl-ink-soft); font-size: 13px; line-height: 1.55; }
+.catalog-choice-copy > .catalog-choice-access:not(.catalog-choice-link){ color: var(--pl-navy); font-weight: 600; }
 .catalog-choice-link{ margin-top: auto; padding-top: 8px; color: var(--pl-navy); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .catalog-session-status{
   margin: 14px 0 0;
@@ -1062,6 +1063,38 @@
   font: inherit;
   color: var(--pl-ink);
 }
+.catalog-email-field{
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--pl-line);
+}
+.masterlink-form .catalog-email-field input{
+  min-width: 0;
+  flex: 1 1 0;
+  border: 0;
+  padding-right: 4px;
+}
+.catalog-email-domain{
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 4px;
+  color: var(--pl-navy);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.catalog-email-field:focus-within{ outline: 2px solid var(--pl-navy); outline-offset: 2px; }
+.catalog-pdf-invitation{
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--pl-line);
+  color: var(--pl-ink-soft);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.catalog-pdf-invitation strong{ color: var(--pl-navy); }
+.catalog-pdf-invitation p{ margin: 6px 0 0; }
+.catalog-pdf-invitation a{ color: var(--pl-navy); font-weight: 600; }
 .masterlink-form .btn{ justify-content: center; background: var(--pl-navy); color: #fff; cursor: pointer; }
 .masterlink-form .btn:disabled{ opacity: .55; cursor: wait; }
 .access-code-form input{
@@ -1090,6 +1123,7 @@
   font: inherit;
   font-size: 12px;
 }
+.masterlink-back[hidden]{ display: none; }
 
 /* ---------- Order entry and new-account document curtains ---------- */
 .order-entry-panel,

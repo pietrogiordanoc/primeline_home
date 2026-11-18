@@ -683,6 +683,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = panel.querySelector('.masterlink-status');
     const backButton = panel.querySelector('.masterlink-back');
     const lead = panel.querySelector('.masterlink-lead');
+    const initialLead = lead?.textContent || '';
+    const isCatalogPdf = resourceName === 'catalog-pdf';
+    const companyDomain = '@primelinedist.com';
     let email = '';
 
     const showStatus = (message, isError = false) => {
@@ -691,10 +694,19 @@ document.addEventListener('DOMContentLoaded', () => {
       status.classList.toggle('is-error', isError);
     };
 
+    if (isCatalogPdf) {
+      emailInput?.addEventListener('input', () => {
+        if (emailInput.value.trim().toLowerCase().endsWith(companyDomain)) {
+          emailInput.value = emailInput.value.trim().slice(0, -companyDomain.length);
+        }
+      });
+    }
+
     emailForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       email = emailInput?.value.trim().toLowerCase() || '';
-      if (!email.endsWith('@primelinedist.com')) {
+      if (isCatalogPdf && email && !email.includes('@')) email += companyDomain;
+      if (!/^[^\s@]+@primelinedist\.com$/.test(email)) {
         showStatus('Please use your company email address.', true);
         return;
       }
@@ -733,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
       codeForm.hidden = true;
       backButton.hidden = true;
       codeInput.value = '';
-      if (lead) lead.textContent = 'Enter your company email to receive a 3-digit access code.';
+      if (lead) lead.textContent = initialLead;
       showStatus('');
       if (focusEmail) emailInput?.focus();
     };

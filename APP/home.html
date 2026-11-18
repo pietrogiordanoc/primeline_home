@@ -7,7 +7,7 @@
 <meta name="description" content="Prime Line - Importers of Selected Specialty Foods.">
 <link rel="icon" type="image/gif" href="images/favicon.gif">
 <link rel="stylesheet" href="assets/css/base.css?v=20261028-1">
-<link rel="stylesheet" href="assets/css/home.css?v=20261111-2">
+<link rel="stylesheet" href="assets/css/home.css?v=20261118-1">
 <link rel="stylesheet" href="assets/css/category-vegetables.css?v=20261028-1">
 <link rel="stylesheet" href="assets/css/cheese.css">
 <link rel="stylesheet" href="assets/css/cured-meats.css?v=20261016-1">
@@ -324,6 +324,7 @@
           <span class="catalog-choice-copy">
             <strong>Catalog PDF</strong>
             <span>View the product catalog as a digital book.</span>
+            <span class="catalog-choice-access">Customers: access by invitation only. Ask your Prime Line sales representative.</span>
             <span class="catalog-choice-link">Explore Catalog PDF</span>
           </span>
         </a>
@@ -382,9 +383,12 @@
           <span class="access-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="16" cy="16" r="8"></circle><path d="M22 22 40 40M33 33l5-5M28 28l5-5"></path></svg></span>
           <span class="eyebrow">Private Access</span>
           <h2 class="masterlink-title">Catalog PDF</h2>
-          <p class="masterlink-lead">Enter your company email to receive a 3-digit access code.</p>
+          <p class="masterlink-lead">Prime Line staff: enter your company email to receive a 3-digit access code.</p>
           <form class="masterlink-form access-email-form catalog-pdf-form">
-            <input type="email" name="access-email" placeholder="Email address" autocomplete="email" required>
+            <div class="catalog-email-field">
+              <input type="text" name="access-email" placeholder="Email name" aria-label="Company email name, before @primelinedist.com" autocomplete="email" inputmode="email" required>
+              <span class="catalog-email-domain" aria-hidden="true">@primelinedist.com</span>
+            </div>
             <button type="submit" class="btn">Send access code</button>
           </form>
           <form class="masterlink-form access-code-form" hidden>
@@ -393,6 +397,11 @@
           </form>
           <p class="masterlink-status catalog-pdf-status" aria-live="polite"></p>
           <button type="button" class="masterlink-back" hidden>Use a different email</button>
+          <div class="catalog-pdf-invitation">
+            <strong>Interested in viewing this catalog?</strong>
+            <p>Customer access is by invitation only. Ask your Prime Line sales representative for access.</p>
+            <p>Not a customer yet? <a href="#contact" class="contact-trigger">Contact us</a>.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -549,7 +558,7 @@
 
 <script src="assets/js/contact-form-data.js?v=20261028-1"></script>
 <script src="assets/js/contact-form.js?v=20261028-1"></script>
-<script src="assets/js/main.js?v=20261111-2"></script>
+<script src="assets/js/main.js?v=20261118-1"></script>
 <script src="assets/js/careers-form.js?v=20261111-3"></script>
 </body>
 </html>
