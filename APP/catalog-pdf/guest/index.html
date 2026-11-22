@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <meta name="description" content="Magic Link access to the Prime Line Specialty Foods Catalog.">
   <title>Prime Line Catalog Access</title>
@@ -24,19 +24,21 @@
           <a id="guestInviterEmail"></a>
         </div>
       </div>
-      <a class="guest-home-link" href="/">Back to Home</a>
-      <div class="catalog-mode" id="catalogMode" hidden>
-        <button class="catalog-mode-switch" id="guestWebTransfer" type="button" aria-describedby="catalogModeExplanation" aria-description="Touch and hold to show the catalog mode explanation.">VIEW AS WEB CATALOG</button>
-        <div class="catalog-mode-popover" id="catalogModeExplanation" role="tooltip" hidden>
-          <div class="catalog-mode-popover-content">
-            <h2>Two Ways to Explore Our Catalog</h2>
-            <p>Enjoy the Prime Line catalog in two different viewing modes.</p>
-            <p><strong>Web Mode</strong><br>Browse products, search by name or SKU, create wishlists and prepare quotes.</p>
-            <p><strong>Magazine Mode</strong><br>Explore our digital catalog page by page, just like a traditional magazine.</p>
-            <p>Both modes showcase Prime Line products. Interactive features are available in Web Mode.</p>
+      <nav class="guest-header-actions" aria-label="Catalog actions">
+        <a class="guest-home-link" href="/"><svg class="catalog-mobile-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6"></path></svg><span class="catalog-desktop-label">Back to Home</span><span class="catalog-mobile-label">Home</span></a>
+        <div class="catalog-mode" id="catalogMode" hidden>
+          <button class="catalog-mode-switch" id="guestWebTransfer" type="button" aria-describedby="catalogModeExplanation" aria-description="Touch and hold to show the catalog mode explanation."><svg class="catalog-mobile-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"></path></svg>VIEW AS WEB CATALOG</button>
+          <div class="catalog-mode-popover" id="catalogModeExplanation" role="tooltip" hidden>
+            <div class="catalog-mode-popover-content">
+              <h2>Two Ways to Explore Our Catalog</h2>
+              <p>Enjoy the Prime Line catalog in two different viewing modes.</p>
+              <p><strong>Web Mode</strong><br>Browse products, search by name or SKU, create wishlists and prepare quotes.</p>
+              <p><strong>Magazine Mode</strong><br>Explore our digital catalog page by page, just like a traditional magazine.</p>
+              <p>Both modes showcase Prime Line products. Interactive features are available in Web Mode.</p>
+            </div>
           </div>
         </div>
-      </div>
+      </nav>
     </div>
   </header>
 

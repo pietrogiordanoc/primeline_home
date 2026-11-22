@@ -20,6 +20,7 @@ body{
   gap:clamp(16px,2.4vw,34px);
   min-width:0;
 }
+.guest-header-actions{display:contents}
 .guest-brand img{display:block;width:clamp(125px,10vw,150px);height:auto}
 .guest-home-link{
   flex:none;

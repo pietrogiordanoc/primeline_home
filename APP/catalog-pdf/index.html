@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Prime Line Autumn 2026 product catalog.">
   <title>Prime Line Catalog — Autumn 2026</title>
   <link rel="icon" type="image/gif" href="/images/favicon.gif">
@@ -17,19 +17,20 @@
     </a>
     <nav class="catalog-header-actions" aria-label="Catalog actions">
       <a class="catalog-header-button catalog-back" href="/" aria-label="Back to Home">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"></path></svg>
-        <span>Back to Home</span>
+        <svg class="catalog-desktop-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"></path></svg>
+        <svg class="catalog-mobile-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6"></path></svg>
+        <span class="catalog-desktop-label">Back to Home</span><span class="catalog-mobile-label">Home</span>
       </a>
       <a class="catalog-action catalog-download" id="staffDownloadButton" href="/api/catalog/staff/download" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18v3h14v-3"></path></svg>
-        <span><strong>DOWNLOAD PDF</strong><small>PRIME LINE STAFF ONLY</small></span>
+        <span class="catalog-desktop-label"><strong>DOWNLOAD PDF</strong><small>PRIME LINE STAFF ONLY</small></span><span class="catalog-mobile-label">Download</span>
       </a>
       <button class="catalog-header-button catalog-share" id="shareCatalogButton" type="button" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.7 10.6 6.6-4.1m-6.6 7 6.6 4"></path></svg>
-        <span>Share Catalog</span>
+        <span class="catalog-desktop-label">Share Catalog</span><span class="catalog-mobile-label">Share</span>
       </button>
       <div class="catalog-mode" id="catalogMode" hidden>
-        <a class="catalog-mode-switch" href="https://catalog.primelinedist.com" aria-describedby="catalogModeExplanation" aria-description="Touch and hold to show the catalog mode explanation.">VIEW AS WEB CATALOG</a>
+        <a class="catalog-mode-switch" href="https://catalog.primelinedist.com" aria-describedby="catalogModeExplanation" aria-description="Touch and hold to show the catalog mode explanation."><svg class="catalog-mobile-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"></path></svg>VIEW AS WEB CATALOG</a>
         <div class="catalog-mode-popover" id="catalogModeExplanation" role="tooltip" hidden>
           <div class="catalog-mode-popover-content">
             <h2>Two Ways to Explore Our Catalog</h2>
