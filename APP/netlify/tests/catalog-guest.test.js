@@ -870,42 +870,57 @@ test('staff Catalog Mode appears only after the employee session is verified', a
   }
 });
 
-test('Catalog Mode explanation supports hover, focus, toggle and Escape', () => {
+test('Catalog Mode explanation supports hover, focus and touch without blocking normal clicks', () => {
   const createElement = () => ({
     hidden: true,
     listeners: {},
-    attributes: {},
-    addEventListener(type, handler) { this.listeners[type] = handler; },
-    setAttribute(name, value) { this.attributes[name] = value; }
+    addEventListener(type, handler) { this.listeners[type] = handler; }
   });
   const mode = createElement();
-  const info = createElement();
+  const switcher = createElement();
   const popover = createElement();
-  popover.contains = (target) => target === popover;
-  mode.querySelector = (selector) => selector === '.catalog-mode-info' ? info : popover;
-  mode.contains = (target) => target === mode || target === info || target === popover;
+  mode.querySelector = (selector) => selector === '.catalog-mode-switch' ? switcher : popover;
+  mode.contains = (target) => target === mode || target === switcher || target === popover;
   const doc = createElement();
   doc.querySelector = () => mode;
-  runInNewContext(readFileSync(new URL('../../catalog-pdf/catalog-mode.js', import.meta.url), 'utf8'), { document: doc });
+  let nextTimer = 0;
+  const timers = new Map();
+  runInNewContext(readFileSync(new URL('../../catalog-pdf/catalog-mode.js', import.meta.url), 'utf8'), {
+    document: doc,
+    setTimeout: (callback) => { const id = ++nextTimer; timers.set(id, callback); return id; },
+    clearTimeout: (id) => timers.delete(id)
+  });
 
-  info.listeners.mouseenter();
+  switcher.listeners.mouseenter();
   assert.equal(popover.hidden, false);
-  assert.equal(info.attributes['aria-expanded'], 'true');
   mode.listeners.mouseleave();
   assert.equal(popover.hidden, true);
-  info.listeners.focusin();
+  switcher.listeners.focusin();
   assert.equal(popover.hidden, false);
-  mode.listeners.keydown({ key: 'Escape' });
-  assert.equal(popover.hidden, true);
-  assert.equal(info.attributes['aria-expanded'], 'false');
-  info.listeners.click();
-  assert.equal(popover.hidden, false);
-  info.listeners.click();
+  doc.listeners.keydown({ key: 'Escape' });
   assert.equal(popover.hidden, true);
   mode.listeners.focusout({ relatedTarget: null });
-  info.listeners.click();
+  switcher.listeners.pointerdown({ pointerType: 'touch', clientX: 10, clientY: 10 });
+  timers.get(nextTimer)();
+  switcher.listeners.pointerup();
+  assert.equal(popover.hidden, false);
+  let prevented = false;
+  let stopped = false;
+  mode.listeners.click({ preventDefault() { prevented = true; }, stopPropagation() { stopped = true; } });
+  assert.equal(prevented, true);
+  assert.equal(stopped, true);
   doc.listeners.click({ target: {} });
   assert.equal(popover.hidden, true);
+
+  switcher.listeners.pointerdown({ pointerType: 'touch', clientX: 10, clientY: 10 });
+  switcher.listeners.pointerup();
+  prevented = false;
+  mode.listeners.click({ preventDefault() { prevented = true; }, stopPropagation() {} });
+  assert.equal(prevented, false);
+
+  switcher.listeners.pointerdown({ pointerType: 'touch', clientX: 10, clientY: 10 });
+  switcher.listeners.pointermove({ clientX: 30, clientY: 10 });
+  assert.equal(timers.has(nextTimer), false);
 });
 
 test('guest access cannot use the employee download endpoint', async () => {

@@ -4,15 +4,12 @@
   display:flex;
   flex:none;
   align-items:center;
+  justify-content:flex-end;
+  /* Preserve header wrapping when the label is removed. */
+  min-width:260px;
 }
 .catalog-mode[hidden],.catalog-mode-popover[hidden]{display:none}
-.catalog-mode-heading{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:44px;
-}
-.catalog-mode-switch,.catalog-mode-info{
+.catalog-mode-switch{
   display:flex;
   align-items:center;
   justify-content:center;
@@ -34,28 +31,8 @@
   text-align:center;
   white-space:nowrap;
 }
-.catalog-mode-label{color:var(--pl-navy);font-size:8px;font-weight:600;letter-spacing:.08em;white-space:nowrap}
-.catalog-mode-info{
-  flex:0 0 36px;
-  min-height:44px;
-  padding:0;
-  background:transparent;
-  color:var(--pl-ink-soft);
-}
-.catalog-mode-info span{
-  display:grid;
-  width:17px;
-  height:17px;
-  place-items:center;
-  border-radius:50%;
-  background:rgba(22,38,74,.1);
-  font-family:Georgia,serif;
-  font-size:12px;
-  font-weight:700;
-}
 .catalog-mode-switch:hover{background:#166534;color:#fff}
-.catalog-mode-info:hover{color:var(--pl-navy)}
-.catalog-mode-switch:focus-visible,.catalog-mode-info:focus-visible{
+.catalog-mode-switch:focus-visible{
   outline:2px solid var(--pl-navy);
   outline-offset:3px;
 }
