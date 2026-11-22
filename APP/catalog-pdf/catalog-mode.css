@@ -62,3 +62,32 @@
 .catalog-mode-popover p{margin:0 0 9px}
 .catalog-mode-popover p:last-child{margin-bottom:0}
 .catalog-mode-popover strong{color:var(--pl-navy)}
+
+@media(max-width:600px){
+  .catalog-header,.guest-header{position:relative}
+  .catalog-mode{
+    position:absolute;
+    top:100%;
+    right:16px;
+    min-width:0;
+  }
+  .catalog-mode-switch{
+    position:relative;
+    isolation:isolate;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    filter:drop-shadow(0 4px 5px rgba(13,24,48,.18));
+  }
+  .catalog-mode-switch::before{
+    position:absolute;
+    z-index:-1;
+    inset:0;
+    background:#15803d;
+    clip-path:polygon(0 0,100% 0,94% 100%,6% 100%);
+    content:"";
+  }
+  .catalog-mode-switch:hover{background:transparent}
+  .catalog-mode-switch:hover::before{background:#166534}
+  header:has(.catalog-mode:not([hidden])) + main{padding-top:56px}
+}
