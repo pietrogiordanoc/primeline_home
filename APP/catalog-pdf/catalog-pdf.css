@@ -19,6 +19,10 @@ body{
   justify-content: flex-end;
   gap: 10px;
 }
+@media (max-width: 900px){
+  .catalog-header{flex-wrap:wrap;gap:8px}
+  .catalog-header-actions{flex:1 1 auto;min-width:0;flex-wrap:wrap}
+}
 .catalog-header-button{
   display: inline-flex;
   min-height: 42px;
