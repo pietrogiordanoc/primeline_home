@@ -1,0 +1,83 @@
+.catalog-mode{
+  position:relative;
+  z-index:3;
+  width:min(250px,calc(100% - 32px));
+  margin:0 auto;
+}
+.catalog-mode[hidden],.catalog-mode-popover[hidden]{display:none}
+.catalog-mode-tab{
+  position:relative;
+  display:flex;
+  align-items:center;
+  min-height:50px;
+  padding:0 12px;
+  filter:drop-shadow(0 4px 7px rgba(13,24,48,.2));
+}
+.catalog-mode-tab::before{
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  background:var(--pl-navy);
+  clip-path:polygon(0 0,100% 0,94% 100%,6% 100%);
+  content:"";
+}
+.catalog-mode-switch,.catalog-mode-info{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  border:0;
+  background:transparent;
+  color:#fff;
+  cursor:pointer;
+  font:inherit;
+  text-decoration:none;
+}
+.catalog-mode-switch{flex:1;flex-direction:column;gap:3px;padding:4px 0 6px}
+.catalog-mode-label{font-size:9px;font-weight:600;letter-spacing:.16em}
+.catalog-mode-action{font-size:12px;font-weight:500;white-space:nowrap}
+.catalog-mode-arrow{margin-right:5px;font-size:16px;line-height:0}
+.catalog-mode-info{flex:0 0 44px;padding:0}
+.catalog-mode-info span{
+  display:grid;
+  width:17px;
+  height:17px;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(255,255,255,.18);
+  font-family:Georgia,serif;
+  font-size:12px;
+  font-weight:700;
+}
+.catalog-mode-switch:hover,.catalog-mode-info:hover{color:#fff;opacity:.85}
+.catalog-mode-switch:focus-visible,.catalog-mode-info:focus-visible{
+  outline:2px solid #fff;
+  outline-offset:-5px;
+}
+.catalog-mode-switch:disabled{cursor:wait;opacity:.6}
+.catalog-mode-popover{
+  position:absolute;
+  top:100%;
+  left:50%;
+  width:min(360px,calc(100vw - 32px));
+  padding-top:8px;
+  transform:translateX(-50%);
+}
+.catalog-mode-popover-content{
+  padding:18px 20px;
+  background:#fff;
+  color:var(--pl-ink-soft);
+  box-shadow:0 12px 30px rgba(13,24,48,.18);
+  font-size:12px;
+  line-height:1.55;
+}
+.catalog-mode-popover h2{
+  margin:0 0 8px;
+  color:var(--pl-navy);
+  font-family:var(--font-serif);
+  font-size:18px;
+  font-weight:400;
+}
+.catalog-mode-popover p{margin:0 0 9px}
+.catalog-mode-popover p:last-child{margin-bottom:0}
+.catalog-mode-popover strong{color:var(--pl-navy)}

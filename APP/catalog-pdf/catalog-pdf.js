@@ -6,6 +6,7 @@ const viewerStatus = document.querySelector('#catalogViewerStatus');
 const viewerError = document.querySelector('#catalogViewerError');
 const viewerRetry = document.querySelector('#catalogViewerRetry');
 const frame = document.querySelector('#catalogFrame');
+const catalogMode = document.querySelector('#catalogMode');
 const staffDownloadButton = document.querySelector('#staffDownloadButton');
 const shareCatalogButton = document.querySelector('#shareCatalogButton');
 const shareCatalogDialog = document.querySelector('#shareCatalogDialog');
@@ -51,6 +52,7 @@ frame.addEventListener('error', showViewerError);
 
 const validateCatalogSession = async () => {
   accessRetry.hidden = true;
+  catalogMode.hidden = true;
   setAccessStatus('Verifying your Catalog PDF access...');
 
   try {
@@ -75,6 +77,7 @@ const validateCatalogSession = async () => {
 
     staffDownloadButton.hidden = false;
     shareCatalogButton.hidden = false;
+    catalogMode.hidden = false;
     setAccessStatus('');
     loadViewer();
   } catch {

@@ -14,6 +14,8 @@ const guestViewer = document.querySelector('#guestViewer');
 const guestViewerStatus = document.querySelector('#guestViewerStatus');
 const guestViewerError = document.querySelector('#guestViewerError');
 const guestViewerRetry = document.querySelector('#guestViewerRetry');
+const catalogMode = document.querySelector('#catalogMode');
+const guestWebTransfer = document.querySelector('#guestWebTransfer');
 const pdfFrame = document.querySelector('#guestPdfFrame');
 
 const hashParameters = new URLSearchParams(location.hash.slice(1));
@@ -59,6 +61,7 @@ const setInviterDetails = (name, email) => {
 
 const showRenewal = (message = '') => {
   guestViewer.hidden = true;
+  catalogMode.hidden = true;
   linkPanel.hidden = true;
   renewPanel.hidden = false;
   setStatus(message);
@@ -71,6 +74,7 @@ const showViewerError = () => {
 };
 
 const loadCatalogViewer = async () => {
+  catalogMode.hidden = true;
   linkPanel.hidden = true;
   renewPanel.hidden = true;
   setStatus('');
@@ -92,6 +96,7 @@ const loadCatalogViewer = async () => {
     }
     if (!response.ok) throw new Error('Catalog access could not be verified. Please try again.');
 
+    catalogMode.hidden = false;
     guestViewerStatus.textContent = 'Loading the catalog...';
     pdfFrame.src = ISSUU_URL;
     viewerLoadTimeout = setTimeout(showViewerError, 20000);
@@ -109,6 +114,33 @@ pdfFrame.addEventListener('load', () => {
 
 pdfFrame.addEventListener('error', showViewerError);
 guestViewerRetry.addEventListener('click', loadCatalogViewer);
+
+guestWebTransfer.addEventListener('click', async () => {
+  guestWebTransfer.disabled = true;
+  setStatus('Opening the Web Catalog...');
+  try {
+    const response = await fetch('/api/catalog/guest/transfer', {
+      method: 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' }
+    });
+    if (response.status === 401) {
+      showRenewal('Your browser session has expired or your catalog access is no longer active. Request a fresh verification link to continue.');
+      return;
+    }
+    if (!response.ok) throw new Error('Web Catalog transfer failed.');
+    const result = await response.json();
+    if (typeof result.credential !== 'string' || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(result.credential)) {
+      throw new Error('The Web Catalog could not be opened. Please try again.');
+    }
+    window.location.assign(`https://catalog.primelinedist.com/#pdf_transfer=${result.credential}`);
+  } catch {
+    setStatus('The Web Catalog could not be opened. Please try again or contact your sales representative.', true);
+  } finally {
+    guestWebTransfer.disabled = false;
+  }
+});
 
 openButton.addEventListener('click', async () => {
   if (!magicToken || !linkPurpose) return;

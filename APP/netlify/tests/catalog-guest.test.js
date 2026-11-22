@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHmac } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import {
   CATALOG_PUBLIC_URL,
   GUEST_DEVICE_COOKIE,
@@ -22,6 +25,7 @@ import { createCatalogGuestRedeemHandler } from '../functions/catalog-guest-rede
 import { createCatalogGuestRequestLinkHandler } from '../functions/catalog-guest-request-link.js';
 import { createCatalogGuestSessionHandler } from '../functions/catalog-guest-session.js';
 import { createCatalogGuestPdfHandler } from '../functions/catalog-guest-pdf.js';
+import { createCatalogGuestTransferHandler } from '../functions/catalog-guest-transfer.js';
 import { createCatalogStaffDownloadHandler } from '../functions/catalog-staff-download.js';
 import { createCatalogStaffShareHandler } from '../functions/catalog-staff-share.js';
 
@@ -644,6 +648,263 @@ test('guest PDF endpoint returns the existing public catalog URL only after sess
     validateSession: async () => null
   })(makeEvent('GET'));
   assert.equal(denied.statusCode, 401);
+});
+
+const transferSecret = 'test-only-transfer-signing-secret-123456789';
+
+const createTransferFixture = async (duration = '7-days') => {
+  const state = fixture();
+  const invitationToken = await inviteCustomer(state, duration);
+  const redeemed = await createCatalogGuestRedeemHandler(state.dependencies)(
+    makeEvent('POST', { token: invitationToken, purpose: 'invite' })
+  );
+  const cookies = redeemed.multiValueHeaders['Set-Cookie'].map((cookie) => cookie.split(';')[0]).join('; ');
+  const sessionId = cookies.match(/__Host-pl-guest-catalog-session=([^;]+)/)[1];
+  const session = await state.stores.sessions.get(`session:${sessionId}`, { type: 'json' });
+  const grant = await state.stores.grants.get(`grant:${session.grantId}`, { type: 'json' });
+  const transfer = createCatalogGuestTransferHandler({
+    ...state.dependencies,
+    getSigningSecret: () => transferSecret
+  });
+  return { state, invitationToken, cookies, grant, transfer };
+};
+
+test('guest transfer signs the validated grant identity, not request data', async () => {
+  const { state, invitationToken, cookies, transfer } = await createTransferFixture();
+  const event = makeEvent('POST', { customerEmail: 'other@example.com', sharedBy: 'other@primelinedist.com' }, cookies);
+  const response = await transfer(event);
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.headers['Cache-Control'], 'no-store');
+  assert.equal(response.headers['Referrer-Policy'], 'no-referrer');
+
+  const credential = responseBody(response).credential;
+  const [headerPart, payloadPart, signature] = credential.split('.');
+  assert.deepEqual(JSON.parse(Buffer.from(headerPart, 'base64url')), { alg: 'HS256', typ: 'JWT' });
+  assert.equal(signature, createHmac('sha256', transferSecret).update(`${headerPart}.${payloadPart}`).digest('base64url'));
+  const claims = JSON.parse(Buffer.from(payloadPart, 'base64url'));
+  assert.equal(claims.customerEmail, 'buyer@example.com');
+  assert.equal(claims.sharedBy, 'sales@primelinedist.com');
+  assert.equal(claims.source, 'pdf_catalog_share');
+  assert.equal(claims.iss, 'https://primelinedist.com');
+  assert.equal(claims.aud, 'https://catalog.primelinedist.com');
+  assert.equal(claims.iat, Math.floor(state.now / 1000));
+  assert.equal(claims.exp, claims.iat + 300);
+  assert.match(claims.jti, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  assert.equal(JSON.stringify(claims).includes(invitationToken), false);
+  assert.equal(JSON.stringify(claims).includes(cookies), false);
+
+  const next = responseBody(await transfer(event)).credential;
+  assert.notEqual(JSON.parse(Buffer.from(next.split('.')[1], 'base64url')).jti, claims.jti);
+});
+
+test('guest transfer expiration is capped by finite grants and five minutes for permanent grants', async () => {
+  const finite = await createTransferFixture();
+  finite.grant.expiresAt = finite.state.now + 74_999;
+  await finite.state.stores.grants.setJSON(`grant:${finite.grant.id}`, finite.grant);
+  const response = await finite.transfer(makeEvent('POST', undefined, finite.cookies));
+  const claims = JSON.parse(Buffer.from(responseBody(response).credential.split('.')[1], 'base64url'));
+  assert.equal(claims.exp, Math.floor(finite.grant.expiresAt / 1000));
+  assert.ok(claims.exp * 1000 <= finite.grant.expiresAt);
+  assert.ok(claims.exp - claims.iat <= 300);
+
+  const permanent = await createTransferFixture('permanent');
+  const permanentResponse = await permanent.transfer(makeEvent('POST', undefined, permanent.cookies));
+  const permanentClaims = JSON.parse(Buffer.from(responseBody(permanentResponse).credential.split('.')[1], 'base64url'));
+  assert.equal(permanentClaims.exp - permanentClaims.iat, 300);
+
+  finite.state.setNow(finite.grant.expiresAt - 500);
+  assert.equal((await finite.transfer(makeEvent('POST', undefined, finite.cookies))).statusCode, 401);
+  finite.state.setNow(finite.grant.expiresAt);
+  assert.equal((await finite.transfer(makeEvent('POST', undefined, finite.cookies))).statusCode, 401);
+});
+
+test('guest transfer rejects missing sessions, expired or revoked grants, and wrong devices', async () => {
+  const { state, grant, cookies, transfer } = await createTransferFixture();
+  assert.equal((await transfer(makeEvent('POST'))).statusCode, 401);
+  assert.equal((await transfer(makeEvent('POST', undefined, cookies.split('; ')[0]))).statusCode, 401);
+
+  grant.revokedAt = state.now;
+  await state.stores.grants.setJSON(`grant:${grant.id}`, grant);
+  assert.equal((await transfer(makeEvent('POST', undefined, cookies))).statusCode, 401);
+
+  grant.revokedAt = null;
+  grant.expiresAt = state.now - 1;
+  await state.stores.grants.setJSON(`grant:${grant.id}`, grant);
+  assert.equal((await transfer(makeEvent('POST', undefined, cookies))).statusCode, 401);
+});
+
+test('guest transfer rejects cross-origin requests and unavailable signer or inviter details', async () => {
+  const { state, grant, cookies, transfer } = await createTransferFixture();
+  assert.equal((await transfer(makeEvent('GET', undefined, cookies))).statusCode, 405);
+  const crossOrigin = makeEvent('POST', undefined, cookies);
+  crossOrigin.headers.origin = 'https://example.com';
+  assert.equal((await transfer(crossOrigin)).statusCode, 403);
+
+  const unconfigured = createCatalogGuestTransferHandler({
+    ...state.dependencies,
+    getSigningSecret: () => ''
+  });
+  assert.equal((await unconfigured(makeEvent('POST', undefined, cookies))).statusCode, 503);
+  grant.sharedBy = null;
+  await state.stores.grants.setJSON(`grant:${grant.id}`, grant);
+  assert.equal((await transfer(makeEvent('POST', undefined, cookies))).statusCode, 422);
+});
+
+test('guest Web Mode transfer requires a click and handles expired access', async () => {
+  const elements = new Map();
+  const element = (selector) => {
+    if (!elements.has(selector)) {
+      elements.set(selector, {
+        hidden: true,
+        disabled: false,
+        textContent: '',
+        classList: { toggle() {} },
+        listeners: {},
+        addEventListener(type, handler) { this.listeners[type] = handler; },
+        querySelector() { return { textContent: '' }; }
+      });
+    }
+    return elements.get(selector);
+  };
+  const requests = [];
+  const redirects = [];
+  let transferStatus = 200;
+  const fetch = async (url) => {
+    requests.push(url);
+    if (url.endsWith('/session')) {
+      return { status: 200, ok: true, json: async () => ({ authenticated: true, resource: 'catalog-guest', expiresAt: null }) };
+    }
+    if (url.endsWith('/pdf')) return { status: 200, ok: true };
+    return { status: transferStatus, ok: transferStatus === 200, json: async () => ({ credential: 'header.payload.signature' }) };
+  };
+  const script = readFileSync(new URL('../../catalog-pdf/guest/guest-catalog.js', import.meta.url), 'utf8');
+  runInNewContext(script, {
+    document: { querySelector: element },
+    location: { hash: '', pathname: '/catalog-pdf/guest/', search: '' },
+    window: { location: { assign: (url) => redirects.push(url) } },
+    URLSearchParams,
+    fetch,
+    setTimeout: () => 1,
+    clearTimeout() {}
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(element('#catalogMode').hidden, false);
+  assert.equal(requests.includes('/api/catalog/guest/transfer'), false);
+  assert.deepEqual(redirects, []);
+
+  await element('#guestWebTransfer').listeners.click();
+  assert.deepEqual(redirects, ['https://catalog.primelinedist.com/#pdf_transfer=header.payload.signature']);
+
+  transferStatus = 503;
+  await element('#guestWebTransfer').listeners.click();
+  assert.equal(redirects.length, 1);
+  assert.match(element('#guestStatus').textContent, /could not be opened/i);
+  assert.equal(element('#guestWebTransfer').disabled, false);
+
+  transferStatus = 401;
+  await element('#guestWebTransfer').listeners.click();
+  assert.equal(redirects.length, 1);
+  assert.equal(element('#guestRenewPanel').hidden, false);
+  assert.equal(element('#catalogMode').hidden, true);
+});
+
+test('an unredeemed invitation does not show the Catalog Mode switcher', async () => {
+  const elements = new Map();
+  const element = (selector) => {
+    if (!elements.has(selector)) {
+      elements.set(selector, {
+        hidden: true,
+        classList: { toggle() {} },
+        addEventListener() {},
+        querySelector() { return {}; }
+      });
+    }
+    return elements.get(selector);
+  };
+  const requests = [];
+  runInNewContext(readFileSync(new URL('../../catalog-pdf/guest/guest-catalog.js', import.meta.url), 'utf8'), {
+    document: { querySelector: element },
+    location: { hash: '#invite=sample', pathname: '/catalog-pdf/guest/', search: '' },
+    history: { replaceState() {} },
+    URLSearchParams,
+    fetch: async (url) => { requests.push(url); },
+    setTimeout,
+    clearTimeout
+  });
+  assert.equal(element('#guestLinkPanel').hidden, false);
+  assert.equal(element('#catalogMode').hidden, true);
+  assert.deepEqual(requests, []);
+});
+
+test('staff Catalog Mode appears only after the employee session is verified', async () => {
+  const script = readFileSync(new URL('../../catalog-pdf/catalog-pdf.js', import.meta.url), 'utf8');
+  for (const result of [
+    { authenticated: true, resource: 'catalog-pdf', role: 'staff' },
+    { authenticated: true, resource: 'catalog-pdf', role: 'guest' }
+  ]) {
+    const elements = new Map();
+    const element = (selector) => {
+      if (!elements.has(selector)) {
+        elements.set(selector, {
+          hidden: true,
+          classList: { toggle() {} },
+          addEventListener() {},
+          querySelector() { return {}; }
+        });
+      }
+      return elements.get(selector);
+    };
+    const requests = [];
+    runInNewContext(script, {
+      document: { querySelector: element },
+      fetch: async (url) => {
+        requests.push(url);
+        return { status: 200, ok: true, json: async () => result };
+      },
+      setTimeout: () => 1,
+      clearTimeout() {}
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(element('#catalogMode').hidden, result.role !== 'staff');
+    assert.deepEqual(requests, ['/api/access/catalog-session']);
+  }
+});
+
+test('Catalog Mode explanation supports hover, focus, toggle and Escape', () => {
+  const createElement = () => ({
+    hidden: true,
+    listeners: {},
+    attributes: {},
+    addEventListener(type, handler) { this.listeners[type] = handler; },
+    setAttribute(name, value) { this.attributes[name] = value; }
+  });
+  const mode = createElement();
+  const info = createElement();
+  const popover = createElement();
+  mode.querySelector = (selector) => selector === '.catalog-mode-info' ? info : popover;
+  mode.contains = (target) => target === mode || target === info || target === popover;
+  const doc = createElement();
+  doc.querySelector = () => mode;
+  runInNewContext(readFileSync(new URL('../../catalog-pdf/catalog-mode.js', import.meta.url), 'utf8'), { document: doc });
+
+  mode.listeners.mouseenter();
+  assert.equal(popover.hidden, false);
+  assert.equal(info.attributes['aria-expanded'], 'true');
+  mode.listeners.mouseleave();
+  assert.equal(popover.hidden, true);
+  mode.listeners.focusin();
+  assert.equal(popover.hidden, false);
+  mode.listeners.keydown({ key: 'Escape' });
+  assert.equal(popover.hidden, true);
+  assert.equal(info.attributes['aria-expanded'], 'false');
+  info.listeners.click();
+  assert.equal(popover.hidden, false);
+  info.listeners.click();
+  assert.equal(popover.hidden, true);
+  mode.listeners.focusout({ relatedTarget: null });
+  info.listeners.click();
+  doc.listeners.click({ target: {} });
+  assert.equal(popover.hidden, true);
 });
 
 test('guest access cannot use the employee download endpoint', async () => {

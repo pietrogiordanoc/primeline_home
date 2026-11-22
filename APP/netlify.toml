@@ -49,6 +49,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/catalog/guest/transfer"
+  to = "/.netlify/functions/catalog-guest-transfer"
+  status = 200
+
+[[redirects]]
   from = "/api/catalog/staff/download"
   to = "/.netlify/functions/catalog-staff-download"
   status = 200

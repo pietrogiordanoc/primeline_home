@@ -8,6 +8,7 @@
   <link rel="icon" type="image/gif" href="/images/favicon.gif">
   <link rel="stylesheet" href="/assets/css/base.css">
   <link rel="stylesheet" href="./catalog-pdf.css">
+  <link rel="stylesheet" href="./catalog-mode.css">
 </head>
 <body>
   <header class="catalog-header">
@@ -29,6 +30,25 @@
       </button>
     </nav>
   </header>
+
+  <div class="catalog-mode" id="catalogMode" hidden>
+    <div class="catalog-mode-tab">
+      <a class="catalog-mode-switch" href="https://catalog.primelinedist.com" aria-describedby="catalogModeExplanation">
+        <span class="catalog-mode-label">CATALOG MODE</span>
+        <span class="catalog-mode-action"><span class="catalog-mode-arrow" aria-hidden="true">↔</span>Switch to Web Mode</span>
+      </a>
+      <button class="catalog-mode-info" type="button" aria-label="About catalog modes" aria-expanded="false" aria-controls="catalogModeExplanation"><span aria-hidden="true">i</span></button>
+    </div>
+    <div class="catalog-mode-popover" id="catalogModeExplanation" role="tooltip" hidden>
+      <div class="catalog-mode-popover-content">
+        <h2>Two Ways to Explore Our Catalog</h2>
+        <p>Enjoy the Prime Line catalog in two different viewing modes.</p>
+        <p><strong>Web Mode</strong><br>Browse products, search by name or SKU, create wishlists and prepare quotes.</p>
+        <p><strong>Magazine Mode</strong><br>Explore our digital catalog page by page, just like a traditional magazine.</p>
+        <p>Both modes showcase Prime Line products. Interactive features are available in Web Mode.</p>
+      </div>
+    </div>
+  </div>
 
   <main class="catalog-main">
     <div class="catalog-heading">
@@ -95,6 +115,7 @@
     </form>
   </dialog>
 
+  <script type="module" src="./catalog-mode.js"></script>
   <script type="module" src="./catalog-pdf.js"></script>
 </body>
 </html>
