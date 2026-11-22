@@ -12,7 +12,7 @@ const updatePopover = () => {
   info.setAttribute('aria-expanded', String(open));
 };
 
-mode.addEventListener('mouseenter', () => {
+info.addEventListener('mouseenter', () => {
   hovered = true;
   dismissed = false;
   updatePopover();
@@ -21,13 +21,13 @@ mode.addEventListener('mouseleave', () => {
   hovered = false;
   updatePopover();
 });
-mode.addEventListener('focusin', () => {
+info.addEventListener('focusin', () => {
   focused = true;
   dismissed = false;
   updatePopover();
 });
 mode.addEventListener('focusout', (event) => {
-  if (mode.contains(event.relatedTarget)) return;
+  if (event.relatedTarget === info || popover.contains(event.relatedTarget)) return;
   focused = false;
   pinned = false;
   updatePopover();

@@ -29,13 +29,11 @@
   </header>
 
   <div class="catalog-mode" id="catalogMode" hidden>
-    <div class="catalog-mode-tab">
-      <button class="catalog-mode-switch" id="guestWebTransfer" type="button" aria-describedby="catalogModeExplanation">
-        <span class="catalog-mode-label">CATALOG MODE</span>
-        <span class="catalog-mode-action"><span class="catalog-mode-arrow" aria-hidden="true">↔</span>Switch to Web Mode</span>
-      </button>
-      <button class="catalog-mode-info" type="button" aria-label="About catalog modes" aria-expanded="false" aria-controls="catalogModeExplanation"><span aria-hidden="true">i</span></button>
+    <div class="catalog-mode-heading">
+      <span class="catalog-mode-label">CATALOG MODE</span>
+      <button class="catalog-mode-info" type="button" aria-label="About catalog modes" aria-expanded="false" aria-controls="catalogModeExplanation" aria-describedby="catalogModeExplanation"><span aria-hidden="true">i</span></button>
     </div>
+    <button class="catalog-mode-switch" id="guestWebTransfer" type="button">VIEW AS WEB CATALOG</button>
     <div class="catalog-mode-popover" id="catalogModeExplanation" role="tooltip" hidden>
       <div class="catalog-mode-popover-content">
         <h2>Two Ways to Explore Our Catalog</h2>

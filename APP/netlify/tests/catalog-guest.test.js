@@ -881,18 +881,19 @@ test('Catalog Mode explanation supports hover, focus, toggle and Escape', () => 
   const mode = createElement();
   const info = createElement();
   const popover = createElement();
+  popover.contains = (target) => target === popover;
   mode.querySelector = (selector) => selector === '.catalog-mode-info' ? info : popover;
   mode.contains = (target) => target === mode || target === info || target === popover;
   const doc = createElement();
   doc.querySelector = () => mode;
   runInNewContext(readFileSync(new URL('../../catalog-pdf/catalog-mode.js', import.meta.url), 'utf8'), { document: doc });
 
-  mode.listeners.mouseenter();
+  info.listeners.mouseenter();
   assert.equal(popover.hidden, false);
   assert.equal(info.attributes['aria-expanded'], 'true');
   mode.listeners.mouseleave();
   assert.equal(popover.hidden, true);
-  mode.listeners.focusin();
+  info.listeners.focusin();
   assert.equal(popover.hidden, false);
   mode.listeners.keydown({ key: 'Escape' });
   assert.equal(popover.hidden, true);
