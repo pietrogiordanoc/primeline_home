@@ -166,15 +166,34 @@
             </div>
             <button class="admin-secondary-button" id="reloadGuestAccess" type="button">Reload</button>
           </div>
+          <div class="guest-access-filters">
+            <label class="guest-access-search" for="guestAccessSearch">Search
+              <input id="guestAccessSearch" type="search" placeholder="Customer or salesperson email">
+            </label>
+            <label for="guestAccessStatusFilter">Status
+              <select id="guestAccessStatusFilter">
+                <option value="">All statuses</option>
+                <option value="active">Active</option>
+                <option value="pending">Pending</option>
+                <option value="expired">Expired</option>
+                <option value="revoked">Revoked</option>
+              </select>
+            </label>
+            <label for="guestAccessSharedByFilter">Shared By
+              <select id="guestAccessSharedByFilter"><option value="">All salespeople</option></select>
+            </label>
+            <button class="admin-secondary-button" id="clearGuestAccessFilters" type="button">Clear Filters</button>
+          </div>
+          <p class="guest-access-count" id="guestAccessCount" role="status" aria-live="polite"></p>
           <div class="admin-rules-table-wrap">
             <table class="admin-rules-table guest-access-table">
               <thead>
                 <tr>
-                  <th scope="col">Customer Email</th>
-                  <th scope="col">Shared By</th>
-                  <th scope="col">Access Duration</th>
-                  <th scope="col">Expiration</th>
-                  <th scope="col">Status</th>
+                  <th scope="col"><button class="guest-sort-button" type="button" data-guest-sort="customerEmail">Customer Email <span aria-hidden="true"></span></button></th>
+                  <th scope="col"><button class="guest-sort-button" type="button" data-guest-sort="sharedBy">Shared By <span aria-hidden="true"></span></button></th>
+                  <th scope="col"><button class="guest-sort-button" type="button" data-guest-sort="duration">Access Duration <span aria-hidden="true"></span></button></th>
+                  <th scope="col"><button class="guest-sort-button" type="button" data-guest-sort="expiresAt">Expiration <span aria-hidden="true"></span></button></th>
+                  <th scope="col"><button class="guest-sort-button" type="button" data-guest-sort="status">Status <span aria-hidden="true"></span></button></th>
                   <th scope="col">Actions</th>
                 </tr>
               </thead>

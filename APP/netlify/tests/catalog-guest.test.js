@@ -154,6 +154,35 @@ test('guest durations use fixed periods and clamped UTC calendar months', () => 
   assert.equal(getGrantExpiresAt('permanent', start), null);
 });
 
+test('admin rows sort by the original invitation creation date, with legacy records last', async () => {
+  const state = fixture();
+  const invitation = (id, createdAt, expiresAt) => ({
+    id, customerEmail: `${id}@example.com`, sharedBy: 'sales@primelinedist.com',
+    duration: '7-days', status: 'pending', createdAt, expiresAt, usedAt: null
+  });
+  await state.stores.invitations.setJSON('invitation:old', invitation('old', 100, state.now + 9000));
+  await state.stores.invitations.setJSON('invitation:new', invitation('new', 300, state.now + 1000));
+  await state.stores.invitations.setJSON('invitation:linked', invitation('linked', 200, state.now + 500));
+  await state.stores.invitations.setJSON('invitation:legacy', invitation('legacy', undefined, state.now + 10000));
+  await state.stores.grants.setJSON('grant:grant', {
+    id: 'grant', invitationId: 'linked', email: 'linked@example.com', sharedBy: 'sales@primelinedist.com',
+    duration: '7-days', createdAt: 9999, expiresAt: state.now + 20000, revokedAt: null
+  });
+  await state.stores.grants.setJSON('grant:orphan', {
+    id: 'orphan', invitationId: 'missing', email: 'orphan@example.com', sharedBy: 'sales@primelinedist.com',
+    duration: '7-days', createdAt: 99999, expiresAt: null, revokedAt: null
+  });
+  const handler = createCatalogGuestAdminHandler({
+    ...state.dependencies,
+    authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  const response = await handler(makeEvent('GET'));
+  assert.equal(response.statusCode, 200);
+  const rows = responseBody(response).entries;
+  assert.deepEqual(rows.map((row) => row.id), ['new', 'grant', 'old', 'legacy', 'orphan']);
+  assert.deepEqual(rows.map((row) => row.createdAt), [300, 200, 100, null, null]);
+});
+
 test('only an authenticated employee can create a guest invitation and tokens are stored hashed', async () => {
   const state = fixture();
   const response = await createCatalogStaffShareHandler(state.dependencies)(

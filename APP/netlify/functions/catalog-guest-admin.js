@@ -28,6 +28,7 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
   const invitations = await listStoreRecords(invitationStore, 'invitation:');
   const grants = await listStoreRecords(grantStore, 'grant:');
   const linkedInvitationIds = new Set();
+  const invitationsById = new Map(invitations.map(invitation => [invitation.id, invitation]));
   const rows = grants.map((grant) => {
     linkedInvitationIds.add(grant.invitationId);
     return {
@@ -36,6 +37,8 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
       customerEmail: grant.email,
       sharedBy: grant.sharedBy,
       duration: GUEST_DURATIONS[grant.duration] || grant.duration,
+      createdAt: Number.isFinite(invitationsById.get(grant.invitationId)?.createdAt)
+        ? invitationsById.get(grant.invitationId).createdAt : null,
       expiresAt: grant.expiresAt,
       status: getStatusForGrant(grant, now),
       canRevoke: getStatusForGrant(grant, now) === 'active',
@@ -53,6 +56,7 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
           customerEmail: invitation.customerEmail,
           sharedBy: invitation.sharedBy,
           duration: GUEST_DURATIONS[invitation.duration] || invitation.duration,
+          createdAt: Number.isFinite(invitation.createdAt) ? invitation.createdAt : null,
           expiresAt: invitation.expiresAt,
           status: 'revoked',
           canRevoke: false,
@@ -69,6 +73,7 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
         customerEmail: invitation.customerEmail,
         sharedBy: invitation.sharedBy,
         duration: GUEST_DURATIONS[invitation.duration] || invitation.duration,
+        createdAt: Number.isFinite(invitation.createdAt) ? invitation.createdAt : null,
         expiresAt: invitation.expiresAt,
         status: invitation.status === 'revoked' ? 'revoked' : expired ? 'expired' : 'pending',
         canRevoke: false,
@@ -76,7 +81,11 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
       });
     });
 
-  return rows.sort((a, b) => b.expiresAt - a.expiresAt);
+  return rows.sort((a, b) => {
+    if (a.createdAt === null && b.createdAt !== null) return 1;
+    if (b.createdAt === null && a.createdAt !== null) return -1;
+    return (b.createdAt - a.createdAt) || String(a.id).localeCompare(String(b.id));
+  });
 };
 
 export const createCatalogGuestAdminHandler = (dependencies = {}) => async (event) => {
