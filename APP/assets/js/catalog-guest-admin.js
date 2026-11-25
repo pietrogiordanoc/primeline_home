@@ -122,6 +122,10 @@ const renderGuestEntries = () => {
     const actionGroup = document.createElement('div');
     actionGroup.className = 'admin-rule-actions';
     if (entry.canRevoke) {
+      actionGroup.append(actionButton('Reset authorized devices', async () => {
+        if (!window.confirm(`Reset authorized devices for ${entry.customerEmail}? Existing guest sessions will stop working. The expiration date will not change.`)) return;
+        await updateEntry({ action: 'reset-devices', grantId: entry.id, confirmed: true }, 'Authorized devices reset.');
+      }));
       actionGroup.append(actionButton('Revoke access', async () => {
         if (!window.confirm(`Revoke catalog access for ${entry.customerEmail}?`)) return;
         await updateEntry({ action: 'revoke', grantId: entry.id }, 'Access revoked.');

@@ -6,16 +6,17 @@ import {
 } from '../shared/admin-auth.js';
 import {
   GUEST_DURATIONS,
-  claimGuestToken,
   createGuestInvitationRecord,
   getEmployeeProfile,
   getEmployeeProfileStore,
   getGrantStore,
   getInvitationStore,
+  getActiveGrant,
   jsonResponse,
   listStoreRecords,
   parseBody,
-  sendCatalogInvitationEmail
+  sendCatalogInvitationEmail,
+  updateGuestGrant
 } from '../shared/catalog-guest-access.js';
 
 const getStatusForGrant = (grant, now) => {
@@ -27,8 +28,8 @@ const getStatusForGrant = (grant, now) => {
 const buildAdminRows = async (invitationStore, grantStore, now) => {
   const invitations = await listStoreRecords(invitationStore, 'invitation:');
   const grants = await listStoreRecords(grantStore, 'grant:');
-  const linkedInvitationIds = new Set();
   const invitationsById = new Map(invitations.map(invitation => [invitation.id, invitation]));
+  const linkedInvitationIds = new Set();
   const rows = grants.map((grant) => {
     linkedInvitationIds.add(grant.invitationId);
     return {
@@ -36,9 +37,9 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
       invitationId: grant.invitationId,
       customerEmail: grant.email,
       sharedBy: grant.sharedBy,
-      duration: GUEST_DURATIONS[grant.duration] || grant.duration,
       createdAt: Number.isFinite(invitationsById.get(grant.invitationId)?.createdAt)
         ? invitationsById.get(grant.invitationId).createdAt : null,
+      duration: GUEST_DURATIONS[grant.duration] || grant.duration,
       expiresAt: grant.expiresAt,
       status: getStatusForGrant(grant, now),
       canRevoke: getStatusForGrant(grant, now) === 'active',
@@ -55,8 +56,8 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
           invitationId: invitation.id,
           customerEmail: invitation.customerEmail,
           sharedBy: invitation.sharedBy,
-          duration: GUEST_DURATIONS[invitation.duration] || invitation.duration,
           createdAt: Number.isFinite(invitation.createdAt) ? invitation.createdAt : null,
+          duration: GUEST_DURATIONS[invitation.duration] || invitation.duration,
           expiresAt: invitation.expiresAt,
           status: 'revoked',
           canRevoke: false,
@@ -72,8 +73,8 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
         invitationId: invitation.id,
         customerEmail: invitation.customerEmail,
         sharedBy: invitation.sharedBy,
-        duration: GUEST_DURATIONS[invitation.duration] || invitation.duration,
         createdAt: Number.isFinite(invitation.createdAt) ? invitation.createdAt : null,
+        duration: GUEST_DURATIONS[invitation.duration] || invitation.duration,
         expiresAt: invitation.expiresAt,
         status: invitation.status === 'revoked' ? 'revoked' : expired ? 'expired' : 'pending',
         canRevoke: false,
@@ -119,24 +120,45 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
 
     if (!isSameOrigin(event)) return jsonResponse({ error: 'Request could not be completed.' }, 403);
     const payload = (dependencies.parseBody || parseBody)(event);
-    if (!payload || !['revoke', 'reissue'].includes(payload.action)) {
+    if (!payload || !['revoke', 'reissue', 'reset-devices'].includes(payload.action)) {
       return jsonResponse({ error: 'Invalid request.' }, 400);
     }
 
-    if (payload.action === 'revoke') {
+    if (payload.action === 'revoke' || payload.action === 'reset-devices') {
       if (typeof payload.grantId !== 'string' || !/^[0-9a-f-]{36}$/i.test(payload.grantId)) {
         return jsonResponse({ error: 'Invalid grant.' }, 400);
       }
       const grantStore = await getGrants();
-      const key = `grant:${payload.grantId}`;
-      const grant = await grantStore.get(key, { type: 'json' });
-      if (!grant) return jsonResponse({ error: 'Access grant was not found.' }, 404);
-      if (!grant.revokedAt) {
-        grant.revokedAt = now();
-        grant.revokedBy = authorization.session?.email || ADMIN_EMAIL;
-        await grantStore.setJSON(key, grant);
+      if (payload.action === 'reset-devices' && authorization.session?.email !== ADMIN_EMAIL) {
+        return jsonResponse({ error: 'Super Admin access is required.' }, 403);
       }
-      return jsonResponse({ revoked: true });
+      if (payload.action === 'reset-devices' && payload.confirmed !== true) {
+        return jsonResponse({ error: 'Explicit confirmation is required.' }, 400);
+      }
+      const result = await updateGuestGrant(grantStore, payload.grantId, async (grant) => {
+        if (payload.action === 'revoke') {
+          if (grant.revokedAt) return { alreadyRevoked: true };
+          return { grant: { ...grant, revokedAt: now(), revokedBy: authorization.session?.email || ADMIN_EMAIL } };
+        }
+        if (!getActiveGrant(grant, now())) return { inactive: true };
+        const version = grant.deviceVersion || 0;
+        if (!Number.isSafeInteger(version) || version < 0 || version >= Number.MAX_SAFE_INTEGER) {
+          throw new Error('Invalid guest device version.');
+        }
+        const audit = Array.isArray(grant.deviceResetAudit) ? grant.deviceResetAudit : [];
+        return { grant: {
+          ...grant,
+          deviceHashes: [],
+          deviceVersion: version + 1,
+          deviceResetAudit: [...audit, {
+            action: 'reset-authorized-devices', administrator: authorization.session?.email || ADMIN_EMAIL,
+            timestamp: now(), previousDeviceCount: Array.isArray(grant.deviceHashes) ? new Set(grant.deviceHashes).size : 0
+          }]
+        } };
+      });
+      if (result.missing) return jsonResponse({ error: 'Access grant was not found.' }, 404);
+      if (result.inactive) return jsonResponse({ error: 'Only active catalog access can be reset.' }, 409);
+      return jsonResponse(payload.action === 'revoke' ? { revoked: true } : { devicesReset: true });
     }
 
     const invitationStore = await getInvitations();
@@ -145,7 +167,8 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
         return jsonResponse({ error: 'Invalid invitation.' }, 400);
       }
       const key = `invitation:${payload.invitationId}`;
-      const previous = await invitationStore.get(key, { type: 'json' });
+      const previousRecord = await invitationStore.getWithMetadata(key, { type: 'json' });
+      const previous = previousRecord?.data;
       if (!previous || previous.status === 'reissued' || previous.usedAt) {
         return jsonResponse({ error: 'This invitation cannot be reissued.' }, 409);
       }
@@ -154,14 +177,11 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
         reissuerEmail,
         dependencies.getEmployeeProfileStore || getEmployeeProfileStore
       );
-      if (previous.tokenHash) {
-        const claimed = await (dependencies.claimToken || claimGuestToken)(previous.tokenHash);
-        if (!claimed) return jsonResponse({ error: 'This invitation has already been used.' }, 409);
-        await invitationStore.delete(`token:${previous.tokenHash}`);
-      }
       previous.status = 'reissued';
       previous.reissuedAt = now();
-      await invitationStore.setJSON(key, previous);
+      const changed = await invitationStore.setJSON(key, previous, { onlyIfMatch: previousRecord.etag });
+      if (!changed.modified) return jsonResponse({ error: 'This invitation was changed. Please refresh and try again.' }, 409);
+      if (previous.tokenHash) await invitationStore.delete(`token:${previous.tokenHash}`);
 
       const created = createGuestInvitationRecord({
         customerEmail: previous.customerEmail,
@@ -191,6 +211,7 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
 
     return jsonResponse({ error: 'Invalid request.' }, 400);
   } catch {
+    console.error('Catalog guest administration could not be completed.');
     return jsonResponse({ error: 'Catalog guest access could not be processed.' }, 503);
   }
 };

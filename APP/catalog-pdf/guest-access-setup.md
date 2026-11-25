@@ -12,9 +12,10 @@ No private bucket or storage setup is required. The guest PDF endpoint checks th
 - Invitations expire after 30 days unused. Customer access starts when redeemed and supports 24 hours, 7 days, 1 month, 3 months, or permanent access. The invitation can be reused on up to three devices while the grant is active.
 - The customer receives the access link. The verified inviting employee and Super Admin receive internal copies that identify the employee, customer, and access duration without including the access link. If an internal copy fails, customer access remains active and the sharing page reports the partial notification failure.
 - Renewal verification links expire after 15 minutes and do not extend the grant. Browser sessions last at most seven days and never outlive a finite grant.
-- Netlify Blobs stores invitation, grant, session, verification, and hashed token-claim records in separate stores. Replayed tokens are rejected after a claim is recorded.
-- Existing invitation redemption and device-record updates are not transactional; simultaneous redemption requests can race. The separate Web-to-PDF transfer claim uses an atomic conditional create and does not add devices.
-- Admin can revoke grants, including permanent access. Guest session and PDF endpoint requests re-check the grant and revocation state.
+- The browser first receives a secure, HttpOnly device cookie before a redemption can reserve a device. A session is prepared before the grant is updated, and grant writes use conditional updates to enforce the three-device limit under concurrency. If the browser loses its cookie, it cannot recover its old device identity.
+- Verification links are consumed in the same conditional grant update that authorizes the device; a device-limit rejection or session creation failure does not consume them. Expired verification claims are pruned on later verification attempts. If a response is lost after authorization, the same browser can reopen the guest page using its device cookie.
+- Super Admin can explicitly reset the devices on an active grant. The reset preserves its original expiration and inviter, invalidates previous guest sessions, and stores the administrator, time, and previous device count on the grant. The guest can reopen the original invitation or request a fresh verification link. Expired or revoked grants cannot be reset.
+- Admin can revoke grants, including permanent access. Guest session and PDF endpoint requests re-check the grant, device version, and revocation state. The separate Web-to-PDF transfer claim uses an atomic conditional create and does not add devices.
 
 ## Web Catalog transfer
 

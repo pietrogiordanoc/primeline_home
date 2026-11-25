@@ -7,11 +7,12 @@ import {
   getActiveGrant,
   getGrantStore,
   getGuestSessionStore,
+  guestDeviceCookieForGrant,
+  guestDeviceIdentity,
   hashDeviceId,
   jsonResponse,
   listStoreRecords,
   readCookie,
-  registerGuestDevice,
   validateGuestSession
 } from '../shared/catalog-guest-access.js';
 
@@ -59,15 +60,11 @@ export const createCatalogGuestSessionHandler = (dependencies = {}) => async (ev
     }
 
     if (authenticated.session.deviceHash) {
-      const device = await (dependencies.registerDevice || registerGuestDevice)(
-        authenticated.grant,
-        event,
-        { getGrantStore: dependencies.getGrantStore || getGrantStore, now }
-      );
-      if (device.limitReached || device.expired) {
+      const device = guestDeviceIdentity(event);
+      if (!device || !authenticated.grant.deviceHashes?.includes(device.deviceHash)) {
         return jsonResponse({ authenticated: false }, 401, [clearGuestSessionCookie()]);
       }
-      cookies.push(device.cookie);
+      cookies.push(guestDeviceCookieForGrant(device.deviceId, authenticated.grant, now()));
     }
 
     return jsonResponse({

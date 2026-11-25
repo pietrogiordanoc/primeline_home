@@ -166,34 +166,67 @@ export const getActiveGrant = (grant, now = Date.now()) => Boolean(
   (grant.expiresAt === null || (Number.isFinite(grant.expiresAt) && grant.expiresAt > now))
 );
 
-export const registerGuestDevice = async (
-  grant,
-  event,
-  { getGrantStore: getStoreForGrant = getGrantStore, now = Date.now } = {}
-) => {
+export const guestDeviceIdentity = (event) => {
   const cookieDeviceId = readCookie(event, GUEST_DEVICE_COOKIE);
-  const deviceId = UUID_PATTERN.test(cookieDeviceId) ? cookieDeviceId : createId();
-  const deviceHash = hashDeviceId(deviceId);
-  const deviceHashes = Array.isArray(grant.deviceHashes)
-    ? [...new Set(grant.deviceHashes.filter((hash) => /^[0-9a-f]{64}$/.test(hash)))]
-    : [];
-  if (!deviceHashes.includes(deviceHash)) {
-    if (deviceHashes.length >= GUEST_MAX_DEVICES) return { limitReached: true };
-    deviceHashes.push(deviceHash);
-    grant.deviceHashes = deviceHashes;
-    const store = await getStoreForGrant();
-    await store.setJSON(`grant:${grant.id}`, grant);
-  }
+  if (!UUID_PATTERN.test(cookieDeviceId)) return null;
+  return { deviceId: cookieDeviceId, deviceHash: hashDeviceId(cookieDeviceId) };
+};
 
+export const guestDeviceCookieForGrant = (deviceId, grant, now = Date.now()) => {
   const remaining = grant.expiresAt === null
     ? GUEST_DEVICE_COOKIE_MAX_AGE_SECONDS
-    : Math.floor((grant.expiresAt - now()) / 1000);
-  if (remaining <= 0) return { limitReached: false, expired: true };
-  return {
-    deviceId,
-    deviceHash,
-    cookie: guestDeviceCookie(deviceId, Math.min(remaining, GUEST_DEVICE_COOKIE_MAX_AGE_SECONDS))
-  };
+    : Math.floor((grant.expiresAt - now) / 1000);
+  if (remaining <= 0) throw new Error('Guest access has expired.');
+  return guestDeviceCookie(deviceId, Math.min(remaining, GUEST_DEVICE_COOKIE_MAX_AGE_SECONDS));
+};
+
+export const updateGuestGrant = async (store, grantId, update) => {
+  const key = `grant:${grantId}`;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const current = await store.getWithMetadata(key, { type: 'json' });
+    if (!current) return { missing: true };
+    if (!current.data || !current.etag) throw new Error('Guest grant metadata is unavailable.');
+    const result = await update(current.data);
+    if (!result.grant) return result;
+    const write = await store.setJSON(key, result.grant, { onlyIfMatch: current.etag });
+    if (write.modified) return { ...result, grant: result.grant };
+  }
+  throw new Error('Guest grant update conflicted repeatedly.');
+};
+
+export const authorizeGuestDevice = async (grantId, event, options = {}) => {
+  const identity = guestDeviceIdentity(event);
+  if (!identity) return { deviceRequired: true };
+  const now = options.now || Date.now;
+  const grantStore = await (options.getGrantStore || getGrantStore)();
+  let startingVersion;
+  return updateGuestGrant(grantStore, grantId, async (grant) => {
+    if (!getActiveGrant(grant, now())) return { expired: true };
+    if (options.email && grant.email !== options.email) return { expired: true };
+    const version = grant.deviceVersion || 0;
+    if (startingVersion === undefined) startingVersion = version;
+    else if (startingVersion !== version) return { resetConflict: true };
+    const devices = Array.isArray(grant.deviceHashes) ? [...new Set(grant.deviceHashes)] : [];
+    const verification = options.verification;
+    const claims = Array.isArray(grant.usedVerifications)
+      ? grant.usedVerifications.filter(item => Number.isFinite(item.expiresAt) && item.expiresAt > now())
+      : [];
+    if (verification && (verification.expiresAt <= now() || claims.some(item => item.hash === verification.hash))) {
+      return { verificationUsed: true };
+    }
+    if (!devices.includes(identity.deviceHash) && devices.length >= GUEST_MAX_DEVICES) return { limitReached: true };
+    if (!devices.includes(identity.deviceHash)) devices.push(identity.deviceHash);
+    const session = await (options.createSession || createGuestSession)(grant, {
+      getSessionStore: options.getGuestSessionStore || getGuestSessionStore, now, deviceHash: identity.deviceHash
+    });
+    if (!getActiveGrant(grant, now()) || (verification && verification.expiresAt <= now())) return { expired: true };
+    if (verification) claims.push(verification);
+    return {
+      grant: { ...grant, deviceHashes: devices, ...(verification ? { usedVerifications: claims } : {}) },
+      session,
+      deviceCookie: guestDeviceCookieForGrant(identity.deviceId, grant, now())
+    };
+  });
 };
 
 export const validateGuestSession = async (event, options = {}) => {
@@ -220,7 +253,9 @@ export const validateGuestSession = async (event, options = {}) => {
 
   const grantStore = await (options.getGrantStorage || options.getGrantStore || getGrantStore)();
   const grant = await grantStore.get(`grant:${session.grantId}`, { type: 'json' });
-  if (!getActiveGrant(grant, now()) || grant.email !== session.email || grant.id !== session.grantId) return null;
+  if (!getActiveGrant(grant, now()) || grant.email !== session.email || grant.id !== session.grantId ||
+      (session.deviceVersion || 0) !== (grant.deviceVersion || 0) ||
+      (session.deviceHash && (!Array.isArray(grant.deviceHashes) || !grant.deviceHashes.includes(session.deviceHash)))) return null;
   return { session, grant, sessionId, sessionStore };
 };
 
@@ -241,6 +276,7 @@ export const createGuestSession = async (
     email: grant.email,
     grantId: grant.id,
     ...(deviceHash ? { deviceHash } : {}),
+    deviceVersion: grant.deviceVersion || 0,
     resource: 'catalog-guest',
     createdAt,
     expiresAt: createdAt + maxAge * 1000

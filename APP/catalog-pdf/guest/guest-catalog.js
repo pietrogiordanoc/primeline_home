@@ -147,13 +147,16 @@ openButton.addEventListener('click', async () => {
   openButton.disabled = true;
   setStatus(linkPurpose === 'invite' ? 'Verifying your invitation...' : 'Verifying your access link...');
   try {
-    const response = await fetch('/api/catalog/guest/redeem', {
+    const redeem = () => fetch('/api/catalog/guest/redeem', {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: magicToken, purpose: linkPurpose })
     });
+    let response = await redeem();
+    if (response.status === 428) response = await redeem();
     const result = await response.json();
+    if (response.status === 428) throw new Error('Please enable browser cookies and try again.');
     if (!response.ok || result.authenticated !== true || result.resource !== 'catalog-guest') {
       throw new Error(result.error || 'This catalog link is invalid or expired.');
     }
