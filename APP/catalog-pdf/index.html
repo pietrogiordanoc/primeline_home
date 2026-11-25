@@ -3,6 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <script>
+    (() => {
+      const params = new URLSearchParams(location.hash.slice(1));
+      if (!params.has('web_transfer')) return;
+      const credentials = params.getAll('web_transfer');
+      params.delete('web_transfer');
+      const remaining = params.toString();
+      history.replaceState(null, '', location.pathname + location.search + (remaining ? '#' + remaining : ''));
+      window.catalogWebTransfer = credentials.length === 1 && credentials[0]
+        ? fetch('/.netlify/functions/catalog-web-transfer', {
+          method: 'POST',
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ credential: credentials[0] })
+        }).then(async response => ({ ok: response.ok, status: response.status, data: await response.json() }))
+          .catch(() => ({ ok: false, status: 503 }))
+        : Promise.resolve({ ok: false, status: 401 });
+    })();
+  </script>
   <meta name="description" content="Prime Line Autumn 2026 product catalog.">
   <title>Prime Line Catalog — Autumn 2026</title>
   <link rel="icon" type="image/gif" href="/images/favicon.gif">

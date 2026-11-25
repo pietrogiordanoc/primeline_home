@@ -188,4 +188,23 @@ shareCatalogForm.addEventListener('submit', async (event) => {
 
 accessRetry.addEventListener('click', validateCatalogSession);
 viewerRetry.addEventListener('click', validateCatalogSession);
-validateCatalogSession();
+const initialize = async () => {
+  const transfer = typeof window !== 'undefined' ? window.catalogWebTransfer : null;
+  if (!transfer) return validateCatalogSession();
+  delete window.catalogWebTransfer;
+  setAccessStatus('Checking your catalog access...');
+  const result = await transfer;
+  if (result.ok && result.data?.resource === 'catalog-guest') {
+    window.location.replace('/catalog-pdf/guest/');
+    return;
+  }
+  if (result.ok && result.data?.resource === 'catalog-pdf') return validateCatalogSession();
+  if (result.status === 403) {
+    setAccessStatus('Catalog access could not be authorized. Customers should open their existing invitation on this device; employees should contact Prime Line.', true);
+  } else if (result.status === 401 || result.status === 409) {
+    setAccessStatus('This catalog transfer is invalid, expired, or already used. Please return to Web Catalog and try again.', true);
+  } else {
+    setAccessStatus('Catalog access is temporarily unavailable. Please try again later.', true);
+  }
+};
+initialize();

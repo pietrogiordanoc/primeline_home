@@ -1,4 +1,5 @@
 import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
+import { verifyTransferredStaffSession } from '../shared/catalog-web-staff.js';
 
 const SESSION_COOKIE = 'access_session';
 const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -30,7 +31,7 @@ const getAccessStore = async () => {
   });
 };
 
-const handler = async (event) => {
+export const createCatalogSessionHandler = (dependencies = {}) => async (event) => {
   if (event.httpMethod !== 'GET') return json({ error: 'Method not allowed.' }, 405, { Allow: 'GET' });
 
   const sessionId = getSessionId(event);
@@ -39,12 +40,12 @@ const handler = async (event) => {
   }
 
   try {
-    const store = await getAccessStore();
+    const store = await (dependencies.getAccessStore || getAccessStore)();
     const key = `session:${sessionId}`;
     const session = await store.get(key, { type: 'json' });
     if (!session) return json({ authenticated: false }, 401, { 'Set-Cookie': clearSessionCookie });
 
-    if (!Number.isFinite(session.expiresAt) || session.expiresAt <= Date.now()) {
+    if (!Number.isFinite(session.expiresAt) || session.expiresAt <= (dependencies.now || Date.now)()) {
       await store.delete(key);
       return json({ authenticated: false }, 401, { 'Set-Cookie': clearSessionCookie });
     }
@@ -53,6 +54,9 @@ const handler = async (event) => {
       return json({ authenticated: false }, 401, { 'Set-Cookie': clearSessionCookie });
     }
     if (session.resource !== 'catalog-pdf') return json({ authenticated: false }, 401);
+    if (!(await (dependencies.verifyTransferredStaffSession || verifyTransferredStaffSession)(session))) {
+      return json({ authenticated: false }, 401, { 'Set-Cookie': clearSessionCookie });
+    }
 
     return json({ authenticated: true, resource: 'catalog-pdf', role: 'staff' });
   } catch {
@@ -61,4 +65,4 @@ const handler = async (event) => {
   }
 };
 
-export default adaptNetlifyHandler(handler);
+export default adaptNetlifyHandler(createCatalogSessionHandler());

@@ -4,7 +4,7 @@ Guest and staff catalog views use the existing public Autumn 2026 PDF:
 
 `https://fcdrjlzqrbvnbsehkqgm.supabase.co/storage/v1/object/public/PDF%20Catalog/Autumn%202026.pdf`
 
-No private bucket, catalog-specific Supabase credentials, or storage setup is required. The guest PDF endpoint checks the active guest session and then returns this public URL. Staff download still requires an authorized employee catalog session.
+No private bucket or storage setup is required. The guest PDF endpoint checks the active guest session and then returns this public URL. Staff download still requires an authorized employee catalog session. Web-to-PDF staff transfers additionally require the server-side Supabase credentials described below.
 
 ## Invitations, sessions, and revocation
 
@@ -13,7 +13,7 @@ No private bucket, catalog-specific Supabase credentials, or storage setup is re
 - The customer receives the access link. The verified inviting employee and Super Admin receive internal copies that identify the employee, customer, and access duration without including the access link. If an internal copy fails, customer access remains active and the sharing page reports the partial notification failure.
 - Renewal verification links expire after 15 minutes and do not extend the grant. Browser sessions last at most seven days and never outlive a finite grant.
 - Netlify Blobs stores invitation, grant, session, verification, and hashed token-claim records in separate stores. Replayed tokens are rejected after a claim is recorded.
-- Netlify Blobs does not provide conditional create/CAS writes. Sequential replays are rejected, but simultaneous redemption requests may race; strict concurrency-safe single-use requires an atomic claim service.
+- Existing invitation redemption and device-record updates are not transactional; simultaneous redemption requests can race. The separate Web-to-PDF transfer claim uses an atomic conditional create and does not add devices.
 - Admin can revoke grants, including permanent access. Guest session and PDF endpoint requests re-check the grant and revocation state.
 
 ## Web Catalog transfer
@@ -24,7 +24,21 @@ An authenticated guest may explicitly select **View as Web Catalog**. The Home f
 
 The Catalog Mode button in the header is available after staff or guest access is verified. Staff navigate directly to Web Catalog, while guests use the transfer described above. Hover or focus reveals the explanation; on touch devices, press and hold the button to show it without navigating.
 
-Web Catalog must remove the fragment before loading analytics or third-party scripts and verify the HS256 signature, issuer, audience, source, timestamps, and customer email on its backend before using the data. A signed JWT is readable by its holder and is a bearer credential; it is not encrypted or single-use. Verification must not treat it alone as proof of email ownership, and an already issued credential cannot reflect subsequent PDF grant revocation without an additional server-side check. The Web Catalog receiver and Express Pass integration are not implemented here; coordinate activation with the receiver so the fragment is handled safely.
+Web Catalog must remove the fragment before loading analytics or third-party scripts and verify the HS256 signature, issuer, audience, source, timestamps, and customer email on its backend before using the data. A signed JWT is readable by its holder and is a bearer credential; it is not encrypted or single-use. Verification must not treat it alone as proof of email ownership, and an already issued credential cannot reflect subsequent PDF grant revocation without an additional server-side check.
+
+## Web Catalog to PDF
+
+The Web Catalog backend issues a separate HS256 credential with `iss` `https://catalog.primelinedist.com`, `aud` `https://primelinedist.com/.netlify/functions/catalog-web-transfer`, `source` `web_catalog_mode`, identity claims, `iat`, `exp`, and a unique `jti`. Its lifetime is at most 120 seconds. Home removes `#web_transfer` before loading external resources and posts the credential to the transfer function. Home atomically claims the hashed `jti` in the `prime-line-web-transfer-claims` Blobs store; a daily scheduled function removes claims only after expiration plus a safety margin.
+
+For staff, configure these **server-only Netlify Functions** environment variables manually:
+
+- `PDF_CATALOG_TRANSFER_SECRET`: the same dedicated secret configured in the Web Catalog backend.
+- `WEB_CATALOG_SUPABASE_URL`: the URL of the Web Catalog Supabase project.
+- `WEB_CATALOG_SUPABASE_SERVICE_ROLE_KEY`: that project's service-role key. It has broad privileges; never expose it to browsers or commit it.
+
+Home checks the Supabase Auth user and matching active `staff` record before issuing a staff session, then rechecks them for the viewer, downloads, and sharing. Existing OTP sessions keep their existing behavior. For customers, Home requires an active matching PDF grant and a previously registered device cookie; it reuses or creates a guest session without modifying the grant. A new device must use the existing invitation redemption process. Grant expiration and revocation continue to apply.
+
+`@netlify/blobs` 11 requires Node.js 22.12 or newer. Manually confirm the Netlify build and Functions runtime use a compatible version before deploying. The Web Catalog transfer issuer and its secret must also be configured and deployed manually by the user; no Supabase schema or configuration changes are made here. Scheduled cleanup runs on production deploys.
 
 ## Important public-PDF limitation
 

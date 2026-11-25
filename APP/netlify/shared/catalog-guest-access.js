@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { ADMIN_EMAIL, hashValue } from './admin-auth.js';
+import { verifyTransferredStaffSession } from './catalog-web-staff.js';
 
 export const GUEST_INVITATION_STORE = 'prime-line-guest-invitations';
 export const GUEST_GRANT_STORE = 'prime-line-guest-grants';
@@ -432,7 +433,9 @@ export const sendCatalogShareNotification = async (invitation, recipient, depend
   });
 };
 
-export const getEmployeeCatalogSession = async (event, storeFactory, now = Date.now()) => {
+export const getEmployeeCatalogSession = async (
+  event, storeFactory, now = Date.now(), verifySession = verifyTransferredStaffSession
+) => {
   const sessionId = readCookie(event, 'access_session');
   if (!UUID_PATTERN.test(sessionId)) return null;
   const store = await (storeFactory || (() => getStore('prime-line-access')))();
@@ -445,5 +448,6 @@ export const getEmployeeCatalogSession = async (event, storeFactory, now = Date.
     typeof session.email !== 'string' ||
     !STAFF_EMAIL_PATTERN.test(session.email)
   ) return null;
+  if (!(await verifySession(session))) return null;
   return { ...session, sessionId };
 };
