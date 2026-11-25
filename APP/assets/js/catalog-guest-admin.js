@@ -106,6 +106,7 @@ const renderGuestEntries = () => {
       ['Customer Email', entry.customerEmail],
       ['Shared By', entry.sharedBy],
       ['Access Duration', entry.duration],
+      ['Created', Number.isFinite(entry.createdAt) ? formatExpiration(entry.createdAt) : '—'],
       ['Expiration', formatExpiration(entry.expiresAt)],
       ['Status', entry.status ? `${entry.status[0].toUpperCase()}${entry.status.slice(1)}` : '—']
     ];
