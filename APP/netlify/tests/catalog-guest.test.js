@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash, createHmac } from 'node:crypto';
+import { createHash, createHmac, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import {
@@ -1244,4 +1244,234 @@ test('Admin guest operations require authorization and can reissue an expired in
     authorizeAdmin: async () => ({ ok: false, reason: 'unauthorized' })
   })(makeEvent('GET'));
   assert.equal(denied.statusCode, 401);
+});
+
+test('individual deletion requires Super Admin and invalidates only the revoked invitation', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state);
+  const otherToken = await inviteCustomer(state);
+  const redeem = createCatalogGuestRedeemHandler(state.dependencies);
+  const first = await redeem(makeEvent('POST', { purpose: 'invite', token }));
+  assert.equal(first.statusCode, 200);
+  const cookies = first.multiValueHeaders['Set-Cookie'].map(value => value.split(';')[0]).join('; ');
+  assert.equal((await createCatalogGuestPdfHandler(state.dependencies)(makeEvent('GET', undefined, cookies))).statusCode, 200);
+  await createCatalogGuestRequestLinkHandler(state.dependencies)(makeEvent('POST', { email: 'buyer@example.com' }));
+  const verification = emailToken(state.emails.at(-1), 'verify');
+  assert.equal((await redeem(makeEvent('POST', { purpose: 'invite', token: otherToken }))).statusCode, 200);
+  const pointer = await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' });
+  const invitation = await state.stores.invitations.get(`invitation:${pointer.invitationId}`, { type: 'json' });
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  const otherAdmin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: 'other@primelinedist.com' } })
+  });
+  const request = { action: 'delete', recordType: 'grant', id: invitation.grantId };
+  assert.equal((await otherAdmin(makeEvent('POST', request))).statusCode, 403);
+  assert.equal((await createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: false })
+  })(makeEvent('POST', request))).statusCode, 401);
+  assert.equal(responseBody(await admin(makeEvent('POST', request))).deleted, 0);
+  assert.equal((await admin(makeEvent('POST', { action: 'revoke', grantId: invitation.grantId }))).statusCode, 200);
+  assert.equal(responseBody(await admin(makeEvent('POST', {
+    action: 'delete-expired', asOf: state.now, records: [{ recordType: 'grant', id: invitation.grantId }]
+  }))).deleted, 0);
+  assert.equal(responseBody(await admin(makeEvent('POST', request))).deleted, 1);
+  assert.equal(responseBody(await admin(makeEvent('POST', request))).deleted, 0);
+  const marker = await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' });
+  assert.equal(marker.status, 'deleted');
+  assert.equal(marker.revokedBy, ADMIN_EMAIL);
+  assert.equal(marker.deletedBy, ADMIN_EMAIL);
+  assert.equal(marker.email, undefined);
+  assert.equal((await redeem(makeEvent('POST', { purpose: 'invite', token }))).statusCode, 401);
+  assert.equal((await redeem(makeEvent('POST', { purpose: 'verify', token: verification }))).statusCode, 401);
+  assert.equal((await createCatalogGuestPdfHandler(state.dependencies)(makeEvent('GET', undefined, cookies))).statusCode, 401);
+  assert.equal((await redeem(makeEvent('POST', { purpose: 'invite', token: otherToken }))).statusCode, 200);
+  assert.equal(responseBody(await admin(makeEvent('GET'))).entries.length, 1);
+});
+
+test('bulk deletion removes only expired non-permanent records, preserving audit and other access', async () => {
+  const state = fixture();
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  const makeInvitation = async (duration, status, expiresAt) => {
+    const id = randomUUID();
+    await state.stores.invitations.setJSON(`invitation:${id}`, {
+      id, grantId: randomUUID(), customerEmail: 'same@example.com', sharedBy: 'sales@primelinedist.com',
+      duration, status, expiresAt, createdAt: state.now - 100, usedAt: null
+    });
+    return id;
+  };
+  const expired = await makeInvitation('7-days', 'pending', state.now - 1);
+  const valid = await makeInvitation('7-days', 'pending', state.now + 100);
+  const revokedValid = await makeInvitation('7-days', 'revoked', state.now + 100);
+  const permanent = await makeInvitation('permanent', 'pending', state.now - 1);
+  const grantId = randomUUID();
+  const invitationId = randomUUID();
+  await state.stores.invitations.setJSON(`invitation:${invitationId}`, {
+    id: invitationId, grantId, usedAt: state.now - 200, duration: '7-days', status: 'redeemed',
+    customerEmail: 'same@example.com', expiresAt: state.now - 1
+  });
+  await state.stores.grants.setJSON(`grant:${grantId}`, {
+    id: grantId, invitationId, duration: '7-days', status: 'active', expiresAt: state.now - 1,
+    email: 'same@example.com', deviceResetAudit: [{ action: 'reset-authorized-devices', timestamp: state.now - 100 }]
+  });
+  const permanentGrantId = randomUUID();
+  await state.stores.grants.setJSON(`grant:${permanentGrantId}`, {
+    id: permanentGrantId, invitationId: randomUUID(), duration: 'permanent', status: 'active',
+    expiresAt: null, revokedAt: state.now - 1, email: 'same@example.com'
+  });
+  const rows = responseBody(await admin(makeEvent('GET'))).entries;
+  assert.equal(rows.filter(row => row.canBulkDelete).length, 2);
+  assert.equal(responseBody(await admin(makeEvent('POST', {
+    action: 'delete-expired', asOf: state.now,
+    records: rows.filter(row => row.canBulkDelete).map(({ recordType, id }) => ({ recordType, id }))
+  }))).deleted, 2);
+  assert.equal((await state.stores.invitations.get(`invitation:${expired}`, { type: 'json' })).status, 'deleted');
+  assert.equal((await state.stores.invitations.get(`invitation:${invitationId}`, { type: 'json' })).status, 'deleted');
+  assert.equal((await state.stores.grants.get(`grant:${grantId}`, { type: 'json' })).deviceResetAudit.length, 1);
+  for (const id of [valid, revokedValid, permanent]) {
+    assert.notEqual((await state.stores.invitations.get(`invitation:${id}`, { type: 'json' })).status, 'deleted');
+  }
+  for (const [recordType, id] of [['invitation', valid], ['invitation', permanent], ['grant', permanentGrantId]]) {
+    assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType, id }))).deleted, 0);
+  }
+  assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType: 'invitation', id: revokedValid }))).deleted, 1);
+});
+
+test('concurrent renewal and deletion recheck eligibility with conditional writes', async () => {
+  const state = fixture();
+  const id = randomUUID();
+  await state.stores.grants.setJSON(`grant:${id}`, {
+    id, invitationId: randomUUID(), duration: '7-days', status: 'active', expiresAt: state.now - 1
+  });
+  const original = state.stores.grants.setJSON.bind(state.stores.grants);
+  let raced = false;
+  state.stores.grants.setJSON = async (key, value, options) => {
+    if (!raced && value.status === 'deleted') {
+      raced = true;
+      const current = await state.stores.grants.get(key, { type: 'json' });
+      await original(key, { ...current, expiresAt: state.now + 10000 });
+    }
+    return original(key, value, options);
+  };
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType: 'grant', id }))).deleted, 0);
+  assert.equal((await state.stores.grants.get(`grant:${id}`, { type: 'json' })).expiresAt, state.now + 10000);
+});
+
+test('a concurrent revocation is preserved in the deletion audit', async () => {
+  const state = fixture();
+  const id = randomUUID();
+  await state.stores.grants.setJSON(`grant:${id}`, {
+    id, invitationId: randomUUID(), duration: '7-days', status: 'active', expiresAt: state.now - 1
+  });
+  const original = state.stores.grants.setJSON.bind(state.stores.grants);
+  let raced = false;
+  state.stores.grants.setJSON = async (key, value, options) => {
+    if (!raced && value.status === 'deleted') {
+      raced = true;
+      const current = await state.stores.grants.get(key, { type: 'json' });
+      await original(key, { ...current, revokedAt: state.now, revokedBy: ADMIN_EMAIL });
+    }
+    return original(key, value, options);
+  };
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType: 'grant', id }))).deleted, 1);
+  const marker = await state.stores.grants.get(`grant:${id}`, { type: 'json' });
+  assert.equal(marker.revokedAt, state.now);
+  assert.equal(marker.revokedBy, ADMIN_EMAIL);
+});
+
+test('deletion fails closed when storage lacks conditional writes', async () => {
+  const state = fixture();
+  const id = randomUUID();
+  await state.stores.invitations.setJSON(`invitation:${id}`, {
+    id, grantId: randomUUID(), duration: '7-days', status: 'pending', expiresAt: state.now - 1
+  });
+  const original = state.stores.invitations.setJSON.bind(state.stores.invitations);
+  state.stores.invitations.setJSON = async (key, value) => {
+    await original(key, value);
+  };
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  assert.equal((await admin(makeEvent('POST', { action: 'delete', recordType: 'invitation', id }))).statusCode, 503);
+  assert.equal((await state.stores.invitations.get(`invitation:${id}`, { type: 'json' })).status, 'pending');
+});
+
+test('bulk deletion uses the confirmed expiry cutoff and excludes later expirations', async () => {
+  const state = fixture();
+  const id = randomUUID();
+  await state.stores.invitations.setJSON(`invitation:${id}`, {
+    id, grantId: randomUUID(), customerEmail: 'buyer@example.com', duration: '7-days',
+    status: 'pending', expiresAt: state.now + 1, usedAt: null
+  });
+  const asOf = state.now;
+  state.setNow(asOf + 2);
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  const records = [{ recordType: 'invitation', id }];
+  assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete-expired', asOf, records }))).deleted, 0);
+  assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete-expired', asOf: state.now, records }))).deleted, 1);
+  assert.equal((await admin(makeEvent('POST', { action: 'delete-expired', asOf: state.now + 1, records }))).statusCode, 400);
+});
+
+test('a concurrent activation cannot resurrect a deleted invitation and duplicate deletes count once', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state);
+  const pointer = await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' });
+  const key = `invitation:${pointer.invitationId}`;
+  const original = state.stores.invitations.setJSON.bind(state.stores.invitations);
+  let release, entered;
+  const waiting = new Promise(resolve => { entered = resolve; });
+  const blocked = new Promise(resolve => { release = resolve; });
+  state.stores.invitations.setJSON = async (recordKey, value, options) => {
+    if (recordKey === key && value.status === 'activating') {
+      entered();
+      await blocked;
+    }
+    return original(recordKey, value, options);
+  };
+  const redemption = createCatalogGuestRedeemHandler(state.dependencies)(makeEvent('POST', { purpose: 'invite', token }));
+  await waiting;
+  state.setNow(state.now + GUEST_INVITATION_LIFETIME_MS + 1);
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  const payload = { action: 'delete', recordType: 'invitation', id: pointer.invitationId };
+  const results = await Promise.all([admin(makeEvent('POST', payload)), admin(makeEvent('POST', payload))]);
+  assert.equal(results.reduce((sum, response) => sum + responseBody(response).deleted, 0), 1);
+  release();
+  assert.equal((await redemption).statusCode, 401);
+  assert.equal((await state.stores.invitations.get(key, { type: 'json' })).status, 'deleted');
+});
+
+test('a failed concurrent reissue cannot restore a deleted invitation', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state);
+  const pointer = await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' });
+  let release, entered;
+  const waiting = new Promise(resolve => { entered = resolve; });
+  const blocked = new Promise(resolve => { release = resolve; });
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies,
+    authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } }),
+    sendInvitation: async () => { entered(); await blocked; return false; }
+  });
+  const reissue = admin(makeEvent('POST', { action: 'reissue', invitationId: pointer.invitationId }));
+  await waiting;
+  const deleted = await admin(makeEvent('POST', {
+    action: 'delete', recordType: 'invitation', id: pointer.invitationId
+  }));
+  assert.equal(responseBody(deleted).deleted, 1);
+  release();
+  assert.equal((await reissue).statusCode, 502);
+  assert.equal((await state.stores.invitations.get(`invitation:${pointer.invitationId}`, { type: 'json' })).status, 'deleted');
 });

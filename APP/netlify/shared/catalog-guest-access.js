@@ -161,6 +161,7 @@ export const saveEmployeeProfile = async (
 
 export const getActiveGrant = (grant, now = Date.now()) => Boolean(
   grant &&
+  grant.status !== 'deleted' &&
   grant.status !== 'revoked' &&
   !grant.revokedAt &&
   (grant.expiresAt === null || (Number.isFinite(grant.expiresAt) && grant.expiresAt > now))

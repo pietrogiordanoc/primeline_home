@@ -7,13 +7,21 @@ const guestAccessStatusFilter = document.querySelector('#guestAccessStatusFilter
 const guestAccessSharedByFilter = document.querySelector('#guestAccessSharedByFilter');
 const clearGuestAccessFilters = document.querySelector('#clearGuestAccessFilters');
 const guestAccessCount = document.querySelector('#guestAccessCount');
+const deleteExpiredGuests = document.querySelector('#deleteExpiredGuests');
+const deleteGuestDialog = document.querySelector('#deleteGuestDialog');
+const deleteGuestCount = document.querySelector('#deleteGuestCount');
+const cancelDeleteGuests = document.querySelector('#cancelDeleteGuests');
+const confirmDeleteGuests = document.querySelector('#confirmDeleteGuests');
 const guestSortButtons = document.querySelectorAll('[data-guest-sort]');
 const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 const durationOrder = new Map([['24 Hours', 1], ['7 Days', 2], ['1 Month', 3], ['3 Months', 4], ['Permanent', 5]]);
 let guestEntries = [];
+let guestEntriesAsOf = null;
 let sortKey = 'createdAt';
 let sortDirection = 'descending';
 let initialized = false;
+let deletionPayload = null;
+let deleting = false;
 
 const setGuestAccessStatus = (message, isError = false) => {
   guestAccessStatus.textContent = message;
@@ -91,6 +99,7 @@ const renderGuestEntries = () => {
     (!sharedBy || normalizeEmail(entry.sharedBy) === sharedBy)
   ).sort(compareEntries);
   guestAccessCount.textContent = `${entries.length} matching record(s).`;
+  deleteExpiredGuests.disabled = deleting || guestEntriesAsOf === null || !guestEntries.some(entry => entry.canBulkDelete);
   guestSortButtons.forEach((button) => {
     const active = button.dataset.guestSort === sortKey;
     if (active) button.parentElement.setAttribute('aria-sort', sortDirection);
@@ -137,13 +146,18 @@ const renderGuestEntries = () => {
         await updateEntry({ action: 'reissue', invitationId: entry.invitationId }, 'A new invitation was sent.');
       }));
     }
+    if (entry.canDelete) {
+      actionGroup.append(actionButton('Delete Record', () => {
+        openDeleteDialog({ action: 'delete', recordType: entry.recordType, id: entry.id }, 1);
+      }));
+    }
     actions.append(actionGroup);
     row.append(actions);
     guestAccessList.append(row);
   });
 };
 
-const loadGuestEntries = async () => {
+const loadGuestEntries = async (successMessage = '') => {
   reloadGuestAccess.disabled = true;
   setGuestAccessStatus('Loading catalog guest access...');
   try {
@@ -157,11 +171,12 @@ const loadGuestEntries = async () => {
       throw new Error(result.error || 'Catalog guest access could not be loaded.');
     }
     guestEntries = result.entries;
+    guestEntriesAsOf = Number.isFinite(result.asOf) ? result.asOf : null;
     refreshSharedByOptions();
     renderGuestEntries();
-    setGuestAccessStatus('');
+    setGuestAccessStatus(successMessage);
   } catch (error) {
-    setGuestAccessStatus(error.message || 'Catalog guest access could not be loaded.', true);
+    setGuestAccessStatus(`${successMessage ? `${successMessage} ` : ''}${error.message || 'Catalog guest access could not be loaded.'}`, true);
   } finally {
     reloadGuestAccess.disabled = false;
   }
@@ -178,16 +193,74 @@ const updateEntry = async (payload, successMessage) => {
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Catalog access could not be updated.');
-    setGuestAccessStatus(successMessage);
-    await loadGuestEntries();
+    await loadGuestEntries(successMessage);
   } catch (error) {
     setGuestAccessStatus(error.message || 'Catalog access could not be updated.', true);
   }
 };
 
+const openDeleteDialog = (payload, count) => {
+  if (deleting) return;
+  deletionPayload = payload;
+  deleteGuestCount.textContent = `${count} eligible record(s).${payload.action === 'delete-expired' ? ' All eligible records are included, regardless of filters.' : ''}`;
+  deleteGuestDialog.showModal();
+};
+
+const confirmDeletion = async () => {
+  if (deleting || !deletionPayload) return;
+  deleting = true;
+  confirmDeleteGuests.disabled = true;
+  cancelDeleteGuests.disabled = true;
+  deleteExpiredGuests.disabled = true;
+  try {
+    const response = await fetch('/api/admin/catalog-guests', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(deletionPayload)
+    });
+    const result = await response.json();
+    if (!response.ok || !Number.isInteger(result.deleted)) {
+      const count = Number.isInteger(result.deleted) ? `${result.deleted} record(s) deleted. ` : '';
+      throw new Error(`${count}${result.error || 'Records could not be deleted.'}`);
+    }
+    deleteGuestDialog.close();
+    deletionPayload = null;
+    await loadGuestEntries(`${result.deleted} record(s) deleted.`);
+  } catch (error) {
+    deleteGuestDialog.close();
+    deletionPayload = null;
+    await loadGuestEntries();
+    setGuestAccessStatus(error.message || 'Records could not be deleted.', true);
+  } finally {
+    deleting = false;
+    confirmDeleteGuests.disabled = false;
+    cancelDeleteGuests.disabled = false;
+    renderGuestEntries();
+  }
+};
+
 export const initializeCatalogGuestAdmin = async () => {
   if (!initialized) {
-    reloadGuestAccess.addEventListener('click', loadGuestEntries);
+    deleteExpiredGuests.addEventListener('click', () => {
+      const records = guestEntries.filter(entry => entry.canBulkDelete)
+        .map(({ recordType, id }) => ({ recordType, id }));
+      if (records.length && guestEntriesAsOf !== null) {
+        openDeleteDialog({ action: 'delete-expired', asOf: guestEntriesAsOf, records }, records.length);
+      }
+    });
+    cancelDeleteGuests.addEventListener('click', () => {
+      if (!deleting) {
+        deletionPayload = null;
+        deleteGuestDialog.close();
+      }
+    });
+    deleteGuestDialog.addEventListener('cancel', (event) => {
+      if (deleting) event.preventDefault();
+      else deletionPayload = null;
+    });
+    confirmDeleteGuests.addEventListener('click', confirmDeletion);
+    reloadGuestAccess.addEventListener('click', () => loadGuestEntries());
     guestAccessSearch.addEventListener('input', renderGuestEntries);
     guestAccessStatusFilter.addEventListener('change', renderGuestEntries);
     guestAccessSharedByFilter.addEventListener('change', renderGuestEntries);

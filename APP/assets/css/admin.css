@@ -105,6 +105,9 @@
 .guest-access-filters input,.guest-access-filters select{ width:100%; min-width:0; min-height:34px; padding:6px 8px; border:1px solid #cbd3de; border-radius:3px; background:#fff; color:var(--pl-ink); font:12px/1.4 var(--font-sans); }
 .guest-access-filters input:focus-visible,.guest-access-filters select:focus-visible,.guest-sort-button:focus-visible{ outline:2px solid #c49a43; outline-offset:1px; }
 .guest-access-count{ margin:9px 0 0; color:#647184; font-size:10px; }
+.guest-access-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:9px; }
+.guest-access-toolbar .guest-access-count{ margin:0; }
+.guest-access-table .admin-rule-actions{ flex-wrap:wrap; }
 .guest-sort-button{ padding:0; border:0; background:transparent; color:inherit; font:inherit; letter-spacing:inherit; text-align:left; text-transform:inherit; cursor:pointer; }
 .guest-sort-button span{ color:var(--pl-navy); }
 

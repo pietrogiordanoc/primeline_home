@@ -184,7 +184,10 @@
             </label>
             <button class="admin-secondary-button" id="clearGuestAccessFilters" type="button">Clear Filters</button>
           </div>
-          <p class="guest-access-count" id="guestAccessCount" role="status" aria-live="polite"></p>
+          <div class="guest-access-toolbar">
+            <p class="guest-access-count" id="guestAccessCount" role="status" aria-live="polite"></p>
+            <button class="admin-secondary-button" id="deleteExpiredGuests" type="button" disabled>Delete Expired Records</button>
+          </div>
           <div class="admin-rules-table-wrap">
             <table class="admin-rules-table guest-access-table">
               <thead>
@@ -206,6 +209,18 @@
         </div>
       </section>
     </section>
+
+    <dialog class="admin-auth" id="deleteGuestDialog" aria-labelledby="deleteGuestTitle" aria-describedby="deleteGuestMessage">
+      <div class="admin-auth-content">
+        <h1 id="deleteGuestTitle">Delete Records?</h1>
+        <p id="deleteGuestMessage">Are you sure you want to permanently delete these records? This action cannot be undone.</p>
+        <p id="deleteGuestCount"></p>
+        <div class="admin-rule-editor-actions">
+          <button class="admin-secondary-button" id="cancelDeleteGuests" type="button">Cancel</button>
+          <button class="admin-primary-button" id="confirmDeleteGuests" type="button">Confirm Delete</button>
+        </div>
+      </div>
+    </dialog>
 
     <dialog class="admin-auth" id="authDialog" aria-labelledby="authTitle">
       <div class="admin-auth-brand">
