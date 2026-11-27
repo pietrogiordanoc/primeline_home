@@ -52,11 +52,12 @@
     </div>
 
     <p class="guest-status" id="guestStatus" role="status" aria-live="polite"></p>
+    <button class="guest-primary-button" id="retryGuestInvitation" type="button" hidden>Try Again</button>
 
     <section class="guest-link-panel" id="guestLinkPanel" hidden aria-labelledby="guestLinkTitle">
-      <h2 id="guestLinkTitle">Open the catalog</h2>
-      <p id="guestLinkDescription"></p>
-      <button class="guest-primary-button" id="openGuestCatalog" type="button">Open Catalog</button>
+      <h2 id="guestLinkTitle">Verify your access</h2>
+      <p id="guestLinkDescription">This single-use verification link confirms your existing catalog access. It does not extend the access expiration.</p>
+      <button class="guest-primary-button" id="openGuestCatalog" type="button">Verify and Open Catalog</button>
     </section>
 
     <section class="guest-renew-panel" id="guestRenewPanel" hidden aria-labelledby="guestRenewTitle">
@@ -89,6 +90,6 @@
   </main>
 
   <script type="module" src="../catalog-mode.js"></script>
-  <script type="module" src="./guest-catalog.js"></script>
+  <script type="module" src="./guest-catalog.js?v=auto-invitation-1"></script>
 </body>
 </html>

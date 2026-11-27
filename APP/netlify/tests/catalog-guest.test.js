@@ -865,7 +865,7 @@ test('Netlify Blobs conditional grant update retries a real SDK conflict', async
   assert.equal(stored.deviceVersion, 1);
 });
 
-test('guest page automatically retries cookie preparation once', async () => {
+test('invitation opens automatically, preparing fresh browser cookies only once', async () => {
   const elements = new Map();
   const element = selector => {
     if (!elements.has(selector)) elements.set(selector, {
@@ -875,24 +875,117 @@ test('guest page automatically retries cookie preparation once', async () => {
     });
     return elements.get(selector);
   };
-  let redemptionRequests = 0;
+  const requests = [];
+  let fragmentRemoved = false;
   const context = {
     document: { querySelector: element },
     location: { hash: `#invite=${'a'.repeat(43)}`, pathname: '/catalog-pdf/guest/', search: '' },
-    history: { replaceState() {} },
+    history: { replaceState() { fragmentRemoved = true; } },
     URLSearchParams, setTimeout: () => 1, clearTimeout() {},
-    fetch: async url => {
+    fetch: async (url, options) => {
+      requests.push({ url, options });
       if (url.endsWith('/redeem')) {
-        redemptionRequests++;
-        if (redemptionRequests === 1) return { status: 428 };
-        return { status: 200, ok: true, json: async () => ({ authenticated: true, resource: 'catalog-guest', expiresAt: null }) };
+        assert.equal(fragmentRemoved, true);
+        assert.equal(JSON.parse(options.body).purpose, 'invite');
+        if (requests.filter(request => request.url.endsWith('/redeem')).length === 1) return { status: 428 };
+        return { status: 200, ok: true, json: async () => ({
+          authenticated: true, resource: 'catalog-guest', expiresAt: null, sharedBy: 'seller@primelinedist.com'
+        }) };
       }
       return { status: 200, ok: true };
     }
   };
-  runInNewContext(readFileSync(new URL('../../catalog-pdf/guest/guest-catalog.js', import.meta.url), 'utf8'), context);
+  const script = readFileSync(new URL('../../catalog-pdf/guest/guest-catalog.js', import.meta.url), 'utf8')
+    .replace('initialize();', 'globalThis.guestInitialization = initialize();');
+  runInNewContext(script, context);
+  await context.guestInitialization;
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(requests.filter(request => request.url.endsWith('/redeem')).length, 2);
+  assert.equal(requests.filter(request => request.url.endsWith('/pdf')).length, 1);
+  assert.equal(requests.some(request => request.url.endsWith('/session') || request.url.endsWith('/request-link')), false);
+  assert.equal(element('#guestLinkPanel').hidden, true);
+  assert.equal(element('#retryGuestInvitation').hidden, true);
+  assert.equal(element('#guestViewer').hidden, false);
+  assert.equal(element('#guestInviterEmail').textContent, 'seller@primelinedist.com');
+});
+
+test('failed automatic invitation redemption shows the error and allows a guarded retry', async () => {
+  const elements = new Map();
+  const element = selector => {
+    if (!elements.has(selector)) elements.set(selector, {
+      hidden: true, listeners: {}, classList: { toggle() {} },
+      addEventListener(type, handler) { this.listeners[type] = handler; },
+      querySelector() { return { textContent: '' }; }
+    });
+    return elements.get(selector);
+  };
+  let requests = 0;
+  let release;
+  const pending = new Promise(resolve => { release = resolve; });
+  const context = {
+    document: { querySelector: element },
+    location: { hash: `#invite=${'a'.repeat(43)}`, pathname: '/catalog-pdf/guest/', search: '' },
+    history: { replaceState() {} }, URLSearchParams, setTimeout: () => 1, clearTimeout() {},
+    fetch: async url => {
+      assert.equal(url, '/api/catalog/guest/redeem');
+      requests++;
+      if (requests === 1) return { status: 401, ok: false, json: async () => ({ error: 'This catalog access has expired or been revoked.' }) };
+      await pending;
+      return { status: 401, ok: false, json: async () => ({ error: 'This catalog access has expired or been revoked.' }) };
+    }
+  };
+  const script = readFileSync(new URL('../../catalog-pdf/guest/guest-catalog.js', import.meta.url), 'utf8')
+    .replace('initialize();', 'globalThis.guestInitialization = initialize();');
+  runInNewContext(script, context);
+  await context.guestInitialization;
+  assert.match(element('#guestStatus').textContent, /expired or been revoked/);
+  assert.equal(element('#guestLinkPanel').hidden, true);
+  assert.equal(element('#retryGuestInvitation').hidden, false);
+  const first = element('#retryGuestInvitation').listeners.click();
+  await element('#retryGuestInvitation').listeners.click();
+  assert.equal(requests, 2);
+  release();
+  await first;
+  assert.match(element('#guestStatus').textContent, /expired or been revoked/);
+  assert.equal(element('#guestViewer').hidden, true);
+});
+
+test('single-use verification links still require confirmation and guard against duplicate clicks', async () => {
+  const elements = new Map();
+  const element = selector => {
+    if (!elements.has(selector)) elements.set(selector, {
+      hidden: true, listeners: {}, classList: { toggle() {} },
+      addEventListener(type, handler) { this.listeners[type] = handler; },
+      querySelector() { return { textContent: '' }; }
+    });
+    return elements.get(selector);
+  };
+  let requests = 0;
+  let release;
+  const pending = new Promise(resolve => { release = resolve; });
+  const context = {
+    document: { querySelector: element },
+    location: { hash: `#verify=${'b'.repeat(43)}`, pathname: '/catalog-pdf/guest/', search: '' },
+    history: { replaceState() {} }, URLSearchParams, setTimeout: () => 1, clearTimeout() {},
+    fetch: async (url, options) => {
+      if (url.endsWith('/pdf')) return { ok: true };
+      requests++;
+      assert.equal(JSON.parse(options.body).purpose, 'verify');
+      await pending;
+      return { status: 200, ok: true, json: async () => ({ authenticated: true, resource: 'catalog-guest', expiresAt: null }) };
+    }
+  };
+  const script = readFileSync(new URL('../../catalog-pdf/guest/guest-catalog.js', import.meta.url), 'utf8')
+    .replace('initialize();', 'globalThis.guestInitialization = initialize();');
+  runInNewContext(script, context);
+  await context.guestInitialization;
+  assert.equal(requests, 0);
+  assert.equal(element('#guestLinkPanel').hidden, false);
+  const first = element('#openGuestCatalog').listeners.click();
   await element('#openGuestCatalog').listeners.click();
-  assert.equal(redemptionRequests, 2);
+  assert.equal(requests, 1);
+  release();
+  await first;
   assert.equal(element('#guestViewer').hidden, false);
 });
 
@@ -1393,7 +1486,7 @@ test('guest Web Mode transfer requires a click and handles expired access', asyn
   assert.equal(element('#catalogMode').hidden, true);
 });
 
-test('an unredeemed invitation does not show the Catalog Mode switcher', async () => {
+test('Catalog Mode remains hidden while an invitation is being redeemed', async () => {
   const elements = new Map();
   const element = (selector) => {
     if (!elements.has(selector)) {
@@ -1407,18 +1500,30 @@ test('an unredeemed invitation does not show the Catalog Mode switcher', async (
     return elements.get(selector);
   };
   const requests = [];
-  runInNewContext(readFileSync(new URL('../../catalog-pdf/guest/guest-catalog.js', import.meta.url), 'utf8'), {
+  let release;
+  const waiting = new Promise(resolve => { release = resolve; });
+  const context = {
     document: { querySelector: element },
     location: { hash: '#invite=sample', pathname: '/catalog-pdf/guest/', search: '' },
     history: { replaceState() {} },
     URLSearchParams,
-    fetch: async (url) => { requests.push(url); },
+    fetch: async (url) => {
+      requests.push(url);
+      await waiting;
+      return { status: 401, ok: false, json: async () => ({ error: 'Invalid invitation.' }) };
+    },
     setTimeout,
     clearTimeout
-  });
-  assert.equal(element('#guestLinkPanel').hidden, false);
+  };
+  const script = readFileSync(new URL('../../catalog-pdf/guest/guest-catalog.js', import.meta.url), 'utf8')
+    .replace('initialize();', 'globalThis.guestInitialization = initialize();');
+  runInNewContext(script, context);
+  assert.equal(element('#guestLinkPanel').hidden, true);
   assert.equal(element('#catalogMode').hidden, true);
-  assert.deepEqual(requests, []);
+  assert.deepEqual(requests, ['/api/catalog/guest/redeem']);
+  release();
+  await context.guestInitialization;
+  assert.equal(element('#catalogMode').hidden, true);
 });
 
 test('staff Catalog Mode appears only after the employee session is verified', async () => {

@@ -1,7 +1,7 @@
 const ISSUU_URL = 'https://e.issuu.com/embed.html?d=florida_spring_2021_compressed&hideIssuuLogo=true&hideShareButton=true&u=primelinedist';
 const linkPanel = document.querySelector('#guestLinkPanel');
-const linkDescription = document.querySelector('#guestLinkDescription');
 const openButton = document.querySelector('#openGuestCatalog');
+const retryInvitation = document.querySelector('#retryGuestInvitation');
 const renewPanel = document.querySelector('#guestRenewPanel');
 const requestLinkForm = document.querySelector('#requestGuestLinkForm');
 const guestFormStatus = document.querySelector('#guestFormStatus');
@@ -24,6 +24,7 @@ const verificationToken = hashParameters.get('verify') || '';
 const linkPurpose = invitationToken ? 'invite' : verificationToken ? 'verify' : '';
 let magicToken = invitationToken || verificationToken;
 let viewerLoadTimeout;
+let redeeming = false;
 
 if (location.hash) history.replaceState(null, '', `${location.pathname}${location.search}`);
 
@@ -142,9 +143,14 @@ guestWebTransfer.addEventListener('click', async () => {
   }
 });
 
-openButton.addEventListener('click', async () => {
-  if (!magicToken || !linkPurpose) return;
+const redeemLink = async () => {
+  if (!magicToken || !linkPurpose || redeeming) return;
+  redeeming = true;
   openButton.disabled = true;
+  if (retryInvitation) {
+    retryInvitation.hidden = true;
+    retryInvitation.disabled = true;
+  }
   setStatus(linkPurpose === 'invite' ? 'Verifying your invitation...' : 'Verifying your access link...');
   try {
     const redeem = () => fetch('/api/catalog/guest/redeem', {
@@ -166,9 +172,16 @@ openButton.addEventListener('click', async () => {
     loadCatalogViewer();
   } catch (error) {
     setStatus(error.message || 'This catalog link could not be verified.', true);
+    if (linkPurpose === 'invite' && retryInvitation) retryInvitation.hidden = false;
+  } finally {
+    redeeming = false;
     openButton.disabled = false;
+    if (retryInvitation) retryInvitation.disabled = false;
   }
-});
+};
+
+openButton.addEventListener('click', redeemLink);
+retryInvitation?.addEventListener('click', redeemLink);
 
 requestLinkForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -196,12 +209,9 @@ requestLinkForm.addEventListener('submit', async (event) => {
 
 const initialize = async () => {
   if (magicToken) {
-    linkPanel.hidden = false;
     renewPanel.hidden = true;
-    linkDescription.textContent = linkPurpose === 'invite'
-      ? 'Open this invitation within 30 days to start access. After activation, this link can be reused on any browser or device until access expires.'
-      : 'This single-use verification link confirms your existing catalog access. It does not extend the access expiration.';
-    openButton.textContent = linkPurpose === 'invite' ? 'Open Catalog' : 'Verify and Open Catalog';
+    if (linkPurpose === 'invite') await redeemLink();
+    else linkPanel.hidden = false;
     return;
   }
 

@@ -105,6 +105,7 @@ body{
   text-decoration:underline;
 }
 .guest-status{margin:0 0 10px}
+.guest-main>#retryGuestInvitation{align-self:flex-start}
 .guest-link-panel,.guest-renew-panel{
   width:min(100%,520px);
   margin:24px auto;
