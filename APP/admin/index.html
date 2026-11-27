@@ -205,19 +205,21 @@
             </table>
             <p class="admin-empty-rules" id="emptyGuestAccess">No catalog invitations or grants yet.</p>
           </div>
-          <p class="admin-config-status" id="guestAccessStatus" role="status" aria-live="polite"></p>
+          <p class="admin-config-status" id="guestAccessStatus" role="status" aria-live="polite" tabindex="-1"></p>
         </div>
       </section>
     </section>
 
-    <dialog class="admin-auth" id="deleteGuestDialog" aria-labelledby="deleteGuestTitle" aria-describedby="deleteGuestMessage">
+    <dialog class="admin-auth guest-action-dialog" id="deleteGuestDialog" aria-labelledby="deleteGuestTitle" aria-describedby="deleteGuestCustomer deleteGuestMessage deleteGuestCount" tabindex="-1">
       <div class="admin-auth-content">
         <h1 id="deleteGuestTitle">Delete Records?</h1>
+        <p id="deleteGuestCustomer"></p>
         <p id="deleteGuestMessage">Are you sure you want to permanently delete these records? This action cannot be undone.</p>
         <p id="deleteGuestCount"></p>
+        <p id="guestActionProgress" role="status" aria-live="polite"></p>
         <div class="admin-rule-editor-actions">
-          <button class="admin-secondary-button" id="cancelDeleteGuests" type="button">Cancel</button>
-          <button class="admin-primary-button" id="confirmDeleteGuests" type="button">Confirm Delete</button>
+          <button class="admin-secondary-button" id="cancelDeleteGuests" type="button" autofocus>Cancel</button>
+          <button class="admin-primary-button is-danger" id="confirmDeleteGuests" type="button">Confirm Delete</button>
         </div>
       </div>
     </dialog>

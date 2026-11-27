@@ -75,6 +75,8 @@
 .admin-primary-button{ background:var(--pl-navy); color:#fff; }
 .admin-secondary-button{ background:#fff; color:var(--pl-navy); }
 .admin-primary-button:hover{ background:#233960; }
+.admin-primary-button.is-danger{ border-color:#a3302b; background:#a3302b; }
+.admin-primary-button.is-danger:hover{ background:#812722; }
 .admin-secondary-button:hover{ background:#edf0f5; }
 .admin-primary-button:disabled,.admin-secondary-button:disabled{ opacity:.6; cursor:wait; }
 .admin-signout,.admin-text-button{ padding:5px 0; border:0; background:transparent; color:inherit; font:600 11px/1.2 var(--font-sans); cursor:pointer; }
@@ -88,6 +90,12 @@
 .admin-auth-content{ padding:20px; }
 .admin-auth-content h1{ margin:5px 0 6px; color:var(--pl-navy); font:600 22px/1.3 var(--font-sans); }
 .admin-auth-content>p:not(.admin-status){ margin:0 0 16px; color:#647184; font-size:12px; }
+.guest-action-dialog{ position:fixed; inset:0; margin:auto; max-height:calc(100dvh - 32px); overflow:auto; }
+.guest-action-dialog::backdrop{ background:rgba(13,24,48,.55); }
+.guest-action-dialog #deleteGuestCustomer{ overflow-wrap:anywhere; color:var(--pl-navy); font-weight:600; }
+.guest-action-dialog p:empty{ display:none; }
+.guest-action-dialog .admin-rule-editor-actions{ flex-wrap:wrap; }
+.guest-action-dialog button:focus-visible{ outline:2px solid #c49a43; outline-offset:2px; }
 .admin-auth-form{ display:grid; gap:9px; }
 .admin-auth-form[hidden]{ display:none; }
 .admin-auth-form label{ color:#647184; font-size:11px; font-weight:600; }

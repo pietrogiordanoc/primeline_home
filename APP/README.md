@@ -29,6 +29,10 @@ revocación y reinicio de dispositivos. No se modifican cuentas del catálogo we
 Los PDF descargados y las URL públicas de Issuu no pueden retirarse; los tokens
 de transferencia ya emitidos pueden seguir siendo válidos hasta su vencimiento.
 
+Las acciones de acceso al catálogo usan un diálogo de confirmación de Admin.
+El administrador puede cancelar o pulsar Escape antes de confirmar; el diálogo
+muestra el cliente y la acción, o el número de registros para la limpieza masiva.
+
 ### Recuperación de acceso al catálogo PDF
 
 La cookie del dispositivo no identifica por sí sola una invitación. Si una sesión

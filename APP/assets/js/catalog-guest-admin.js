@@ -10,8 +10,10 @@ const guestAccessCount = document.querySelector('#guestAccessCount');
 const deleteExpiredGuests = document.querySelector('#deleteExpiredGuests');
 const deleteGuestDialog = document.querySelector('#deleteGuestDialog');
 const deleteGuestTitle = document.querySelector('#deleteGuestTitle');
+const deleteGuestCustomer = document.querySelector('#deleteGuestCustomer');
 const deleteGuestMessage = document.querySelector('#deleteGuestMessage');
 const deleteGuestCount = document.querySelector('#deleteGuestCount');
+const guestActionProgress = document.querySelector('#guestActionProgress');
 const cancelDeleteGuests = document.querySelector('#cancelDeleteGuests');
 const confirmDeleteGuests = document.querySelector('#confirmDeleteGuests');
 const guestSortButtons = document.querySelectorAll('[data-guest-sort]');
@@ -22,8 +24,9 @@ let guestEntriesAsOf = null;
 let sortKey = 'createdAt';
 let sortDirection = 'descending';
 let initialized = false;
-let deletionPayload = null;
-let deleting = false;
+let pendingAction = null;
+let actionTrigger = null;
+let submitting = false;
 
 const setGuestAccessStatus = (message, isError = false) => {
   guestAccessStatus.textContent = message;
@@ -41,7 +44,7 @@ const actionButton = (label, action) => {
   button.type = 'button';
   button.className = 'admin-text-button';
   button.textContent = label;
-  button.addEventListener('click', action);
+  button.addEventListener('click', () => action(button));
   return button;
 };
 
@@ -101,7 +104,7 @@ const renderGuestEntries = () => {
     (!sharedBy || normalizeEmail(entry.sharedBy) === sharedBy)
   ).sort(compareEntries);
   guestAccessCount.textContent = `${entries.length} matching record(s).`;
-  deleteExpiredGuests.disabled = deleting || guestEntriesAsOf === null || !guestEntries.some(entry => entry.canBulkDelete);
+  deleteExpiredGuests.disabled = submitting || guestEntriesAsOf === null || !guestEntries.some(entry => entry.canBulkDelete);
   guestSortButtons.forEach((button) => {
     const active = button.dataset.guestSort === sortKey;
     if (active) button.parentElement.setAttribute('aria-sort', sortDirection);
@@ -133,24 +136,50 @@ const renderGuestEntries = () => {
     const actionGroup = document.createElement('div');
     actionGroup.className = 'admin-rule-actions';
     if (entry.canRevoke) {
-      actionGroup.append(actionButton('Reset authorized devices', async () => {
-        if (!window.confirm(`Reset authorized devices for ${entry.customerEmail}? Existing guest sessions will stop working. The expiration date will not change.`)) return;
-        await updateEntry({ action: 'reset-devices', grantId: entry.id, confirmed: true }, 'Authorized devices reset.');
+      actionGroup.append(actionButton('Reset authorized devices', (trigger) => {
+        openGuestDialog({
+          payload: { action: 'reset-devices', grantId: entry.id, confirmed: true },
+          title: 'Reset Authorized Devices?',
+          message: 'Existing guest sessions will stop working. The expiration date will not change.',
+          customerEmail: entry.customerEmail,
+          confirmLabel: 'Confirm Reset',
+          successMessage: 'Authorized devices reset.'
+        }, trigger);
       }));
-      actionGroup.append(actionButton('Revoke access', async () => {
-        if (!window.confirm(`Revoke catalog access for ${entry.customerEmail}?`)) return;
-        await updateEntry({ action: 'revoke', grantId: entry.id }, 'Access revoked.');
+      actionGroup.append(actionButton('Revoke access', (trigger) => {
+        openGuestDialog({
+          payload: { action: 'revoke', grantId: entry.id },
+          title: 'Revoke Access?',
+          message: 'This immediately revokes catalog access and invalidates existing guest sessions.',
+          customerEmail: entry.customerEmail,
+          confirmLabel: 'Confirm Revoke',
+          successMessage: 'Access revoked.',
+          destructive: true
+        }, trigger);
       }));
     }
     if (entry.canReissue) {
-      actionGroup.append(actionButton('Reissue invitation', async () => {
-        if (!window.confirm(`Send a new private invitation to ${entry.customerEmail}?`)) return;
-        await updateEntry({ action: 'reissue', invitationId: entry.invitationId }, 'A new invitation was sent.');
+      actionGroup.append(actionButton('Reissue invitation', (trigger) => {
+        openGuestDialog({
+          payload: { action: 'reissue', invitationId: entry.invitationId },
+          title: 'Reissue Invitation?',
+          message: 'This sends a new private invitation and invalidates the previous invitation link.',
+          customerEmail: entry.customerEmail,
+          confirmLabel: 'Confirm Reissue',
+          successMessage: 'A new invitation was sent.'
+        }, trigger);
       }));
     }
     if (entry.canDelete) {
-      actionGroup.append(actionButton('Delete Record', () => {
-        openDeleteDialog({ action: 'delete', recordType: entry.recordType, id: entry.id }, 1);
+      actionGroup.append(actionButton('Delete Record', (trigger) => {
+        openGuestDialog({
+          payload: { action: 'delete', recordType: entry.recordType, id: entry.id },
+          title: 'Delete Invitation?',
+          message: 'This permanently deletes the invitation and immediately revokes access through Prime Line Home. This action cannot be undone. Previously downloaded PDFs and publicly accessible Issuu URLs cannot be recalled.',
+          customerEmail: entry.customerEmail,
+          confirmLabel: 'Confirm Delete',
+          destructive: true
+        }, trigger);
       }));
     }
     actions.append(actionGroup);
@@ -184,66 +213,69 @@ const loadGuestEntries = async (successMessage = '') => {
   }
 };
 
-const updateEntry = async (payload, successMessage) => {
-  setGuestAccessStatus('Updating catalog access...');
-  try {
-    const response = await fetch('/api/admin/catalog-guests', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Catalog access could not be updated.');
-    await loadGuestEntries(successMessage);
-  } catch (error) {
-    setGuestAccessStatus(error.message || 'Catalog access could not be updated.', true);
-  }
-};
-
-const openDeleteDialog = (payload, count) => {
-  if (deleting) return;
-  deletionPayload = payload;
-  const bulk = payload.action === 'delete-expired';
-  deleteGuestTitle.textContent = bulk ? 'Delete Records?' : 'Delete Invitation?';
-  deleteGuestMessage.textContent = bulk
-    ? 'Are you sure you want to permanently delete these records? This action cannot be undone.'
-    : 'This permanently deletes the invitation and immediately revokes access through Prime Line Home. This action cannot be undone. Previously downloaded PDFs and publicly accessible Issuu URLs cannot be recalled.';
-  deleteGuestCount.textContent = bulk ? `${count} eligible record(s). All eligible records are included, regardless of filters.` : '';
+const openGuestDialog = (action, trigger) => {
+  if (submitting || deleteGuestDialog.open) return;
+  pendingAction = action;
+  actionTrigger = trigger;
+  deleteGuestTitle.textContent = action.title;
+  deleteGuestCustomer.textContent = action.customerEmail ? `Customer: ${action.customerEmail}` : '';
+  deleteGuestMessage.textContent = action.message;
+  deleteGuestCount.textContent = action.count ? `${action.count} eligible record(s). All eligible records are included, regardless of filters.` : '';
+  confirmDeleteGuests.textContent = action.confirmLabel;
+  confirmDeleteGuests.classList.toggle('is-danger', Boolean(action.destructive));
   deleteGuestDialog.showModal();
+  cancelDeleteGuests.focus();
 };
 
-const confirmDeletion = async () => {
-  if (deleting || !deletionPayload) return;
-  deleting = true;
+const cancelGuestDialog = () => {
+  if (submitting) return;
+  pendingAction = null;
+  deleteGuestDialog.close();
+  if (actionTrigger?.isConnected) actionTrigger.focus();
+  else guestAccessStatus.focus();
+  actionTrigger = null;
+};
+
+const confirmGuestAction = async () => {
+  if (submitting || !pendingAction) return;
+  const action = pendingAction;
+  const isDeletion = action.payload.action === 'delete' || action.payload.action === 'delete-expired';
+  submitting = true;
   confirmDeleteGuests.disabled = true;
   cancelDeleteGuests.disabled = true;
   deleteExpiredGuests.disabled = true;
+  guestActionProgress.textContent = 'Processing...';
+  deleteGuestDialog.setAttribute('aria-busy', 'true');
+  deleteGuestDialog.focus();
   try {
     const response = await fetch('/api/admin/catalog-guests', {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(deletionPayload)
+      body: JSON.stringify(action.payload)
     });
     const result = await response.json();
-    if (!response.ok || !Number.isInteger(result.deleted)) {
+    if (!response.ok || (isDeletion && !Number.isInteger(result.deleted))) {
       const count = Number.isInteger(result.deleted) ? `${result.deleted} record(s) deleted. ` : '';
-      throw new Error(`${count}${result.error || 'Records could not be deleted.'}`);
+      throw new Error(`${count}${result.error || (isDeletion ? 'Records could not be deleted.' : 'Catalog access could not be updated.')}`);
     }
     deleteGuestDialog.close();
-    deletionPayload = null;
-    await loadGuestEntries(`${result.deleted} record(s) deleted.`);
+    pendingAction = null;
+    await loadGuestEntries(isDeletion ? `${result.deleted} record(s) deleted.` : action.successMessage);
   } catch (error) {
     deleteGuestDialog.close();
-    deletionPayload = null;
-    await loadGuestEntries();
-    setGuestAccessStatus(error.message || 'Records could not be deleted.', true);
+    pendingAction = null;
+    if (isDeletion) await loadGuestEntries();
+    setGuestAccessStatus(error.message || (isDeletion ? 'Records could not be deleted.' : 'Catalog access could not be updated.'), true);
   } finally {
-    deleting = false;
+    submitting = false;
+    actionTrigger = null;
+    guestActionProgress.textContent = '';
+    deleteGuestDialog.removeAttribute('aria-busy');
     confirmDeleteGuests.disabled = false;
     cancelDeleteGuests.disabled = false;
     renderGuestEntries();
+    guestAccessStatus.focus();
   }
 };
 
@@ -253,20 +285,27 @@ export const initializeCatalogGuestAdmin = async () => {
       const records = guestEntries.filter(entry => entry.canBulkDelete)
         .map(({ recordType, id }) => ({ recordType, id }));
       if (records.length && guestEntriesAsOf !== null) {
-        openDeleteDialog({ action: 'delete-expired', asOf: guestEntriesAsOf, records }, records.length);
+        openGuestDialog({
+          payload: { action: 'delete-expired', asOf: guestEntriesAsOf, records },
+          title: 'Delete Records?',
+          message: 'Are you sure you want to permanently delete these records? This action cannot be undone.',
+          count: records.length,
+          confirmLabel: 'Confirm Delete',
+          destructive: true
+        }, deleteExpiredGuests);
       }
     });
-    cancelDeleteGuests.addEventListener('click', () => {
-      if (!deleting) {
-        deletionPayload = null;
-        deleteGuestDialog.close();
-      }
+    cancelDeleteGuests.addEventListener('click', cancelGuestDialog);
+    deleteGuestDialog.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      cancelGuestDialog();
     });
     deleteGuestDialog.addEventListener('cancel', (event) => {
-      if (deleting) event.preventDefault();
-      else deletionPayload = null;
+      event.preventDefault();
+      cancelGuestDialog();
     });
-    confirmDeleteGuests.addEventListener('click', confirmDeletion);
+    confirmDeleteGuests.addEventListener('click', confirmGuestAction);
     reloadGuestAccess.addEventListener('click', () => loadGuestEntries());
     guestAccessSearch.addEventListener('input', renderGuestEntries);
     guestAccessStatusFilter.addEventListener('change', renderGuestEntries);

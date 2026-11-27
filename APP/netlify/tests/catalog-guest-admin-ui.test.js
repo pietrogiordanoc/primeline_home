@@ -10,12 +10,18 @@ const createElement = () => ({
   attributes: {},
   value: '',
   textContent: '',
-  classList: { toggle() {} },
+  classList: {
+    values: new Set(),
+    toggle(name, enabled) { if (enabled) this.values.add(name); else this.values.delete(name); },
+    contains(name) { return this.values.has(name); }
+  },
+  isConnected: true,
   append(...children) { this.children.push(...children); },
   replaceChildren(...children) { this.children = children; },
   addEventListener(type, listener) { this.listeners[type] = listener; },
   showModal() { this.open = true; },
   close() { this.open = false; },
+  focus() { this.focused = true; },
   setAttribute(name, value) { this.attributes[name] = value; },
   removeAttribute(name) { delete this.attributes[name]; }
 });
@@ -69,11 +75,122 @@ test('delete confirmation shows the unfiltered eligible count and prevents doubl
   actions[0].listeners.click();
   assert.equal(element('#deleteGuestDialog').open, true);
   assert.equal(element('#deleteGuestTitle').textContent, 'Delete Invitation?');
+  assert.equal(element('#deleteGuestCustomer').textContent, 'Customer: two@example.com');
   assert.match(element('#deleteGuestMessage').textContent, /immediately revokes access/);
   assert.match(element('#deleteGuestMessage').textContent, /downloaded PDFs.*Issuu URLs cannot be recalled/);
   element('#cancelDeleteGuests').listeners.click();
   assert.equal(element('#deleteGuestDialog').open, false);
   assert.equal(posts, 1);
+});
+
+test('all guest actions use accessible confirmations, preserve payloads and prevent duplicate submissions', async () => {
+  const cases = [
+    { label: 'Reset authorized devices', title: 'Reset Authorized Devices?', confirm: 'Confirm Reset', action: 'reset-devices', destructive: false },
+    { label: 'Revoke access', title: 'Revoke Access?', confirm: 'Confirm Revoke', action: 'revoke', destructive: true },
+    { label: 'Reissue invitation', title: 'Reissue Invitation?', confirm: 'Confirm Reissue', action: 'reissue', destructive: false },
+    { label: 'Delete Record', title: 'Delete Invitation?', confirm: 'Confirm Delete', action: 'delete', destructive: true }
+  ];
+  for (const scenario of cases) {
+    const elements = new Map();
+    const element = selector => {
+      if (!elements.has(selector)) elements.set(selector, createElement());
+      return elements.get(selector);
+    };
+    const entry = {
+      id: 'grant-1', invitationId: 'invitation-1', recordType: 'grant', customerEmail: 'buyer@example.com',
+      status: 'active', canRevoke: true, canReissue: true, canDelete: true
+    };
+    const requests = [];
+    let resolvePost;
+    const script = readFileSync(new URL('../../assets/js/catalog-guest-admin.js', import.meta.url), 'utf8')
+      .replace('export const initializeCatalogGuestAdmin', 'const initializeCatalogGuestAdmin');
+    const context = {
+      document: { querySelector: element, querySelectorAll: () => [], createElement },
+      fetch: async (_url, options) => {
+        if (options.method === 'GET') return { ok: true, json: async () => ({ entries: [entry], asOf: 10 }) };
+        requests.push(JSON.parse(options.body));
+        await new Promise(resolve => { resolvePost = resolve; });
+        return { ok: true, json: async () => scenario.action === 'delete' ? { deleted: 1 } : {} };
+      }
+    };
+    runInNewContext(`${script}\nglobalThis.initialize = initializeCatalogGuestAdmin;`, context);
+    await context.initialize();
+    const findAction = () => element('#guestAccessList').children[0].children[6].children[0].children
+      .find(button => button.textContent === scenario.label);
+    let trigger = findAction();
+    trigger.listeners.click();
+    assert.equal(element('#deleteGuestDialog').open, true, scenario.action);
+    assert.equal(element('#deleteGuestTitle').textContent, scenario.title);
+    assert.equal(element('#deleteGuestCustomer').textContent, 'Customer: buyer@example.com');
+    assert.notEqual(element('#deleteGuestMessage').textContent, '');
+    assert.equal(element('#confirmDeleteGuests').textContent, scenario.confirm);
+    assert.equal(element('#confirmDeleteGuests').classList.contains('is-danger'), scenario.destructive);
+    assert.equal(element('#cancelDeleteGuests').focused, true);
+    element('#cancelDeleteGuests').listeners.click();
+    assert.equal(element('#deleteGuestDialog').open, false);
+    assert.equal(trigger.focused, true);
+    assert.equal(requests.length, 0);
+
+    trigger = findAction();
+    trigger.listeners.click();
+    let prevented = false;
+    element('#deleteGuestDialog').listeners.keydown({ key: 'Escape', preventDefault() { prevented = true; } });
+    assert.equal(prevented, true);
+    assert.equal(element('#deleteGuestDialog').open, false);
+    assert.equal(trigger.focused, true);
+
+    findAction().listeners.click();
+    const first = element('#confirmDeleteGuests').listeners.click();
+    await element('#confirmDeleteGuests').listeners.click();
+    element('#deleteGuestDialog').listeners.cancel({ preventDefault() {} });
+    assert.equal(element('#deleteGuestDialog').open, true);
+    assert.equal(element('#confirmDeleteGuests').disabled, true);
+    assert.equal(element('#cancelDeleteGuests').disabled, true);
+    assert.equal(element('#deleteGuestDialog').attributes['aria-busy'], 'true');
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].action, scenario.action);
+    if (scenario.action === 'reset-devices') assert.equal(requests[0].confirmed, true);
+    if (scenario.action === 'reissue') assert.equal(requests[0].invitationId, 'invitation-1');
+    if (scenario.action === 'delete') {
+      assert.equal(requests[0].recordType, 'grant');
+      assert.equal(requests[0].id, 'grant-1');
+    }
+    resolvePost();
+    await first;
+    assert.equal(element('#deleteGuestDialog').open, false);
+    assert.equal(element('#guestAccessStatus').focused, true);
+    assert.notEqual(element('#guestAccessStatus').textContent, '');
+    assert.equal(element('#confirmDeleteGuests').disabled, false);
+    assert.equal(element('#deleteGuestDialog').attributes['aria-busy'], undefined);
+  }
+});
+
+test('guest action failures are reported in the application and allow retry', async () => {
+  const elements = new Map();
+  const element = selector => {
+    if (!elements.has(selector)) elements.set(selector, createElement());
+    return elements.get(selector);
+  };
+  const entry = { id: 'grant', customerEmail: 'buyer@example.com', status: 'active', canRevoke: true };
+  const script = readFileSync(new URL('../../assets/js/catalog-guest-admin.js', import.meta.url), 'utf8')
+    .replace('export const initializeCatalogGuestAdmin', 'const initializeCatalogGuestAdmin');
+  const context = {
+    document: { querySelector: element, querySelectorAll: () => [], createElement },
+    fetch: async (_url, options) => options.method === 'GET'
+      ? { ok: true, json: async () => ({ entries: [entry] }) }
+      : { ok: false, json: async () => ({ error: 'Access denied.' }) }
+  };
+  runInNewContext(`${script}\nglobalThis.initialize = initializeCatalogGuestAdmin;`, context);
+  await context.initialize();
+  const actions = () => element('#guestAccessList').children[0].children[6].children[0].children;
+  actions().find(button => button.textContent === 'Revoke access').listeners.click();
+  await element('#confirmDeleteGuests').listeners.click();
+  assert.equal(element('#deleteGuestDialog').open, false);
+  assert.equal(element('#guestAccessStatus').textContent, 'Access denied.');
+  assert.equal(element('#guestAccessStatus').classList.contains('is-error'), true);
+  assert.equal(element('#guestAccessStatus').focused, true);
+  actions().find(button => button.textContent === 'Revoke access').listeners.click();
+  assert.equal(element('#deleteGuestDialog').open, true);
 });
 
 test('created date displays and sorts invitation timestamps with missing dates last', async () => {
