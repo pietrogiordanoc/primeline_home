@@ -16,10 +16,30 @@ import {
   isGuestDuration,
   jsonResponse,
   listStoreRecords,
+  normalizeEmail,
   parseBody,
   sendCatalogInvitationEmail,
+  sendGuestEmailWithResult,
   updateGuestGrant
 } from '../shared/catalog-guest-access.js';
+import { createGuestVerification, removeGuestVerification, sendVerificationEmail } from '../shared/catalog-guest-verification.js';
+
+const resetHistory = (grant) => {
+  if (!Array.isArray(grant.deviceResetAudit)) return null;
+  return grant.deviceResetAudit.map(item => {
+    const event = item && typeof item === 'object' ? item : {};
+    const administrator = normalizeEmail(event.administrator);
+    return {
+      timestamp: Number.isFinite(event.timestamp) ? event.timestamp : null,
+      administrator: administrator.endsWith('@primelinedist.com') ? administrator : null,
+      previousDeviceCount: Number.isSafeInteger(event.previousDeviceCount) && event.previousDeviceCount >= 0
+        ? event.previousDeviceCount : null,
+      emailStatus: ['not_requested', 'pending', 'accepted', 'failed', 'unknown'].includes(event.emailStatus)
+        ? event.emailStatus : 'unrecorded',
+      emailStatusAt: Number.isFinite(event.emailStatusAt) ? event.emailStatusAt : null
+    };
+  });
+};
 
 const getStatusForGrant = (grant, now) => {
   if (grant.revokedAt || grant.status === 'revoked') return 'revoked';
@@ -50,6 +70,7 @@ const buildAdminRows = async (invitationStore, grantStore, now, isSuperAdmin) =>
     const invitation = invitationsById.get(grant.invitationId);
     const safeLink = (!invitation || (invitation.grantId === grant.id && invitation.usedAt &&
       invitation.duration !== 'permanent')) && grantCounts.get(grant.invitationId) === 1;
+    const history = isSuperAdmin ? resetHistory(grant) : null;
     return [{
       id: grant.id,
       invitationId: grant.invitationId,
@@ -61,6 +82,8 @@ const buildAdminRows = async (invitationStore, grantStore, now, isSuperAdmin) =>
       expiresAt: grant.expiresAt,
       status: getStatusForGrant(grant, now),
       canRevoke: getStatusForGrant(grant, now) === 'active',
+      canReset: Boolean(isSuperAdmin && getStatusForGrant(grant, now) === 'active'),
+      ...(isSuperAdmin ? { resetCount: history?.length ?? null, resetHistory: history } : {}),
       canReissue: false,
       canDelete: isSuperAdmin,
       canBulkDelete: Boolean(isSuperAdmin && safeLink && isBulkDeletable(grant, now)),
@@ -85,6 +108,7 @@ const buildAdminRows = async (invitationStore, grantStore, now, isSuperAdmin) =>
           expiresAt: invitation.expiresAt,
           status: 'revoked',
           canRevoke: false,
+          ...(isSuperAdmin ? { resetCount: null, resetHistory: null } : {}),
           canReissue: false,
           canDelete: isSuperAdmin,
           canBulkDelete: Boolean(isSuperAdmin && safeInvitation && isBulkDeletable(invitation, now)),
@@ -105,6 +129,7 @@ const buildAdminRows = async (invitationStore, grantStore, now, isSuperAdmin) =>
         expiresAt: invitation.expiresAt,
         status: invitation.status === 'revoked' ? 'revoked' : expired ? 'expired' : 'pending',
         canRevoke: false,
+        ...(isSuperAdmin ? { resetCount: null, resetHistory: null } : {}),
         canReissue: Boolean(!invitation.usedAt && invitation.status !== 'revoked'),
         canDelete: isSuperAdmin,
         canBulkDelete: Boolean(isSuperAdmin && safeInvitation && isBulkDeletable(invitation, now)),
@@ -348,7 +373,10 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
       if (payload.action === 'reset-devices' && authorization.session?.email !== ADMIN_EMAIL) {
         return jsonResponse({ error: 'Super Admin access is required.' }, 403);
       }
-      if (payload.action === 'reset-devices' && payload.confirmed !== true) {
+      if (payload.action === 'reset-devices' && (payload.confirmed !== true ||
+          typeof payload.operationId !== 'string' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(payload.operationId) ||
+          typeof payload.sendLink !== 'boolean')) {
         return jsonResponse({ error: 'Explicit confirmation is required.' }, 400);
       }
       const result = await updateGuestGrant(grantStore, payload.grantId, async (grant) => {
@@ -356,25 +384,80 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
           if (grant.revokedAt) return { alreadyRevoked: true };
           return { grant: { ...grant, revokedAt: now(), revokedBy: authorization.session?.email || ADMIN_EMAIL } };
         }
+        const audit = Array.isArray(grant.deviceResetAudit) ? grant.deviceResetAudit : [];
+        const previous = audit.find(event => event.operationId === payload.operationId);
+        if (previous) {
+          if (previous.emailRequested !== payload.sendLink) return { conflict: true };
+          return { duplicate: true, emailStatus: previous.emailStatus };
+        }
         if (!getActiveGrant(grant, now())) return { inactive: true };
         const version = grant.deviceVersion || 0;
         if (!Number.isSafeInteger(version) || version < 0 || version >= Number.MAX_SAFE_INTEGER) {
           throw new Error('Invalid guest device version.');
         }
-        const audit = Array.isArray(grant.deviceResetAudit) ? grant.deviceResetAudit : [];
         return { grant: {
           ...grant,
           deviceHashes: [],
           deviceVersion: version + 1,
           deviceResetAudit: [...audit, {
             action: 'reset-authorized-devices', administrator: authorization.session?.email || ADMIN_EMAIL,
-            timestamp: now(), previousDeviceCount: Array.isArray(grant.deviceHashes) ? new Set(grant.deviceHashes).size : 0
+            timestamp: now(), previousDeviceCount: Array.isArray(grant.deviceHashes) ? new Set(grant.deviceHashes).size : 0,
+            operationId: payload.operationId, emailRequested: payload.sendLink,
+            emailStatus: payload.sendLink ? 'pending' : 'not_requested'
           }]
         } };
       });
       if (result.missing) return jsonResponse({ error: 'Access grant was not found.' }, 404);
       if (result.inactive) return jsonResponse({ error: 'Only active catalog access can be reset.' }, 409);
-      return jsonResponse(payload.action === 'revoke' ? { revoked: true } : { devicesReset: true });
+      if (result.conflict) return jsonResponse({ error: 'This reset operation does not match the previous request.' }, 409);
+      if (payload.action === 'revoke') return jsonResponse({ revoked: true });
+      if (result.duplicate) return jsonResponse({ devicesReset: true, emailStatus: result.emailStatus });
+      if (!payload.sendLink) return jsonResponse({ devicesReset: true, emailStatus: 'not_requested' });
+
+      let emailStatus = 'failed';
+      let link;
+      try {
+        const selected = result.grant;
+        const current = await grantStore.get(`grant:${selected.id}`, { type: 'json' });
+        const sameGrant = grant => getActiveGrant(grant, now()) && grant.id === selected.id &&
+          normalizeEmail(grant.email) === selected.email && grant.invitationId === selected.invitationId &&
+          grant.sharedBy === selected.sharedBy && grant.expiresAt === selected.expiresAt;
+        if (!normalizeEmail(selected.email) || !sameGrant(current)) {
+          throw new Error('The selected catalog access changed before email preparation.');
+        }
+        link = await createGuestVerification(selected, { ...dependencies, now });
+        const latest = await grantStore.get(`grant:${selected.id}`, { type: 'json' });
+        if (!sameGrant(latest)) {
+          await removeGuestVerification(link, dependencies);
+          throw new Error('The selected catalog access changed before email sending.');
+        }
+        emailStatus = 'unknown';
+        const sendEmail = dependencies.sendRecoveryEmail || (message =>
+          sendGuestEmailWithResult(message, `catalog-reset/${payload.operationId}`));
+        const delivery = await sendVerificationEmail(selected.email, [link], { ...dependencies, sendEmail });
+        if (!delivery || !['accepted', 'failed', 'unknown'].includes(delivery.status)) {
+          throw new Error('The catalog recovery email result is unavailable.');
+        }
+        emailStatus = delivery.status;
+        if (emailStatus === 'failed') await removeGuestVerification(link, dependencies);
+      } catch {
+        console.error('Catalog reset recovery email could not be completed.');
+      }
+      try {
+        const recorded = await updateGuestGrant(grantStore, payload.grantId, async (grant) => {
+          const audit = Array.isArray(grant.deviceResetAudit) ? grant.deviceResetAudit : [];
+          const index = audit.findIndex(event => event.operationId === payload.operationId);
+          if (index < 0) return { missingAudit: true };
+          const updated = [...audit];
+          updated[index] = { ...updated[index], emailStatus, emailStatusAt: now() };
+          return { grant: { ...grant, deviceResetAudit: updated } };
+        });
+        if (recorded.missing || recorded.missingAudit) throw new Error('Reset audit is unavailable.');
+      } catch {
+        console.error('Catalog reset email status could not be recorded.');
+        emailStatus = 'unknown';
+      }
+      return jsonResponse({ devicesReset: true, emailStatus });
     }
 
     const invitationStore = await getInvitations();

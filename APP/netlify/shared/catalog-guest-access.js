@@ -345,6 +345,31 @@ export const sendGuestEmail = async ({ to, subject, text, html }) => {
   }
 };
 
+export const sendGuestEmailWithResult = async ({ to, subject, text, html }, idempotencyKey) => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error('Catalog recovery email is not configured.');
+    return { status: 'failed' };
+  }
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey
+      },
+      body: JSON.stringify({ from: process.env.FROM_EMAIL || 'info@primelinedist.com', to: [to], subject, text, html })
+    });
+    if (response.ok) return { status: 'accepted' };
+    console.error(`Catalog recovery email request returned HTTP ${response.status}.`);
+    return { status: response.status >= 500 || response.status === 408 || response.status === 409 ? 'unknown' : 'failed' };
+  } catch {
+    console.error('Catalog recovery email request outcome is unknown.');
+    return { status: 'unknown' };
+  }
+};
+
 export const escapeHtml = (value) => String(value)
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')

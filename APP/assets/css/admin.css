@@ -93,6 +93,9 @@
 .guest-action-dialog{ position:fixed; inset:0; margin:auto; max-height:calc(100dvh - 32px); overflow:auto; }
 .guest-action-dialog::backdrop{ background:rgba(13,24,48,.55); }
 .guest-action-dialog #deleteGuestCustomer{ overflow-wrap:anywhere; color:var(--pl-navy); font-weight:600; }
+.guest-action-dialog #resetHistoryCustomer{ overflow-wrap:anywhere; color:var(--pl-navy); font-weight:600; }
+.guest-reset-event{ padding:10px 0; border-top:1px solid #e8ebf0; color:#647184; font-size:11px; line-height:1.5; overflow-wrap:anywhere; }
+.guest-reset-event strong{ color:var(--pl-navy); }
 .guest-action-dialog p:empty{ display:none; }
 .guest-action-dialog .admin-rule-editor-actions{ flex-wrap:wrap; }
 .guest-action-dialog button:focus-visible{ outline:2px solid #c49a43; outline-offset:2px; }

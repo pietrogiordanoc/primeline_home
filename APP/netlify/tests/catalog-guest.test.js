@@ -16,6 +16,7 @@ import {
   hashDeviceId,
   hashToken,
   saveEmployeeProfile,
+  sendGuestEmailWithResult,
   sendCatalogInvitationEmail,
   sendCatalogShareNotification,
   updateGuestGrant
@@ -74,6 +75,8 @@ const makeEvent = (method, body, cookie = '') => ({
 });
 
 const responseBody = (response) => JSON.parse(response.body);
+const resetPayload = (grantId, sendLink = false, operationId = randomUUID()) =>
+  ({ action: 'reset-devices', grantId, confirmed: true, operationId, sendLink });
 const emailToken = (email, key) => {
   const token = email.text.match(new RegExp(`#${key}=([A-Za-z0-9_-]{43})`))?.[1];
   assert.ok(token, `Expected a ${key} token in the mocked email`);
@@ -519,10 +522,10 @@ test('administrator reset invalidates sessions and preserves a verification link
     ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
   });
   assert.equal((await admin(makeEvent('POST', { action: 'reset-devices', grantId: grant.id }))).statusCode, 400);
-  const crossOrigin = makeEvent('POST', { action: 'reset-devices', grantId: grant.id, confirmed: true });
+  const crossOrigin = makeEvent('POST', resetPayload(grant.id));
   crossOrigin.headers.origin = 'https://other.example';
   assert.equal((await admin(crossOrigin)).statusCode, 403);
-  assert.equal((await admin(makeEvent('POST', { action: 'reset-devices', grantId: grant.id, confirmed: true }))).statusCode, 200);
+  assert.equal((await admin(makeEvent('POST', resetPayload(grant.id)))).statusCode, 200);
   const reset = await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' });
   assert.equal(reset.expiresAt, grant.expiresAt);
   assert.equal(reset.email, grant.email);
@@ -532,9 +535,11 @@ test('administrator reset invalidates sessions and preserves a verification link
   assert.equal(reset.revokedAt, grant.revokedAt);
   assert.equal(reset.status, grant.status);
   assert.deepEqual(reset.deviceHashes, []);
-  assert.deepEqual(reset.deviceResetAudit[0], {
-    action: 'reset-authorized-devices', administrator: ADMIN_EMAIL, timestamp: state.now, previousDeviceCount: 3
-  });
+  assert.equal(reset.deviceResetAudit[0].action, 'reset-authorized-devices');
+  assert.equal(reset.deviceResetAudit[0].administrator, ADMIN_EMAIL);
+  assert.equal(reset.deviceResetAudit[0].timestamp, state.now);
+  assert.equal(reset.deviceResetAudit[0].previousDeviceCount, 3);
+  assert.equal(reset.deviceResetAudit[0].emailStatus, 'not_requested');
   assert.equal((await createCatalogGuestPdfHandler(state.dependencies)(makeEvent('GET', undefined, cookies))).statusCode, 401);
   assert.equal((await createCatalogGuestSessionHandler(state.dependencies)(makeEvent('GET', undefined, cookies))).statusCode, 401);
   assert.equal((await redeem(makeEvent('POST', { token: verification, purpose: 'verify' }, newDevice))).statusCode, 200);
@@ -543,9 +548,173 @@ test('administrator reset invalidates sessions and preserves a verification link
   const unauthorized = createCatalogGuestAdminHandler({
     ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: 'other@primelinedist.com' } })
   });
-  assert.equal((await unauthorized(makeEvent('POST', { action: 'reset-devices', grantId: grant.id, confirmed: true }))).statusCode, 403);
+  assert.equal((await unauthorized(makeEvent('POST', resetPayload(grant.id)))).statusCode, 403);
   state.setNow(grant.expiresAt + 1);
-  assert.equal((await admin(makeEvent('POST', { action: 'reset-devices', grantId: grant.id, confirmed: true }))).statusCode, 409);
+  assert.equal((await admin(makeEvent('POST', resetPayload(grant.id)))).statusCode, 409);
+});
+
+test('reset and recovery send one link for the selected grant under concurrent duplicate requests', async () => {
+  const state = fixture();
+  const firstToken = await inviteCustomer(state, '3-months', 'buyer@example.com', 'First Seller');
+  state.dependencies.getEmployeeSession = async () => ({
+    email: 'other@primelinedist.com', resource: 'catalog-pdf', expiresAt: state.now + 60000
+  });
+  const secondToken = await inviteCustomer(state, 'permanent', 'buyer@example.com', 'Second Seller');
+  const redeem = createCatalogGuestRedeemHandler(state.dependencies);
+  const first = await redeem(makeEvent('POST', { token: firstToken, purpose: 'invite' }));
+  await redeem(makeEvent('POST', { token: secondToken, purpose: 'invite' }));
+  const pointer = await state.stores.invitations.get(`token:${hashToken(firstToken)}`, { type: 'json' });
+  const invitation = await state.stores.invitations.get(`invitation:${pointer.invitationId}`, { type: 'json' });
+  const before = await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' });
+  let release;
+  let entered;
+  const waiting = new Promise(resolve => { entered = resolve; });
+  const gate = new Promise(resolve => { release = resolve; });
+  const messages = [];
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies,
+    authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } }),
+    sendRecoveryEmail: async message => { messages.push(message); entered(); await gate; return { status: 'accepted' }; }
+  });
+  const payload = resetPayload(before.id, true);
+  const firstRequest = admin(makeEvent('POST', payload));
+  await waiting;
+  const duplicate = await admin(makeEvent('POST', payload));
+  assert.equal(responseBody(duplicate).emailStatus, 'pending');
+  assert.equal(messages.length, 1);
+  release();
+  assert.equal(responseBody(await firstRequest).emailStatus, 'accepted');
+  assert.equal(responseBody(await admin(makeEvent('POST', payload))).emailStatus, 'accepted');
+  assert.equal((await admin(makeEvent('POST', { ...payload, sendLink: false }))).statusCode, 409);
+
+  const after = await state.stores.grants.get(`grant:${before.id}`, { type: 'json' });
+  assert.equal(after.deviceVersion, 1);
+  assert.equal(after.deviceResetAudit.length, 1);
+  assert.equal(after.email, before.email);
+  assert.equal(after.invitationId, before.invitationId);
+  assert.equal(after.sharedBy, before.sharedBy);
+  assert.equal(after.expiresAt, before.expiresAt);
+  assert.equal(messages[0].to, before.email);
+  assert.match(messages[0].text, /First Seller/);
+  assert.doesNotMatch(messages[0].text, /Second Seller/);
+  const verification = emailToken(messages[0], 'verify');
+  const deviceCookie = first.multiValueHeaders['Set-Cookie'][1].split(';')[0];
+  const recovered = await redeem(makeEvent('POST', { token: verification, purpose: 'verify' }, deviceCookie));
+  assert.equal(recovered.statusCode, 200);
+  assert.equal(responseBody(recovered).sharedBy, before.sharedBy);
+  assert.equal(responseBody(recovered).expiresAt, before.expiresAt);
+
+  const rows = responseBody(await admin(makeEvent('GET'))).entries;
+  const row = rows.find(item => item.id === before.id);
+  assert.equal(row.resetCount, 1);
+  assert.equal(row.resetHistory[0].emailStatus, 'accepted');
+  assert.equal(row.resetHistory[0].emailStatusAt, state.now);
+  assert.equal(row.resetHistory[0].previousDeviceCount, 1);
+  assert.equal(JSON.stringify(row.resetHistory).includes(payload.operationId), false);
+  assert.equal(JSON.stringify(row.resetHistory).includes(verification), false);
+  assert.equal(JSON.stringify(row.resetHistory).includes(before.deviceHashes[0]), false);
+  const otherAdmin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: 'other@primelinedist.com' } })
+  });
+  const otherRows = responseBody(await otherAdmin(makeEvent('GET'))).entries;
+  assert.equal(Object.hasOwn(otherRows.find(item => item.id === before.id), 'resetHistory'), false);
+  assert.equal((await otherAdmin(makeEvent('POST', resetPayload(before.id, true)))).statusCode, 403);
+});
+
+test('reset only is idempotent under concurrent requests and never sends email', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state);
+  await createCatalogGuestRedeemHandler(state.dependencies)(makeEvent('POST', { token, purpose: 'invite' }));
+  const grant = JSON.parse([...state.stores.grants.data.values()][0]);
+  let emailsSent = 0;
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } }),
+    sendRecoveryEmail: async () => { emailsSent++; return { status: 'accepted' }; }
+  });
+  const payload = resetPayload(grant.id);
+  const responses = await Promise.all(Array.from({ length: 5 }, () => admin(makeEvent('POST', payload))));
+  assert.ok(responses.every(response => response.statusCode === 200));
+  assert.ok(responses.every(response => responseBody(response).emailStatus === 'not_requested'));
+  const saved = await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' });
+  assert.equal(saved.deviceVersion, 1);
+  assert.equal(saved.deviceResetAudit.length, 1);
+  assert.equal(emailsSent, 0);
+});
+
+test('reset email failures and uncertain results remain separate from the successful reset', async () => {
+  for (const status of ['failed', 'unknown']) {
+    const state = fixture();
+    const token = await inviteCustomer(state);
+    await createCatalogGuestRedeemHandler(state.dependencies)(makeEvent('POST', { token, purpose: 'invite' }));
+    const grant = JSON.parse([...state.stores.grants.data.values()][0]);
+    let message;
+    const admin = createCatalogGuestAdminHandler({
+      ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } }),
+      sendRecoveryEmail: async value => { message = value; return { status }; }
+    });
+    const payload = resetPayload(grant.id, true);
+    const response = await admin(makeEvent('POST', payload));
+    assert.equal(response.statusCode, 200);
+    assert.equal(responseBody(response).devicesReset, true);
+    assert.equal(responseBody(response).emailStatus, status);
+    assert.equal(responseBody(await admin(makeEvent('POST', payload))).emailStatus, status);
+    const saved = await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' });
+    assert.equal(saved.deviceResetAudit.length, 1);
+    assert.equal(saved.deviceResetAudit[0].emailStatus, status);
+    const verify = emailToken(message, 'verify');
+    const pointer = await state.stores.verifications.get(`token:${hashToken(verify)}`, { type: 'json' });
+    assert.equal(Boolean(pointer), status === 'unknown');
+  }
+});
+
+test('deletion during recovery preserves the reset outcome without restoring access', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state);
+  await createCatalogGuestRedeemHandler(state.dependencies)(makeEvent('POST', { token, purpose: 'invite' }));
+  const grant = JSON.parse([...state.stores.grants.data.values()][0]);
+  let release;
+  let entered;
+  const waiting = new Promise(resolve => { entered = resolve; });
+  const gate = new Promise(resolve => { release = resolve; });
+  let message;
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } }),
+    sendRecoveryEmail: async value => { message = value; entered(); await gate; return { status: 'accepted' }; }
+  });
+  const resetting = admin(makeEvent('POST', resetPayload(grant.id, true)));
+  await waiting;
+  assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType: 'grant', id: grant.id }))).deleted, 1);
+  release();
+  assert.equal(responseBody(await resetting).emailStatus, 'accepted');
+  const marker = await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' });
+  assert.equal(marker.status, 'deleted');
+  assert.equal(marker.email, undefined);
+  assert.equal(marker.deviceResetAudit[0].emailStatus, 'accepted');
+  assert.equal((await createCatalogGuestRedeemHandler(state.dependencies)(
+    makeEvent('POST', { token: emailToken(message, 'verify'), purpose: 'verify' })
+  )).statusCode, 401);
+});
+
+test('Resend acceptance, rejection and ambiguous failures are distinguished with an idempotency key', async () => {
+  const previousFetch = globalThis.fetch;
+  const previousKey = process.env.RESEND_API_KEY;
+  process.env.RESEND_API_KEY = 'mock-key';
+  const message = { to: 'buyer@example.com', subject: 'Test', text: 'Test', html: '<p>Test</p>' };
+  try {
+    for (const [status, expected] of [[200, 'accepted'], [400, 'failed'], [500, 'unknown'], [409, 'unknown']]) {
+      globalThis.fetch = async (_url, options) => {
+        assert.equal(options.headers['Idempotency-Key'], 'catalog-reset/test');
+        return { ok: status === 200, status };
+      };
+      assert.equal((await sendGuestEmailWithResult(message, 'catalog-reset/test')).status, expected);
+    }
+    globalThis.fetch = async () => { throw new Error('test network failure'); };
+    assert.equal((await sendGuestEmailWithResult(message, 'catalog-reset/test')).status, 'unknown');
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousKey === undefined) delete process.env.RESEND_API_KEY;
+    else process.env.RESEND_API_KEY = previousKey;
+  }
 });
 
 test('concurrent device registration respects the limit and reset prevents stale registration', async () => {
@@ -564,7 +733,7 @@ test('concurrent device registration respects the limit and reset prevents stale
   const admin = createCatalogGuestAdminHandler({
     ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
   });
-  assert.equal((await admin(makeEvent('POST', { action: 'reset-devices', grantId: grant.id, confirmed: true }))).statusCode, 200);
+  assert.equal((await admin(makeEvent('POST', resetPayload(grant.id)))).statusCode, 200);
   let release;
   let entered;
   const gate = new Promise(resolve => { release = resolve; });
@@ -581,7 +750,7 @@ test('concurrent device registration respects the limit and reset prevents stale
   };
   const stale = redeem(makeEvent('POST', { token, purpose: 'invite' }, `${GUEST_DEVICE_COOKIE}=${ids[0]}`));
   await waiting;
-  assert.equal((await admin(makeEvent('POST', { action: 'reset-devices', grantId: grant.id, confirmed: true }))).statusCode, 200);
+  assert.equal((await admin(makeEvent('POST', resetPayload(grant.id)))).statusCode, 200);
   release();
   assert.equal((await stale).statusCode, 409);
   const final = await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' });
@@ -589,7 +758,7 @@ test('concurrent device registration respects the limit and reset prevents stale
   assert.equal(final.deviceVersion, 2);
   assert.equal(final.deviceResetAudit.length, 2);
   assert.equal((await admin(makeEvent('POST', { action: 'revoke', grantId: grant.id }))).statusCode, 200);
-  assert.equal((await admin(makeEvent('POST', { action: 'reset-devices', grantId: grant.id, confirmed: true }))).statusCode, 409);
+  assert.equal((await admin(makeEvent('POST', resetPayload(grant.id)))).statusCode, 409);
   assert.equal((await redeem(makeEvent('POST', { token, purpose: 'invite' }, `${GUEST_DEVICE_COOKIE}=${ids[0]}`))).statusCode, 401);
 });
 
@@ -641,7 +810,7 @@ test('concurrent first redemption and revocation cannot overwrite grant changes'
   };
   const revoke = admin(makeEvent('POST', { action: 'revoke', grantId: grant.id }));
   await waiting;
-  assert.equal((await admin(makeEvent('POST', { action: 'reset-devices', grantId: grant.id, confirmed: true }))).statusCode, 200);
+  assert.equal((await admin(makeEvent('POST', resetPayload(grant.id)))).statusCode, 200);
   release();
   assert.equal((await revoke).statusCode, 200);
   const final = await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' });

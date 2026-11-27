@@ -41,3 +41,16 @@ por correo. Cuando hay varios permisos activos, el correo ofrece un enlace separ
 para cada invitación, con su referencia, vendedor y vencimiento, para que el cliente elija.
 El regreso desde Web Catalog también requiere una sesión PDF válida; de lo contrario,
 el cliente debe abrir su invitación o verificar su correo primero.
+
+En Admin, el Super Admin puede consultar la columna **RESETS** y abrir el historial
+disponible de cada permiso. Los registros antiguos sin historial se muestran como
+«No history available»; no se reconstruyen datos desconocidos. Al reiniciar los
+dispositivos puede elegir **Reset Only** o **Reset & Send Access Link**. La segunda
+opción envía un enlace de verificación para ese permiso concreto, sin cambiar el
+cliente, el vendedor ni el vencimiento.
+
+El historial distingue si no se solicitó correo, si Resend aceptó la solicitud o si
+falló. La aceptación de Resend no confirma la entrega; si el resultado es incierto
+o queda pendiente, debe revisarse el historial antes de reintentar. El reinicio puede
+haber tenido éxito aunque el envío falle. Las marcas de eliminación conservan la
+auditoría de reinicios, sin exponer identificadores de dispositivos ni tokens en Admin.

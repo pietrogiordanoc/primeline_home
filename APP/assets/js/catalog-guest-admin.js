@@ -16,6 +16,11 @@ const deleteGuestCount = document.querySelector('#deleteGuestCount');
 const guestActionProgress = document.querySelector('#guestActionProgress');
 const cancelDeleteGuests = document.querySelector('#cancelDeleteGuests');
 const confirmDeleteGuests = document.querySelector('#confirmDeleteGuests');
+const sendRecoveryAfterReset = document.querySelector('#sendRecoveryAfterReset');
+const resetHistoryDialog = document.querySelector('#resetHistoryDialog');
+const resetHistoryCustomer = document.querySelector('#resetHistoryCustomer');
+const resetHistoryList = document.querySelector('#resetHistoryList');
+const closeResetHistory = document.querySelector('#closeResetHistory');
 const guestSortButtons = document.querySelectorAll('[data-guest-sort]');
 const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 const durationOrder = new Map([['24 Hours', 1], ['7 Days', 2], ['1 Month', 3], ['3 Months', 4], ['Permanent', 5]]);
@@ -26,6 +31,7 @@ let sortDirection = 'descending';
 let initialized = false;
 let pendingAction = null;
 let actionTrigger = null;
+let historyTrigger = null;
 let submitting = false;
 
 const setGuestAccessStatus = (message, isError = false) => {
@@ -73,6 +79,7 @@ const refreshSharedByOptions = () => {
 const compareEntries = (a, b) => {
   const value = (entry) => {
     if (sortKey === 'createdAt') return Number.isFinite(entry.createdAt) ? entry.createdAt : undefined;
+    if (sortKey === 'resetCount') return Number.isSafeInteger(entry.resetCount) ? entry.resetCount : undefined;
     if (sortKey === 'duration') return durationOrder.get(entry.duration);
     if (sortKey === 'expiresAt') {
       if (entry.expiresAt === null) return Infinity;
@@ -131,21 +138,33 @@ const renderGuestEntries = () => {
       row.append(cell);
     });
 
+    const resetCell = document.createElement('td');
+    resetCell.dataset.label = 'Resets';
+    const resetCount = Number.isSafeInteger(entry.resetCount) ? String(entry.resetCount) : '—';
+    if (Object.hasOwn(entry, 'resetHistory')) {
+      const historyButton = actionButton(resetCount, trigger => openResetHistory(entry, trigger));
+      historyButton.setAttribute('aria-label', `View reset history for ${entry.customerEmail || 'invitation'}`);
+      resetCell.append(historyButton);
+    } else resetCell.textContent = resetCount;
+    row.append(resetCell);
+
     const actions = document.createElement('td');
     actions.dataset.label = 'Actions';
     const actionGroup = document.createElement('div');
     actionGroup.className = 'admin-rule-actions';
-    if (entry.canRevoke) {
+    if (entry.canReset) {
       actionGroup.append(actionButton('Reset authorized devices', (trigger) => {
         openGuestDialog({
-          payload: { action: 'reset-devices', grantId: entry.id, confirmed: true },
+          payload: { action: 'reset-devices', grantId: entry.id, confirmed: true, operationId: crypto.randomUUID() },
           title: 'Reset Authorized Devices?',
-          message: 'Existing guest sessions will stop working. The expiration date will not change.',
+          message: 'Existing guest sessions will stop working. The expiration date will not change. You may also email an access link for this invitation.',
           customerEmail: entry.customerEmail,
-          confirmLabel: 'Confirm Reset',
+          confirmLabel: 'Reset Only',
           successMessage: 'Authorized devices reset.'
         }, trigger);
       }));
+    }
+    if (entry.canRevoke) {
       actionGroup.append(actionButton('Revoke access', (trigger) => {
         openGuestDialog({
           payload: { action: 'revoke', grantId: entry.id },
@@ -188,6 +207,49 @@ const renderGuestEntries = () => {
   });
 };
 
+const openResetHistory = (entry, trigger) => {
+  historyTrigger = trigger;
+  resetHistoryCustomer.textContent = entry.customerEmail ? `Customer: ${entry.customerEmail}` : '';
+  resetHistoryList.replaceChildren();
+  if (!Array.isArray(entry.resetHistory) || entry.resetHistory.length === 0) {
+    const empty = document.createElement('p');
+    empty.textContent = Array.isArray(entry.resetHistory) ? 'No resets recorded.' : 'No history available.';
+    resetHistoryList.append(empty);
+  } else {
+    const statuses = {
+      not_requested: 'Email Not Requested',
+      accepted: 'Accepted by Resend (delivery not confirmed)',
+      failed: 'Email Failed',
+      pending: 'Email status pending or unknown',
+      unknown: 'Email status unknown',
+      unrecorded: 'Email status not recorded'
+    };
+    entry.resetHistory.map((event, index) => ({ event, index }))
+      .sort((a, b) => (b.event.timestamp || 0) - (a.event.timestamp || 0) || b.index - a.index)
+      .forEach(({ event }) => {
+        const item = document.createElement('div');
+        item.className = 'guest-reset-event';
+        const date = document.createElement('strong');
+        date.textContent = Number.isFinite(event.timestamp) ? new Date(event.timestamp).toLocaleString() : 'Date unavailable';
+        const detail = document.createElement('div');
+        const count = Number.isSafeInteger(event.previousDeviceCount) ? event.previousDeviceCount : 'Unknown';
+        const emailTime = Number.isFinite(event.emailStatusAt) ? ` (${new Date(event.emailStatusAt).toLocaleString()})` : '';
+        detail.textContent = `Administrator: ${event.administrator || 'Unknown'} · Previous devices: ${count} · ${statuses[event.emailStatus] || statuses.unrecorded}${emailTime}`;
+        item.append(date, detail);
+        resetHistoryList.append(item);
+      });
+  }
+  resetHistoryDialog.showModal();
+  closeResetHistory.focus();
+};
+
+const dismissResetHistory = () => {
+  resetHistoryDialog.close();
+  if (historyTrigger?.isConnected) historyTrigger.focus();
+  else guestAccessStatus.focus();
+  historyTrigger = null;
+};
+
 const loadGuestEntries = async (successMessage = '') => {
   reloadGuestAccess.disabled = true;
   setGuestAccessStatus('Loading catalog guest access...');
@@ -223,6 +285,7 @@ const openGuestDialog = (action, trigger) => {
   deleteGuestCount.textContent = action.count ? `${action.count} eligible record(s). All eligible records are included, regardless of filters.` : '';
   confirmDeleteGuests.textContent = action.confirmLabel;
   confirmDeleteGuests.classList.toggle('is-danger', Boolean(action.destructive));
+  sendRecoveryAfterReset.hidden = action.payload.action !== 'reset-devices';
   deleteGuestDialog.showModal();
   cancelDeleteGuests.focus();
 };
@@ -236,12 +299,14 @@ const cancelGuestDialog = () => {
   actionTrigger = null;
 };
 
-const confirmGuestAction = async () => {
+const confirmGuestAction = async (sendLink = false) => {
   if (submitting || !pendingAction) return;
   const action = pendingAction;
+  if (action.payload.action === 'reset-devices') action.payload.sendLink = sendLink;
   const isDeletion = action.payload.action === 'delete' || action.payload.action === 'delete-expired';
   submitting = true;
   confirmDeleteGuests.disabled = true;
+  sendRecoveryAfterReset.disabled = true;
   cancelDeleteGuests.disabled = true;
   deleteExpiredGuests.disabled = true;
   guestActionProgress.textContent = 'Processing...';
@@ -261,18 +326,37 @@ const confirmGuestAction = async () => {
     }
     deleteGuestDialog.close();
     pendingAction = null;
-    await loadGuestEntries(isDeletion ? `${result.deleted} record(s) deleted.` : action.successMessage);
+    let message = isDeletion ? `${result.deleted} record(s) deleted.` : action.successMessage;
+    let emailError = false;
+    if (action.payload.action === 'reset-devices') {
+      if (result.devicesReset !== true) throw new Error('Reset status could not be confirmed. Refresh the history before retrying.');
+      if (result.emailStatus === 'accepted') message = 'Authorized devices reset. Access email accepted by Resend; delivery is not confirmed.';
+      else if (result.emailStatus === 'failed') {
+        message = 'Authorized devices reset, but the access email was not sent.';
+        emailError = true;
+      } else if (result.emailStatus !== 'not_requested') {
+        message = 'Authorized devices reset. Email acceptance is pending or unknown; check the reset history before retrying.';
+        emailError = true;
+      }
+    }
+    await loadGuestEntries(message);
+    if (emailError) setGuestAccessStatus(message, true);
   } catch (error) {
     deleteGuestDialog.close();
     pendingAction = null;
     if (isDeletion) await loadGuestEntries();
-    setGuestAccessStatus(error.message || (isDeletion ? 'Records could not be deleted.' : 'Catalog access could not be updated.'), true);
+    if (action.payload.action === 'reset-devices') {
+      setGuestAccessStatus(`Reset outcome could not be confirmed. Refresh the history before retrying.${error.message ? ` ${error.message}` : ''}`, true);
+    } else {
+      setGuestAccessStatus(error.message || (isDeletion ? 'Records could not be deleted.' : 'Catalog access could not be updated.'), true);
+    }
   } finally {
     submitting = false;
     actionTrigger = null;
     guestActionProgress.textContent = '';
     deleteGuestDialog.removeAttribute('aria-busy');
     confirmDeleteGuests.disabled = false;
+    sendRecoveryAfterReset.disabled = false;
     cancelDeleteGuests.disabled = false;
     renderGuestEntries();
     guestAccessStatus.focus();
@@ -296,6 +380,16 @@ export const initializeCatalogGuestAdmin = async () => {
       }
     });
     cancelDeleteGuests.addEventListener('click', cancelGuestDialog);
+    closeResetHistory.addEventListener('click', dismissResetHistory);
+    resetHistoryDialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      dismissResetHistory();
+    });
+    resetHistoryDialog.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      dismissResetHistory();
+    });
     deleteGuestDialog.addEventListener('keydown', (event) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
@@ -305,7 +399,8 @@ export const initializeCatalogGuestAdmin = async () => {
       event.preventDefault();
       cancelGuestDialog();
     });
-    confirmDeleteGuests.addEventListener('click', confirmGuestAction);
+    confirmDeleteGuests.addEventListener('click', () => confirmGuestAction(false));
+    sendRecoveryAfterReset.addEventListener('click', () => confirmGuestAction(true));
     reloadGuestAccess.addEventListener('click', () => loadGuestEntries());
     guestAccessSearch.addEventListener('input', renderGuestEntries);
     guestAccessStatusFilter.addEventListener('change', renderGuestEntries);

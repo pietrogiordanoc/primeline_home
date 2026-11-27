@@ -198,6 +198,7 @@
                   <th scope="col"><button class="guest-sort-button" type="button" data-guest-sort="createdAt">Created <span aria-hidden="true"></span></button></th>
                   <th scope="col"><button class="guest-sort-button" type="button" data-guest-sort="expiresAt">Expiration <span aria-hidden="true"></span></button></th>
                   <th scope="col"><button class="guest-sort-button" type="button" data-guest-sort="status">Status <span aria-hidden="true"></span></button></th>
+                  <th scope="col"><button class="guest-sort-button" type="button" data-guest-sort="resetCount">Resets <span aria-hidden="true"></span></button></th>
                   <th scope="col">Actions</th>
                 </tr>
               </thead>
@@ -220,7 +221,17 @@
         <div class="admin-rule-editor-actions">
           <button class="admin-secondary-button" id="cancelDeleteGuests" type="button" autofocus>Cancel</button>
           <button class="admin-primary-button is-danger" id="confirmDeleteGuests" type="button">Confirm Delete</button>
+          <button class="admin-primary-button" id="sendRecoveryAfterReset" type="button" hidden>Reset &amp; Send Access Link</button>
         </div>
+      </div>
+    </dialog>
+
+    <dialog class="admin-auth guest-action-dialog" id="resetHistoryDialog" aria-labelledby="resetHistoryTitle" aria-describedby="resetHistoryCustomer">
+      <div class="admin-auth-content">
+        <h1 id="resetHistoryTitle">Reset History</h1>
+        <p id="resetHistoryCustomer"></p>
+        <div id="resetHistoryList"></div>
+        <button class="admin-secondary-button" id="closeResetHistory" type="button" autofocus>Close</button>
       </div>
     </dialog>
 
