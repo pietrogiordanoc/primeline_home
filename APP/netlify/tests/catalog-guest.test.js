@@ -6,7 +6,6 @@ import { runInNewContext } from 'node:vm';
 import {
   CATALOG_PUBLIC_URL,
   GUEST_DEVICE_COOKIE,
-  GUEST_MAX_DEVICES,
   GUEST_SESSION_LIFETIME_SECONDS,
   GUEST_INVITATION_LIFETIME_MS,
   claimGuestToken,
@@ -342,7 +341,7 @@ test('catalog invitation Resend request includes escaped inviter details in HTML
     assert.match(message.html, /href="mailto:sales@primelinedist\.com"/);
     assert.match(message.html, /VIEW CATALOG/);
     assert.match(message.html, /must be opened within 30 days/);
-    assert.match(message.html, /used on up to 3 devices/);
+    assert.match(message.html, /reused on any browser or device/);
   } finally {
     globalThis.fetch = previousFetch;
     if (previousApiKey === undefined) delete process.env.RESEND_API_KEY;
@@ -482,7 +481,7 @@ test('invitation link is reusable on the same device without creating another gr
   assert.equal((await state.stores.grants.get(
     `grant:${(await state.stores.invitations.get(`invitation:${(await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' })).invitationId}`, { type: 'json' })).grantId}`,
     { type: 'json' }
-  )).deviceHashes.length, 1);
+  )).deviceHashes.length, 0);
 });
 
 test('device cookie is established before redemption and failed session creation reserves no device', async () => {
@@ -504,7 +503,7 @@ test('device cookie is established before redemption and failed session creation
   assert.equal((await handler(event)).statusCode, 200);
 });
 
-test('administrator reset invalidates sessions and preserves a verification link rejected at the limit', async () => {
+test('administrator invalidates sessions without changing legacy device or reset history', async () => {
   const state = fixture();
   const token = await inviteCustomer(state);
   const redeem = createCatalogGuestRedeemHandler(state.dependencies);
@@ -514,10 +513,16 @@ test('administrator reset invalidates sessions and preserves a verification link
     assert.equal((await redeem(makeEvent('POST', { token, purpose: 'invite' }, `${GUEST_DEVICE_COOKIE}=${id}`))).statusCode, 200);
   }
   const grant = JSON.parse([...state.stores.grants.data.values()][0]);
+  grant.deviceHashes = ['legacy-device-1', 'legacy-device-2', 'legacy-device-3'];
+  const historicalReset = {
+    action: 'reset-authorized-devices', administrator: ADMIN_EMAIL,
+    timestamp: state.now - 1000, previousDeviceCount: 3, emailStatus: 'accepted'
+  };
+  grant.deviceResetAudit = [historicalReset];
+  await state.stores.grants.setJSON(`grant:${grant.id}`, grant);
   await createCatalogGuestRequestLinkHandler(state.dependencies)(makeEvent('POST', { email: grant.email }));
   const verification = emailToken(state.emails.at(-1), 'verify');
   const newDevice = `${GUEST_DEVICE_COOKIE}=33333333-3333-4333-8333-333333333333`;
-  assert.equal((await redeem(makeEvent('POST', { token: verification, purpose: 'verify' }, newDevice))).statusCode, 403);
   const admin = createCatalogGuestAdminHandler({
     ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
   });
@@ -534,12 +539,19 @@ test('administrator reset invalidates sessions and preserves a verification link
   assert.equal(reset.invitationId, grant.invitationId);
   assert.equal(reset.revokedAt, grant.revokedAt);
   assert.equal(reset.status, grant.status);
-  assert.deepEqual(reset.deviceHashes, []);
-  assert.equal(reset.deviceResetAudit[0].action, 'reset-authorized-devices');
-  assert.equal(reset.deviceResetAudit[0].administrator, ADMIN_EMAIL);
-  assert.equal(reset.deviceResetAudit[0].timestamp, state.now);
-  assert.equal(reset.deviceResetAudit[0].previousDeviceCount, 3);
-  assert.equal(reset.deviceResetAudit[0].emailStatus, 'not_requested');
+  assert.deepEqual(reset.deviceHashes, grant.deviceHashes);
+  assert.deepEqual(reset.deviceResetAudit[0], historicalReset);
+  assert.equal(reset.deviceResetAudit[1].action, 'invalidate-guest-sessions');
+  assert.equal(reset.deviceResetAudit[1].administrator, ADMIN_EMAIL);
+  assert.equal(reset.deviceResetAudit[1].timestamp, state.now);
+  assert.equal(reset.deviceResetAudit[1].previousDeviceCount, null);
+  assert.equal(reset.deviceResetAudit[1].emailStatus, 'not_requested');
+  const rows = responseBody(await admin(makeEvent('GET'))).entries;
+  const history = rows.find(row => row.id === grant.id).resetHistory;
+  assert.equal(history.length, 2);
+  assert.equal(history[0].previousDeviceCount, 3);
+  assert.equal(history[0].emailStatus, 'accepted');
+  assert.equal(history[1].previousDeviceCount, null);
   assert.equal((await createCatalogGuestPdfHandler(state.dependencies)(makeEvent('GET', undefined, cookies))).statusCode, 401);
   assert.equal((await createCatalogGuestSessionHandler(state.dependencies)(makeEvent('GET', undefined, cookies))).statusCode, 401);
   assert.equal((await redeem(makeEvent('POST', { token: verification, purpose: 'verify' }, newDevice))).statusCode, 200);
@@ -562,7 +574,7 @@ test('reset and recovery send one link for the selected grant under concurrent d
   const secondToken = await inviteCustomer(state, 'permanent', 'buyer@example.com', 'Second Seller');
   const redeem = createCatalogGuestRedeemHandler(state.dependencies);
   const first = await redeem(makeEvent('POST', { token: firstToken, purpose: 'invite' }));
-  await redeem(makeEvent('POST', { token: secondToken, purpose: 'invite' }));
+  const second = await redeem(makeEvent('POST', { token: secondToken, purpose: 'invite' }));
   const pointer = await state.stores.invitations.get(`token:${hashToken(firstToken)}`, { type: 'json' });
   const invitation = await state.stores.invitations.get(`invitation:${pointer.invitationId}`, { type: 'json' });
   const before = await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' });
@@ -594,6 +606,10 @@ test('reset and recovery send one link for the selected grant under concurrent d
   assert.equal(after.invitationId, before.invitationId);
   assert.equal(after.sharedBy, before.sharedBy);
   assert.equal(after.expiresAt, before.expiresAt);
+  const sessionCookies = response => response.multiValueHeaders['Set-Cookie'].map(value => value.split(';')[0]).join('; ');
+  const pdf = createCatalogGuestPdfHandler(state.dependencies);
+  assert.equal((await pdf(makeEvent('GET', undefined, sessionCookies(first)))).statusCode, 401);
+  assert.equal((await pdf(makeEvent('GET', undefined, sessionCookies(second)))).statusCode, 200);
   assert.equal(messages[0].to, before.email);
   assert.match(messages[0].text, /First Seller/);
   assert.doesNotMatch(messages[0].text, /Second Seller/);
@@ -609,10 +625,10 @@ test('reset and recovery send one link for the selected grant under concurrent d
   assert.equal(row.resetCount, 1);
   assert.equal(row.resetHistory[0].emailStatus, 'accepted');
   assert.equal(row.resetHistory[0].emailStatusAt, state.now);
-  assert.equal(row.resetHistory[0].previousDeviceCount, 1);
+  assert.equal(row.resetHistory[0].previousDeviceCount, null);
   assert.equal(JSON.stringify(row.resetHistory).includes(payload.operationId), false);
   assert.equal(JSON.stringify(row.resetHistory).includes(verification), false);
-  assert.equal(JSON.stringify(row.resetHistory).includes(before.deviceHashes[0]), false);
+  assert.equal(JSON.stringify(row.resetHistory).includes('deviceHashes'), false);
   const otherAdmin = createCatalogGuestAdminHandler({
     ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: 'other@primelinedist.com' } })
   });
@@ -717,7 +733,7 @@ test('Resend acceptance, rejection and ambiguous failures are distinguished with
   }
 });
 
-test('concurrent device registration respects the limit and reset prevents stale registration', async () => {
+test('concurrent devices are unrestricted and session invalidation prevents stale authorization', async () => {
   const state = fixture();
   const token = await inviteCustomer(state);
   const redeem = createCatalogGuestRedeemHandler(state.dependencies);
@@ -726,9 +742,8 @@ test('concurrent device registration respects the limit and reset prevents stale
   const ids = ['11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222',
     '33333333-3333-4333-8333-333333333333', '44444444-4444-4444-8444-444444444444'];
   const results = await Promise.all(ids.map(id => redeem(makeEvent('POST', { token, purpose: 'invite' }, `${GUEST_DEVICE_COOKIE}=${id}`))));
-  assert.equal(results.filter(result => result.statusCode === 200).length, 2);
-  assert.equal(results.filter(result => result.statusCode === 403).length, 2);
-  assert.equal((await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' })).deviceHashes.length, 3);
+  assert.equal(results.filter(result => result.statusCode === 200).length, 4);
+  assert.equal((await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' })).deviceHashes.length, 0);
 
   const admin = createCatalogGuestAdminHandler({
     ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
@@ -741,7 +756,7 @@ test('concurrent device registration respects the limit and reset prevents stale
   const original = state.stores.grants.setJSON;
   let blocked = false;
   state.stores.grants.setJSON = async (key, value, options) => {
-    if (!blocked && value.deviceHashes?.length === 1 && options?.onlyIfMatch) {
+    if (!blocked && value.deviceVersion === 1 && options?.onlyIfMatch) {
       blocked = true;
       entered();
       await gate;
@@ -778,7 +793,7 @@ test('one-use verification is atomic and session failures leave the link reusabl
   const results = await Promise.all(cookies.map(cookie => redeem(makeEvent('POST', { token: verification, purpose: 'verify' }, cookie))));
   assert.deepEqual(results.map(result => result.statusCode).sort(), [200, 409]);
   const grant = JSON.parse([...state.stores.grants.data.values()][0]);
-  assert.equal(grant.deviceHashes.length, 2);
+  assert.equal(grant.deviceHashes.length, 0);
 });
 
 test('concurrent first redemption and revocation cannot overwrite grant changes', async () => {
@@ -790,7 +805,7 @@ test('concurrent first redemption and revocation cannot overwrite grant changes'
   const responses = await Promise.all(cookies.map(cookie => redeem(makeEvent('POST', { token, purpose: 'invite' }, cookie))));
   assert.deepEqual(responses.map(result => result.statusCode), [200, 200]);
   const grant = JSON.parse([...state.stores.grants.data.values()][0]);
-  assert.equal(grant.deviceHashes.length, 2);
+  assert.equal(grant.deviceHashes.length, 0);
   const admin = createCatalogGuestAdminHandler({
     ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
   });
@@ -901,39 +916,45 @@ test('unopened invitations remain valid for 30 days and expire afterward', async
   assert.equal(expiredState.stores.grants.data.size, 0);
 });
 
-test('reusable invitation permits three devices and blocks a fourth with sales guidance', async () => {
+test('an invitation with exhausted legacy slots works repeatedly in fresh browsers and incognito', async () => {
   const state = fixture();
   const token = await inviteCustomer(state);
   const redeem = createCatalogGuestRedeemHandler(state.dependencies);
   const first = await redeem(makeEvent('POST', { token, purpose: 'invite' }));
-  const firstDevice = first.multiValueHeaders['Set-Cookie'][1].split(';')[0];
-  const secondDevice = `${GUEST_DEVICE_COOKIE}=11111111-1111-4111-8111-111111111111`;
-  const thirdDevice = `${GUEST_DEVICE_COOKIE}=22222222-2222-4222-8222-222222222222`;
-  const fourthDevice = `${GUEST_DEVICE_COOKIE}=33333333-3333-4333-8333-333333333333`;
-
-  const second = await redeem(makeEvent('POST', { token, purpose: 'invite' }, secondDevice));
-  const third = await redeem(makeEvent('POST', { token, purpose: 'invite' }, thirdDevice));
-  const fourth = await redeem(makeEvent('POST', { token, purpose: 'invite' }, fourthDevice));
   const invitation = (await state.stores.invitations.get(
     `invitation:${(await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' })).invitationId}`,
     { type: 'json' }
   ));
   const grant = await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' });
-  const fourthResult = responseBody(fourth);
-
+  grant.deviceHashes = ['old-one', 'old-two', 'old-three'];
+  await state.stores.grants.setJSON(`grant:${grant.id}`, grant);
   assert.equal(first.statusCode, 200);
-  assert.equal(second.statusCode, 200);
-  assert.equal(third.statusCode, 200);
-  assert.equal(fourth.statusCode, 403);
-  assert.equal(fourthResult.code, 'device_limit');
-  assert.match(fourthResult.error, /contact your sales representative/i);
-  assert.equal(GUEST_MAX_DEVICES, 3);
-  assert.equal(grant.deviceHashes.length, 3);
-  assert.equal(state.stores.sessions.data.size, 3);
-
-  const sameFirstDevice = await redeem(makeEvent('POST', { token, purpose: 'invite' }, firstDevice));
-  assert.equal(sameFirstDevice.statusCode, 200);
-  assert.equal((await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' })).deviceHashes.length, 3);
+  const sessionHandler = createCatalogGuestSessionHandler(state.dependencies);
+  for (let i = 0; i < 10; i++) {
+    const request = makeEvent('POST', { token, purpose: 'invite' });
+    delete request.headers.cookie;
+    const preparation = await redeem(request);
+    assert.equal(preparation.statusCode, 428);
+    request.headers.cookie = preparation.multiValueHeaders['Set-Cookie'][0].split(';')[0];
+    const opened = await redeem(request);
+    assert.equal(opened.statusCode, 200);
+    assert.equal(responseBody(opened).expiresAt, grant.expiresAt);
+    assert.equal(responseBody(opened).sharedBy, grant.sharedBy);
+    const cookies = opened.multiValueHeaders['Set-Cookie'].map(value => value.split(';')[0]).join('; ');
+    assert.equal((await sessionHandler(makeEvent('GET', undefined, cookies))).statusCode, 200);
+    assert.equal((await createCatalogGuestPdfHandler(state.dependencies)(makeEvent('GET', undefined, cookies))).statusCode, 200);
+    assert.equal((await redeem(request)).statusCode, 200);
+  }
+  const after = await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' });
+  assert.deepEqual(after, grant);
+  assert.equal(state.stores.sessions.data.size, 21);
+  const firstCookies = first.multiValueHeaders['Set-Cookie'].map(value => value.split(';')[0]).join('; ');
+  assert.equal((await sessionHandler(makeEvent('GET', undefined, firstCookies))).statusCode, 200);
+  await createCatalogGuestRequestLinkHandler(state.dependencies)(makeEvent('POST', { email: grant.email }));
+  const verification = emailToken(state.emails.at(-1), 'verify');
+  const freshDevice = `${GUEST_DEVICE_COOKIE}=${randomUUID()}`;
+  assert.equal((await redeem(makeEvent('POST', { token: verification, purpose: 'verify' }, freshDevice))).statusCode, 200);
+  assert.deepEqual((await state.stores.grants.get(`grant:${grant.id}`, { type: 'json' })).deviceHashes, grant.deviceHashes);
 });
 
 test('reused invitation expires with the authorized access period', async () => {

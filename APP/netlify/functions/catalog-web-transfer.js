@@ -111,8 +111,7 @@ export const createCatalogWebTransferHandler = (dependencies = {}) => async (eve
     if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
     if (existing?.session?.deviceHash === deviceHash &&
         normalizeEmail(existing.grant?.email) === claims.email &&
-        getActiveGrant(existing.grant, now()) &&
-        Array.isArray(existing.grant.deviceHashes) && existing.grant.deviceHashes.includes(deviceHash)) {
+        getActiveGrant(existing.grant, now())) {
       if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
       return jsonResponse({ resource: 'catalog-guest' });
     }

@@ -86,7 +86,7 @@ test('delete confirmation shows the unfiltered eligible count and prevents doubl
 
 test('all guest actions use accessible confirmations, preserve payloads and prevent duplicate submissions', async () => {
   const cases = [
-    { label: 'Reset authorized devices', title: 'Reset Authorized Devices?', confirm: 'Reset Only', action: 'reset-devices', destructive: false },
+    { label: 'Invalidate guest sessions', title: 'Invalidate Guest Sessions?', confirm: 'Invalidate Only', action: 'reset-devices', destructive: false },
     { label: 'Revoke access', title: 'Revoke Access?', confirm: 'Confirm Revoke', action: 'revoke', destructive: true },
     { label: 'Reissue invitation', title: 'Reissue Invitation?', confirm: 'Confirm Reissue', action: 'reissue', destructive: false },
     { label: 'Delete Record', title: 'Delete Invitation?', confirm: 'Confirm Delete', action: 'delete', destructive: true }
@@ -214,7 +214,7 @@ test('reset history is sortable and shows recorded statuses without inventing le
     ] },
     { id: 'two', customerEmail: 'two@example.com', resetCount: 2, resetHistory: [
       { timestamp: 1000, administrator: 'admin@primelinedist.com', previousDeviceCount: 1, emailStatus: 'not_requested' },
-      { timestamp: 2000, administrator: 'admin@primelinedist.com', previousDeviceCount: 0, emailStatus: 'accepted' }
+      { timestamp: 2000, administrator: 'admin@primelinedist.com', previousDeviceCount: null, emailStatus: 'accepted' }
     ] }
   ];
   const script = readFileSync(new URL('../../assets/js/catalog-guest-admin.js', import.meta.url), 'utf8')
@@ -231,7 +231,7 @@ test('reset history is sortable and shows recorded statuses without inventing le
   rows()[1].children[6].children[0].listeners.click();
   assert.equal(element('#resetHistoryDialog').open, true);
   const history = element('#resetHistoryList').children;
-  assert.match(history[0].children[1].textContent, /Previous devices: 0.*Accepted by Resend \(delivery not confirmed\)/);
+  assert.match(history[0].children[1].textContent, /Previous devices: Not recorded.*Accepted by Resend \(delivery not confirmed\)/);
   assert.match(history[1].children[1].textContent, /Previous devices: 1.*Email Not Requested/);
   element('#closeResetHistory').listeners.click();
   rows()[2].children[6].children[0].listeners.click();
@@ -243,8 +243,8 @@ test('reset history is sortable and shows recorded statuses without inventing le
 test('reset and send reports provider outcomes without claiming delivery', async () => {
   for (const [status, message] of [
     ['accepted', /accepted by Resend; delivery is not confirmed/i],
-    ['failed', /devices reset, but the access email was not sent/i],
-    ['unknown', /devices reset.*pending or unknown/i]
+    ['failed', /sessions invalidated, but the access email was not sent/i],
+    ['unknown', /sessions invalidated.*pending or unknown/i]
   ]) {
     const elements = new Map();
     const element = selector => {

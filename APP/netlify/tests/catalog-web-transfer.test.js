@@ -65,7 +65,7 @@ const fixture = () => {
   const employees = store();
   const grant = {
     id: 'grant-1', email, status: 'active', expiresAt: now + 3600000,
-    deviceHashes: [hashDeviceId(deviceId)]
+    deviceHashes: ['legacy-device-1', 'legacy-device-2', 'legacy-device-3']
   };
   grants.data.set('grant:grant-1', grant);
   return {
@@ -150,7 +150,7 @@ test('rejects invalid signatures, expired or malformed claims, and unavailable s
   )).statusCode, 503);
 });
 
-test('customer needs an active matching grant and an already registered device', async () => {
+test('customer needs an active matching guest session rather than only a device cookie', async () => {
   for (const change of ['missing', 'revoked', 'expired', 'other-email', 'new-device']) {
     const f = fixture();
     if (change === 'missing') f.grants.data.clear();

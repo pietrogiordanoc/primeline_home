@@ -397,11 +397,10 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
         }
         return { grant: {
           ...grant,
-          deviceHashes: [],
           deviceVersion: version + 1,
           deviceResetAudit: [...audit, {
-            action: 'reset-authorized-devices', administrator: authorization.session?.email || ADMIN_EMAIL,
-            timestamp: now(), previousDeviceCount: Array.isArray(grant.deviceHashes) ? new Set(grant.deviceHashes).size : 0,
+            action: 'invalidate-guest-sessions', administrator: authorization.session?.email || ADMIN_EMAIL,
+            timestamp: now(), previousDeviceCount: null,
             operationId: payload.operationId, emailRequested: payload.sendLink,
             emailStatus: payload.sendLink ? 'pending' : 'not_requested'
           }]

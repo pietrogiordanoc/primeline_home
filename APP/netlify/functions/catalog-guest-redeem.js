@@ -92,13 +92,7 @@ const redeemInvitation = async (token, event, dependencies, now) => {
   const device = await (dependencies.authorizeDevice || authorizeGuestDevice)(grant.id, event, {
     ...dependencies, now, email: invitation.customerEmail
   });
-  if (device.limitReached) {
-    return jsonResponse({
-      error: 'This catalog invitation has already been opened on 3 devices. Please contact your sales representative for additional access.',
-      code: 'device_limit'
-    }, 403);
-  }
-  if (device.resetConflict) return jsonResponse({ error: 'Catalog devices were reset. Please try again.' }, 409);
+  if (device.resetConflict) return jsonResponse({ error: 'Catalog sessions were invalidated. Please try again.' }, 409);
   if (device.expired || device.missing) return jsonResponse({ error: 'This catalog access has expired or been revoked.' }, 401);
   grant = device.grant;
   return jsonResponse({
@@ -138,13 +132,7 @@ const redeemVerification = async (token, event, dependencies, now) => {
   const device = await (dependencies.authorizeDevice || authorizeGuestDevice)(grant.id, event, {
     ...dependencies, now, email: record.email, verification: { hash, expiresAt: record.expiresAt }
   });
-  if (device.limitReached) {
-    return jsonResponse({
-      error: 'This catalog access has already been opened on 3 devices. Please contact your sales representative for additional access.',
-      code: 'device_limit'
-    }, 403);
-  }
-  if (device.resetConflict) return jsonResponse({ error: 'Catalog devices were reset. Please try again.' }, 409);
+  if (device.resetConflict) return jsonResponse({ error: 'Catalog sessions were invalidated. Please try again.' }, 409);
   if (device.verificationUsed) return jsonResponse({ error: 'This verification link has already been used.' }, 409);
   if (device.expired || device.missing) return jsonResponse({ error: 'Catalog access is no longer active.' }, 401);
   const authorizedGrant = device.grant;

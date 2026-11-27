@@ -44,8 +44,8 @@ el cliente debe abrir su invitación o verificar su correo primero.
 
 En Admin, el Super Admin puede consultar la columna **RESETS** y abrir el historial
 disponible de cada permiso. Los registros antiguos sin historial se muestran como
-«No history available»; no se reconstruyen datos desconocidos. Al reiniciar los
-dispositivos puede elegir **Reset Only** o **Reset & Send Access Link**. La segunda
+«No history available»; no se reconstruyen datos desconocidos. Ahora puede elegir
+**Invalidate Only** o **Invalidate & Send Access Link** para invalidar sesiones. La segunda
 opción envía un enlace de verificación para ese permiso concreto, sin cambiar el
 cliente, el vendedor ni el vencimiento.
 
@@ -54,3 +54,6 @@ falló. La aceptación de Resend no confirma la entrega; si el resultado es inci
 o queda pendiente, debe revisarse el historial antes de reintentar. El reinicio puede
 haber tenido éxito aunque el envío falle. Las marcas de eliminación conservan la
 auditoría de reinicios, sin exponer identificadores de dispositivos ni tokens en Admin.
+El límite de dispositivos está retirado temporalmente. No se registran dispositivos
+nuevos ni se eliminan los datos históricos; los eventos nuevos no indican una cantidad
+de dispositivos porque ya no se contabilizan.

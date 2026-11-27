@@ -23,7 +23,7 @@ export const createCatalogGuestSessionHandler = (dependencies = {}) => async (ev
 
     if (authenticated.session.deviceHash) {
       const device = guestDeviceIdentity(event);
-      if (!device || !authenticated.grant.deviceHashes?.includes(device.deviceHash)) {
+      if (!device || authenticated.session.deviceHash !== device.deviceHash) {
         return jsonResponse({ authenticated: false }, 401, [clearGuestSessionCookie()]);
       }
       cookies.push(guestDeviceCookieForGrant(device.deviceId, authenticated.grant, now()));

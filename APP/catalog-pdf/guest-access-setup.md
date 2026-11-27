@@ -9,13 +9,13 @@ No private bucket or storage setup is required. The guest PDF endpoint checks th
 ## Invitations, sessions, and revocation
 
 - Magic Links use URL fragments so ordinary page requests and referrers do not transmit the token. A GET only loads the confirmation page; redemption happens after the customer explicitly confirms.
-- Invitations expire after 30 days unused. Customer access starts when redeemed and supports 24 hours, 7 days, 1 month, 3 months, or permanent access. The invitation can be reused on up to three devices while the grant is active.
+- Invitations expire after 30 days unused. Customer access starts when redeemed and supports 24 hours, 7 days, 1 month, 3 months, or permanent access. The invitation can be reused on any browser or device while the grant is active; there is temporarily no device limit.
 - The customer receives the access link. The verified inviting employee and Super Admin receive internal copies that identify the employee, customer, and access duration without including the access link. If an internal copy fails, customer access remains active and the sharing page reports the partial notification failure.
 - Renewal verification links expire after 15 minutes and do not extend the grant. Browser sessions last at most seven days and never outlive a finite grant.
-- The browser first receives a secure, HttpOnly device cookie before a redemption can reserve a device. A session is prepared before the grant is updated, and grant writes use conditional updates to enforce the three-device limit under concurrency. If the browser loses its cookie, it cannot recover its old device identity.
-- Verification links are consumed in the same conditional grant update that authorizes the device; a device-limit rejection or session creation failure does not consume them. Expired verification claims are pruned on later verification attempts. If a response is lost after authorization, the same browser can reopen the guest page using its device cookie.
-- Super Admin can explicitly reset the devices on an active grant. The reset preserves its original expiration and inviter, invalidates previous guest sessions, and stores the administrator, time, and previous device count on the grant. The guest can reopen the original invitation or request a fresh verification link. Expired or revoked grants cannot be reset.
-- Admin can revoke grants, including permanent access. Guest session and PDF endpoint requests re-check the grant, device version, and revocation state. The separate Web-to-PDF transfer claim uses an atomic conditional create and does not add devices.
+- A secure, HttpOnly device cookie binds a guest session to its browser; it is not an invitation or identity credential. A browser without a valid session must reopen the invitation or verify its email. No devices are registered or counted.
+- Verification links are consumed in a conditional grant update; a session creation failure does not consume them. Expired verification claims are pruned on later verification attempts. Conditional updates also protect session invalidation against concurrent redemption.
+- Super Admin can invalidate guest sessions for an active grant and optionally send a fresh verification link for that grant. This preserves its original expiration and inviter. The RESETS history retains earlier recorded device counts; new events do not claim a device count because devices are no longer tracked. Expired or revoked grants cannot be reset.
+- Admin can revoke grants, including permanent access. Guest session and PDF endpoint requests re-check the grant, session version, and revocation state. The separate Web-to-PDF transfer claim uses an atomic conditional create and does not register devices.
 
 ## Web Catalog transfer
 
@@ -37,7 +37,7 @@ For staff, configure these **server-only Netlify Functions** environment variabl
 - `WEB_CATALOG_SUPABASE_URL`: the URL of the Web Catalog Supabase project.
 - `WEB_CATALOG_SUPABASE_SERVICE_ROLE_KEY`: that project's service-role key. It has broad privileges; never expose it to browsers or commit it.
 
-Home checks the Supabase Auth user and matching active `staff` record before issuing a staff session, then rechecks them for the viewer, downloads, and sharing. Existing OTP sessions keep their existing behavior. For customers, Home requires an active matching PDF grant and a previously registered device cookie; it reuses or creates a guest session without modifying the grant. A new device must use the existing invitation redemption process. Grant expiration and revocation continue to apply.
+Home checks the Supabase Auth user and matching active `staff` record before issuing a staff session, then rechecks them for the viewer, downloads, and sharing. Existing OTP sessions keep their existing behavior. For customers, Home requires an existing valid guest session bound to the browser and an active PDF grant matching the Web Catalog email. It reuses that session and never chooses a grant from a device cookie alone. Without a valid session, the customer must reopen the invitation or verify their email. Grant expiration and revocation continue to apply.
 
 `@netlify/blobs` 11 requires Node.js 22.12 or newer. Manually confirm the Netlify build and Functions runtime use a compatible version before deploying. The Web Catalog transfer issuer and its secret must also be configured and deployed manually by the user; no Supabase schema or configuration changes are made here. Scheduled cleanup runs on production deploys.
 

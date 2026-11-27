@@ -153,14 +153,14 @@ const renderGuestEntries = () => {
     const actionGroup = document.createElement('div');
     actionGroup.className = 'admin-rule-actions';
     if (entry.canReset) {
-      actionGroup.append(actionButton('Reset authorized devices', (trigger) => {
+      actionGroup.append(actionButton('Invalidate guest sessions', (trigger) => {
         openGuestDialog({
           payload: { action: 'reset-devices', grantId: entry.id, confirmed: true, operationId: crypto.randomUUID() },
-          title: 'Reset Authorized Devices?',
+          title: 'Invalidate Guest Sessions?',
           message: 'Existing guest sessions will stop working. The expiration date will not change. You may also email an access link for this invitation.',
           customerEmail: entry.customerEmail,
-          confirmLabel: 'Reset Only',
-          successMessage: 'Authorized devices reset.'
+          confirmLabel: 'Invalidate Only',
+          successMessage: 'Guest sessions invalidated.'
         }, trigger);
       }));
     }
@@ -232,7 +232,7 @@ const openResetHistory = (entry, trigger) => {
         const date = document.createElement('strong');
         date.textContent = Number.isFinite(event.timestamp) ? new Date(event.timestamp).toLocaleString() : 'Date unavailable';
         const detail = document.createElement('div');
-        const count = Number.isSafeInteger(event.previousDeviceCount) ? event.previousDeviceCount : 'Unknown';
+        const count = Number.isSafeInteger(event.previousDeviceCount) ? event.previousDeviceCount : 'Not recorded';
         const emailTime = Number.isFinite(event.emailStatusAt) ? ` (${new Date(event.emailStatusAt).toLocaleString()})` : '';
         detail.textContent = `Administrator: ${event.administrator || 'Unknown'} · Previous devices: ${count} · ${statuses[event.emailStatus] || statuses.unrecorded}${emailTime}`;
         item.append(date, detail);
@@ -330,12 +330,12 @@ const confirmGuestAction = async (sendLink = false) => {
     let emailError = false;
     if (action.payload.action === 'reset-devices') {
       if (result.devicesReset !== true) throw new Error('Reset status could not be confirmed. Refresh the history before retrying.');
-      if (result.emailStatus === 'accepted') message = 'Authorized devices reset. Access email accepted by Resend; delivery is not confirmed.';
+      if (result.emailStatus === 'accepted') message = 'Guest sessions invalidated. Access email accepted by Resend; delivery is not confirmed.';
       else if (result.emailStatus === 'failed') {
-        message = 'Authorized devices reset, but the access email was not sent.';
+        message = 'Guest sessions invalidated, but the access email was not sent.';
         emailError = true;
       } else if (result.emailStatus !== 'not_requested') {
-        message = 'Authorized devices reset. Email acceptance is pending or unknown; check the reset history before retrying.';
+        message = 'Guest sessions invalidated. Email acceptance is pending or unknown; check the reset history before retrying.';
         emailError = true;
       }
     }
@@ -346,7 +346,7 @@ const confirmGuestAction = async (sendLink = false) => {
     pendingAction = null;
     if (isDeletion) await loadGuestEntries();
     if (action.payload.action === 'reset-devices') {
-      setGuestAccessStatus(`Reset outcome could not be confirmed. Refresh the history before retrying.${error.message ? ` ${error.message}` : ''}`, true);
+      setGuestAccessStatus(`Session invalidation outcome could not be confirmed. Refresh the history before retrying.${error.message ? ` ${error.message}` : ''}`, true);
     } else {
       setGuestAccessStatus(error.message || (isDeletion ? 'Records could not be deleted.' : 'Catalog access could not be updated.'), true);
     }

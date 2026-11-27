@@ -9,7 +9,6 @@ export const GUEST_VERIFICATION_STORE = 'prime-line-guest-verifications';
 export const GUEST_CLAIM_STORE = 'prime-line-guest-claims';
 export const GUEST_SESSION_COOKIE = '__Host-pl-guest-catalog-session';
 export const GUEST_DEVICE_COOKIE = '__Host-pl-guest-catalog-device';
-export const GUEST_MAX_DEVICES = 3;
 export const GUEST_INVITATION_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 export const GUEST_VERIFICATION_LIFETIME_MS = 15 * 60 * 1000;
 export const GUEST_SESSION_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
@@ -207,7 +206,6 @@ export const authorizeGuestDevice = async (grantId, event, options = {}) => {
     const version = grant.deviceVersion || 0;
     if (startingVersion === undefined) startingVersion = version;
     else if (startingVersion !== version) return { resetConflict: true };
-    const devices = Array.isArray(grant.deviceHashes) ? [...new Set(grant.deviceHashes)] : [];
     const verification = options.verification;
     const claims = Array.isArray(grant.usedVerifications)
       ? grant.usedVerifications.filter(item => Number.isFinite(item.expiresAt) && item.expiresAt > now())
@@ -215,15 +213,13 @@ export const authorizeGuestDevice = async (grantId, event, options = {}) => {
     if (verification && (verification.expiresAt <= now() || claims.some(item => item.hash === verification.hash))) {
       return { verificationUsed: true };
     }
-    if (!devices.includes(identity.deviceHash) && devices.length >= GUEST_MAX_DEVICES) return { limitReached: true };
-    if (!devices.includes(identity.deviceHash)) devices.push(identity.deviceHash);
     const session = await (options.createSession || createGuestSession)(grant, {
       getSessionStore: options.getGuestSessionStore || getGuestSessionStore, now, deviceHash: identity.deviceHash
     });
     if (!getActiveGrant(grant, now()) || (verification && verification.expiresAt <= now())) return { expired: true };
     if (verification) claims.push(verification);
     return {
-      grant: { ...grant, deviceHashes: devices, ...(verification ? { usedVerifications: claims } : {}) },
+      grant: { ...grant, ...(verification ? { usedVerifications: claims } : {}) },
       session,
       deviceCookie: guestDeviceCookieForGrant(identity.deviceId, grant, now())
     };
@@ -255,8 +251,7 @@ export const validateGuestSession = async (event, options = {}) => {
   const grantStore = await (options.getGrantStorage || options.getGrantStore || getGrantStore)();
   const grant = await grantStore.get(`grant:${session.grantId}`, { type: 'json' });
   if (!getActiveGrant(grant, now()) || grant.email !== session.email || grant.id !== session.grantId ||
-      (session.deviceVersion || 0) !== (grant.deviceVersion || 0) ||
-      (session.deviceHash && (!Array.isArray(grant.deviceHashes) || !grant.deviceHashes.includes(session.deviceHash)))) return null;
+      (session.deviceVersion || 0) !== (grant.deviceVersion || 0)) return null;
   return { session, grant, sessionId, sessionStore };
 };
 
@@ -426,7 +421,7 @@ export const sendCatalogInvitationEmail = async (invitation, token, dependencies
   const inviterText = inviterEmail
     ? `\n\nINVITED BY\n${inviterName ? `${inviterName}\nPrime Line Distributors\n` : ''}${inviterEmail}`
     : '';
-  const linkUsageText = 'This invitation link must be opened within 30 days. Once activated, it can be reused on up to 3 devices while catalog access remains active.';
+  const linkUsageText = 'This invitation link must be opened within 30 days. Once activated, it can be reused on any browser or device while catalog access remains active.';
   const inviterHtml = inviterEmail
     ? `<div style="max-width:340px;margin:22px auto 0;padding:14px 18px;border:1px solid #eeeae3;background:#faf9f6;text-align:left;">
         <div style="margin-bottom:7px;color:#c4933b;font-size:10px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">Invited by</div>
