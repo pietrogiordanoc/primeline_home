@@ -14,7 +14,9 @@
 
 ### Limpieza de acceso al catálogo PDF
 
-Solo el Super Admin puede eliminar registros caducados o revocados no permanentes.
+Solo el Super Admin puede eliminar individualmente cualquier invitación, incluso
+activa, pendiente o permanente. La eliminación invalida inmediatamente las sesiones
+y enlaces de Prime Line Home e impide emitir nuevas transferencias para esa invitación.
 La limpieza masiva incluye únicamente accesos caducados, también los revocados cuya
 fecha de vencimiento ya pasó; no incluye invitaciones permanentes. Abarca todos los
 registros elegibles, independientemente de los filtros de la tabla. El servidor
@@ -24,3 +26,5 @@ La eliminación reemplaza la invitación y el permiso por marcas mínimas de aud
 sin correo ni datos del cliente. Estas marcas invalidan enlaces y sesiones asociados
 y evitan que una activación concurrente recree el permiso; conservan los eventos de
 revocación y reinicio de dispositivos. No se modifican cuentas del catálogo web.
+Los PDF descargados y las URL públicas de Issuu no pueden retirarse; los tokens
+de transferencia ya emitidos pueden seguir siendo válidos hasta su vencimiento.

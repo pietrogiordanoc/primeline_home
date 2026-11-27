@@ -1268,10 +1268,15 @@ test('individual deletion requires Super Admin and invalidates only the revoked 
   });
   const request = { action: 'delete', recordType: 'grant', id: invitation.grantId };
   assert.equal((await otherAdmin(makeEvent('POST', request))).statusCode, 403);
+  assert.equal((await otherAdmin(makeEvent('POST', {
+    action: 'delete-expired', asOf: state.now, records: [{ recordType: 'grant', id: invitation.grantId }]
+  }))).statusCode, 403);
   assert.equal((await createCatalogGuestAdminHandler({
     ...state.dependencies, authorizeAdmin: async () => ({ ok: false })
   })(makeEvent('POST', request))).statusCode, 401);
-  assert.equal(responseBody(await admin(makeEvent('POST', request))).deleted, 0);
+  const crossOrigin = makeEvent('POST', request);
+  crossOrigin.headers.origin = 'https://other.example.com';
+  assert.equal((await admin(crossOrigin)).statusCode, 403);
   assert.equal((await admin(makeEvent('POST', { action: 'revoke', grantId: invitation.grantId }))).statusCode, 200);
   assert.equal(responseBody(await admin(makeEvent('POST', {
     action: 'delete-expired', asOf: state.now, records: [{ recordType: 'grant', id: invitation.grantId }]
@@ -1288,6 +1293,117 @@ test('individual deletion requires Super Admin and invalidates only the revoked 
   assert.equal((await createCatalogGuestPdfHandler(state.dependencies)(makeEvent('GET', undefined, cookies))).statusCode, 401);
   assert.equal((await redeem(makeEvent('POST', { purpose: 'invite', token: otherToken }))).statusCode, 200);
   assert.equal(responseBody(await admin(makeEvent('GET'))).entries.length, 1);
+});
+
+for (const duration of ['7-days', 'permanent']) {
+  test(`individual deletion immediately invalidates ${duration} access without affecting another invitation`, async () => {
+    const state = fixture();
+    const token = await inviteCustomer(state, duration);
+    const redeem = createCatalogGuestRedeemHandler(state.dependencies);
+    const first = await redeem(makeEvent('POST', { purpose: 'invite', token }));
+    assert.equal(first.statusCode, 200);
+    const cookies = first.multiValueHeaders['Set-Cookie'].map(value => value.split(';')[0]).join('; ');
+    await createCatalogGuestRequestLinkHandler(state.dependencies)(makeEvent('POST', { email: 'buyer@example.com' }));
+    const verification = emailToken(state.emails.at(-1), 'verify');
+    const otherToken = await inviteCustomer(state, '7-days');
+    assert.equal((await redeem(makeEvent('POST', { purpose: 'invite', token: otherToken }))).statusCode, 200);
+    const pointer = await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' });
+    const invitation = await state.stores.invitations.get(`invitation:${pointer.invitationId}`, { type: 'json' });
+    const transfer = createCatalogGuestTransferHandler({
+      ...state.dependencies, getSigningSecret: () => 'test-only-secret-that-is-long-enough'
+    });
+    assert.equal((await transfer(makeEvent('POST', {}, cookies))).statusCode, 200);
+    const admin = createCatalogGuestAdminHandler({
+      ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+    });
+    const rows = responseBody(await admin(makeEvent('GET'))).entries;
+    const target = rows.find(row => row.id === invitation.grantId);
+    assert.equal(target.canDelete, true);
+    assert.equal(target.canBulkDelete, false);
+    assert.equal(responseBody(await admin(makeEvent('POST', {
+      action: 'delete-expired', asOf: state.now, records: [{ recordType: 'grant', id: invitation.grantId }]
+    }))).deleted, 0);
+    assert.equal(responseBody(await admin(makeEvent('POST', {
+      action: 'delete', recordType: 'grant', id: invitation.grantId
+    }))).deleted, 1);
+    assert.equal((await transfer(makeEvent('POST', {}, cookies))).statusCode, 401);
+    assert.equal((await createCatalogGuestPdfHandler(state.dependencies)(makeEvent('GET', undefined, cookies))).statusCode, 401);
+    assert.equal((await redeem(makeEvent('POST', { purpose: 'verify', token: verification }))).statusCode, 401);
+    assert.equal((await redeem(makeEvent('POST', { purpose: 'invite', token }))).statusCode, 401);
+    assert.equal((await redeem(makeEvent('POST', { purpose: 'invite', token: otherToken }))).statusCode, 200);
+    assert.equal((await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' })).deletedBy, ADMIN_EMAIL);
+  });
+}
+
+test('all invitation states display delete only for Super Admin', async () => {
+  const state = fixture();
+  for (const [status, duration] of [['pending', '7-days'], ['revoked', '7-days'], ['reissued', '7-days'], ['pending', 'permanent']]) {
+    const id = randomUUID();
+    await state.stores.invitations.setJSON(`invitation:${id}`, {
+      id, grantId: randomUUID(), customerEmail: 'buyer@example.com', duration, status,
+      expiresAt: state.now + 100, usedAt: null
+    });
+  }
+  const grantId = randomUUID();
+  await state.stores.grants.setJSON(`grant:${grantId}`, {
+    id: grantId, invitationId: randomUUID(), duration: '7-days', status: 'active', expiresAt: state.now + 100
+  });
+  for (const [email, allowed] of [[ADMIN_EMAIL, true], ['other@primelinedist.com', false]]) {
+    const admin = createCatalogGuestAdminHandler({
+      ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email } })
+    });
+    const rows = responseBody(await admin(makeEvent('GET'))).entries;
+    assert.equal(rows.length, 5);
+    assert.ok(rows.every(row => row.canDelete === allowed));
+  }
+});
+
+test('deleting a pending invitation during activation blocks grant creation', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state, 'permanent');
+  const pointer = await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' });
+  const invitation = await state.stores.invitations.get(`invitation:${pointer.invitationId}`, { type: 'json' });
+  const original = state.stores.grants.setJSON.bind(state.stores.grants);
+  let release, entered;
+  const waiting = new Promise(resolve => { entered = resolve; });
+  const blocked = new Promise(resolve => { release = resolve; });
+  state.stores.grants.setJSON = async (key, value, options) => {
+    if (key === `grant:${invitation.grantId}` && value.status === 'active') {
+      entered();
+      await blocked;
+    }
+    return original(key, value, options);
+  };
+  const redemption = createCatalogGuestRedeemHandler(state.dependencies)(makeEvent('POST', { purpose: 'invite', token }));
+  await waiting;
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  assert.equal(responseBody(await admin(makeEvent('POST', {
+    action: 'delete', recordType: 'invitation', id: invitation.id
+  }))).deleted, 1);
+  release();
+  assert.equal((await redemption).statusCode, 401);
+  assert.equal((await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' })).status, 'deleted');
+});
+
+test('concurrent deletion by grant and invitation counts the record only once', async () => {
+  const state = fixture();
+  const token = await inviteCustomer(state, 'permanent');
+  await createCatalogGuestRedeemHandler(state.dependencies)(makeEvent('POST', { purpose: 'invite', token }));
+  const pointer = await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' });
+  const invitation = await state.stores.invitations.get(`invitation:${pointer.invitationId}`, { type: 'json' });
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  const results = await Promise.all([
+    admin(makeEvent('POST', { action: 'delete', recordType: 'invitation', id: invitation.id })),
+    admin(makeEvent('POST', { action: 'delete', recordType: 'grant', id: invitation.grantId }))
+  ]);
+  assert.ok(results.every(response => response.statusCode === 200));
+  assert.equal(results.reduce((total, response) => total + responseBody(response).deleted, 0), 1);
+  assert.equal((await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' })).status, 'deleted');
+  assert.equal((await state.stores.invitations.get(`invitation:${invitation.id}`, { type: 'json' })).status, 'deleted');
 });
 
 test('bulk deletion removes only expired non-permanent records, preserving audit and other access', async () => {
@@ -1335,7 +1451,7 @@ test('bulk deletion removes only expired non-permanent records, preserving audit
     assert.notEqual((await state.stores.invitations.get(`invitation:${id}`, { type: 'json' })).status, 'deleted');
   }
   for (const [recordType, id] of [['invitation', valid], ['invitation', permanent], ['grant', permanentGrantId]]) {
-    assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType, id }))).deleted, 0);
+    assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType, id }))).deleted, 1);
   }
   assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType: 'invitation', id: revokedValid }))).deleted, 1);
 });
@@ -1359,8 +1475,57 @@ test('concurrent renewal and deletion recheck eligibility with conditional write
   const admin = createCatalogGuestAdminHandler({
     ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
   });
-  assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType: 'grant', id }))).deleted, 0);
+  assert.equal(responseBody(await admin(makeEvent('POST', {
+    action: 'delete-expired', asOf: state.now, records: [{ recordType: 'grant', id }]
+  }))).deleted, 0);
   assert.equal((await state.stores.grants.get(`grant:${id}`, { type: 'json' })).expiresAt, state.now + 10000);
+});
+
+test('individual deletion wins a concurrent renewal without losing the updated audit', async () => {
+  const state = fixture();
+  const id = randomUUID();
+  await state.stores.grants.setJSON(`grant:${id}`, {
+    id, invitationId: randomUUID(), duration: '7-days', status: 'active', expiresAt: state.now + 100
+  });
+  const original = state.stores.grants.setJSON.bind(state.stores.grants);
+  let raced = false;
+  state.stores.grants.setJSON = async (key, value, options) => {
+    if (!raced && value.status === 'deleted') {
+      raced = true;
+      const current = await state.stores.grants.get(key, { type: 'json' });
+      await original(key, {
+        ...current, expiresAt: state.now + 10000,
+        deviceResetAudit: [{ action: 'reset-authorized-devices', timestamp: state.now }]
+      });
+    }
+    return original(key, value, options);
+  };
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  assert.equal(responseBody(await admin(makeEvent('POST', { action: 'delete', recordType: 'grant', id }))).deleted, 1);
+  const marker = await state.stores.grants.get(`grant:${id}`, { type: 'json' });
+  assert.equal(marker.originalExpiresAt, state.now + 10000);
+  assert.equal(marker.deviceResetAudit.length, 1);
+});
+
+test('individual deletion refuses conflicting invitation links without changing another grant', async () => {
+  const state = fixture();
+  const id = randomUUID();
+  const grantId = randomUUID();
+  await state.stores.invitations.setJSON(`invitation:${id}`, {
+    id, grantId, duration: '7-days', status: 'pending', expiresAt: state.now + 100
+  });
+  const grant = {
+    id: grantId, invitationId: randomUUID(), duration: 'permanent', status: 'active', expiresAt: null
+  };
+  await state.stores.grants.setJSON(`grant:${grantId}`, grant);
+  const admin = createCatalogGuestAdminHandler({
+    ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+  });
+  assert.equal((await admin(makeEvent('POST', { action: 'delete', recordType: 'invitation', id }))).statusCode, 503);
+  assert.deepEqual(await state.stores.grants.get(`grant:${grantId}`, { type: 'json' }), grant);
+  assert.equal((await state.stores.invitations.get(`invitation:${id}`, { type: 'json' })).status, 'pending');
 });
 
 test('a concurrent revocation is preserved in the deletion audit', async () => {

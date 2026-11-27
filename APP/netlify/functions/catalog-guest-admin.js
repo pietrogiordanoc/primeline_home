@@ -30,11 +30,11 @@ const getStatusForGrant = (grant, now) => {
 const isExpired = (record, now) =>
   Number.isFinite(record.expiresAt) && record.expiresAt <= now;
 
-const isDeletable = (record, now, bulk, revoked) =>
-  isGuestDuration(record.duration) && record.duration !== 'permanent' && Number.isFinite(record.expiresAt) &&
-  (isExpired(record, now) || (!bulk && revoked));
+const isBulkDeletable = (record, now) =>
+  isGuestDuration(record.duration) && record.duration !== 'permanent' &&
+  isExpired(record, now);
 
-const buildAdminRows = async (invitationStore, grantStore, now) => {
+const buildAdminRows = async (invitationStore, grantStore, now, isSuperAdmin) => {
   const invitations = await listStoreRecords(invitationStore, 'invitation:');
   const grants = await listStoreRecords(grantStore, 'grant:');
   const invitationsById = new Map(invitations.map(invitation => [invitation.id, invitation]));
@@ -50,7 +50,6 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
     const invitation = invitationsById.get(grant.invitationId);
     const safeLink = (!invitation || (invitation.grantId === grant.id && invitation.usedAt &&
       invitation.duration !== 'permanent')) && grantCounts.get(grant.invitationId) === 1;
-    const canDelete = Boolean(safeLink && isDeletable(grant, now, false, Boolean(grant.revokedAt || grant.status === 'revoked')));
     return [{
       id: grant.id,
       invitationId: grant.invitationId,
@@ -63,8 +62,8 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
       status: getStatusForGrant(grant, now),
       canRevoke: getStatusForGrant(grant, now) === 'active',
       canReissue: false,
-      canDelete,
-      canBulkDelete: canDelete && isExpired(grant, now),
+      canDelete: isSuperAdmin,
+      canBulkDelete: Boolean(isSuperAdmin && safeLink && isBulkDeletable(grant, now)),
       recordType: 'grant'
     }];
   });
@@ -87,8 +86,8 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
           status: 'revoked',
           canRevoke: false,
           canReissue: false,
-          canDelete: Boolean(safeInvitation && isDeletable(invitation, now, false, true)),
-          canBulkDelete: Boolean(safeInvitation && isDeletable(invitation, now, true, true)),
+          canDelete: isSuperAdmin,
+          canBulkDelete: Boolean(isSuperAdmin && safeInvitation && isBulkDeletable(invitation, now)),
           recordType: 'invitation'
         });
         return;
@@ -107,8 +106,8 @@ const buildAdminRows = async (invitationStore, grantStore, now) => {
         status: invitation.status === 'revoked' ? 'revoked' : expired ? 'expired' : 'pending',
         canRevoke: false,
         canReissue: Boolean(!invitation.usedAt && invitation.status !== 'revoked'),
-        canDelete: Boolean(safeInvitation && isDeletable(invitation, now, false, invitation.status === 'revoked')),
-        canBulkDelete: Boolean(safeInvitation && isDeletable(invitation, now, true, false)),
+        canDelete: isSuperAdmin,
+        canBulkDelete: Boolean(isSuperAdmin && safeInvitation && isBulkDeletable(invitation, now)),
         recordType: 'invitation'
       });
     });
@@ -151,28 +150,89 @@ const verifyConditionalWrites = async (store) => {
   }
 };
 
+const deleteIndividualInvitation = async (invitationStore, grantStore, grants, id, administrator, now) => {
+  const key = `invitation:${id}`;
+  const initial = await invitationStore.getWithMetadata(key, { type: 'json' });
+  const invitation = initial?.data;
+  if (!invitation || invitation.status === 'deleted') return false;
+  if (invitation.id !== id || typeof invitation.grantId !== 'string' ||
+      !/^[0-9a-f-]{36}$/i.test(invitation.grantId)) {
+    throw new Error('Guest invitation linkage is invalid.');
+  }
+  if (grants.some(grant => grant.status !== 'deleted' &&
+      grant.invitationId === id && grant.id !== invitation.grantId)) {
+    throw new Error('Guest invitation has conflicting grants.');
+  }
+
+  const grantKey = `grant:${invitation.grantId}`;
+  let secured = false;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const current = await grantStore.getWithMetadata(grantKey, { type: 'json' });
+    if (current && (current.data?.id !== invitation.grantId || current.data?.invitationId !== id)) {
+      throw new Error('Guest grant linkage is invalid.');
+    }
+    if (current?.data.status === 'deleted') {
+      secured = true;
+      break;
+    }
+    if (current && !current.etag) throw new Error('Guest grant metadata is unavailable.');
+    const marker = deletionMarker(current?.data || { id: invitation.grantId, invitationId: id }, administrator, now());
+    const changed = await grantStore.setJSON(grantKey, marker, current ? { onlyIfMatch: current.etag } : { onlyIfNew: true });
+    if (changed.modified) {
+      secured = true;
+      break;
+    }
+  }
+  if (!secured) throw new Error('Guest grant deletion conflicted repeatedly.');
+
+  try {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const current = await invitationStore.getWithMetadata(key, { type: 'json' });
+      if (!current || current.data?.status === 'deleted') return false;
+      if (!current.etag || current.data?.id !== id || current.data?.grantId !== invitation.grantId) {
+        throw new Error('Guest invitation linkage changed during deletion.');
+      }
+      const changed = await invitationStore.setJSON(key, deletionMarker(current.data, administrator, now()), { onlyIfMatch: current.etag });
+      if (changed.modified) return true;
+    }
+    throw new Error('Guest invitation deletion conflicted repeatedly.');
+  } catch (error) {
+    throw Object.assign(new Error('Guest access was invalidated but its invitation could not be erased.', { cause: error }), { recordDeleted: true });
+  }
+};
+
 const deleteGuestRecord = async (invitationStore, grantStore, grants, type, id, bulk, administrator, now, cutoff) => {
+  if (!bulk && type === 'invitation') {
+    return deleteIndividualInvitation(invitationStore, grantStore, grants, id, administrator, now);
+  }
   const store = type === 'grant' ? grantStore : invitationStore;
   const key = `${type}:${id}`;
   for (let attempt = 0; attempt < 10; attempt++) {
     const current = await store.getWithMetadata(key, { type: 'json' });
     const record = current?.data;
     if (!record || record.status === 'deleted') return false;
+    if (record.id !== id) {
+      if (bulk) return false;
+      throw new Error('Guest record identifier is invalid.');
+    }
     if (!current.etag) throw new Error('Guest record metadata is unavailable.');
-    const revoked = type === 'grant'
-      ? Boolean(record.revokedAt || record.status === 'revoked')
-      : record.status === 'revoked' || record.status === 'reissued';
-    if (!isDeletable(record, bulk ? Math.min(now(), cutoff) : now(), bulk, revoked)) return false;
+    if (bulk && !isBulkDeletable(record, Math.min(now(), cutoff))) return false;
 
     if (type === 'invitation') {
       if (record.usedAt || !['pending', 'revoked', 'reissued'].includes(record.status)) return false;
       if (record.grantId && await grantStore.get(`grant:${record.grantId}`, { type: 'json' })) return false;
     } else if (record.invitationId) {
       const invitation = await invitationStore.get(`invitation:${record.invitationId}`, { type: 'json' });
-      if (invitation && (invitation.grantId !== record.id || !invitation.usedAt ||
-          invitation.duration === 'permanent')) return false;
+      if (invitation && (invitation.id !== record.invitationId || invitation.grantId !== record.id ||
+          (bulk && (!invitation.usedAt || invitation.duration === 'permanent')))) {
+        if (bulk) return false;
+        throw new Error('Guest invitation linkage is invalid.');
+      }
       if (grants.some(grant => grant.status !== 'deleted' &&
-          grant.invitationId === record.invitationId && grant.id !== record.id)) return false;
+          grant.invitationId === record.invitationId && grant.id !== record.id)) {
+        if (bulk) return false;
+        throw new Error('Guest invitation has conflicting grants.');
+      }
     }
 
     const changed = await store.setJSON(key, deletionMarker(record, administrator, now()), { onlyIfMatch: current.etag });
@@ -183,9 +243,12 @@ const deleteGuestRecord = async (invitationStore, grantStore, grants, type, id, 
         const invitationKey = `invitation:${record.invitationId}`;
         for (let retry = 0; retry < 10; retry++) {
           const linked = await invitationStore.getWithMetadata(invitationKey, { type: 'json' });
-          if (!linked || linked.data.status === 'deleted') break;
+          if (!linked) break;
+          if (linked.data.status === 'deleted') return false;
           if (!linked.etag) throw new Error('Guest invitation metadata is unavailable.');
-          if (linked.data.grantId !== record.id) throw new Error('Guest invitation linkage changed during deletion.');
+          if (linked.data.id !== record.invitationId || linked.data.grantId !== record.id) {
+            throw new Error('Guest invitation linkage changed during deletion.');
+          }
           const updated = await invitationStore.setJSON(
             invitationKey, deletionMarker(linked.data, administrator, now()), { onlyIfMatch: linked.etag }
           );
@@ -229,7 +292,7 @@ export const createCatalogGuestAdminHandler = (dependencies = {}) => async (even
     if (method === 'GET') {
       const [invitationStore, grantStore] = await Promise.all([getInvitations(), getGrants()]);
       const asOf = now();
-      return jsonResponse({ entries: await buildAdminRows(invitationStore, grantStore, asOf), asOf });
+      return jsonResponse({ entries: await buildAdminRows(invitationStore, grantStore, asOf, authorization.session?.email === ADMIN_EMAIL), asOf });
     }
 
     if (!isSameOrigin(event)) return jsonResponse({ error: 'Request could not be completed.' }, 403);

@@ -50,6 +50,7 @@ test('delete confirmation shows the unfiltered eligible count and prevents doubl
   element('#guestAccessSearch').listeners.input();
   element('#deleteExpiredGuests').listeners.click();
   assert.equal(element('#deleteGuestDialog').open, true);
+  assert.equal(element('#deleteGuestTitle').textContent, 'Delete Records?');
   assert.match(element('#deleteGuestCount').textContent, /1 eligible record/);
   assert.match(element('#deleteGuestCount').textContent, /regardless of filters/);
   const first = element('#confirmDeleteGuests').listeners.click();
@@ -67,6 +68,9 @@ test('delete confirmation shows the unfiltered eligible count and prevents doubl
   assert.equal(actions[0].textContent, 'Delete Record');
   actions[0].listeners.click();
   assert.equal(element('#deleteGuestDialog').open, true);
+  assert.equal(element('#deleteGuestTitle').textContent, 'Delete Invitation?');
+  assert.match(element('#deleteGuestMessage').textContent, /immediately revokes access/);
+  assert.match(element('#deleteGuestMessage').textContent, /downloaded PDFs.*Issuu URLs cannot be recalled/);
   element('#cancelDeleteGuests').listeners.click();
   assert.equal(element('#deleteGuestDialog').open, false);
   assert.equal(posts, 1);

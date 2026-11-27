@@ -9,6 +9,8 @@ const clearGuestAccessFilters = document.querySelector('#clearGuestAccessFilters
 const guestAccessCount = document.querySelector('#guestAccessCount');
 const deleteExpiredGuests = document.querySelector('#deleteExpiredGuests');
 const deleteGuestDialog = document.querySelector('#deleteGuestDialog');
+const deleteGuestTitle = document.querySelector('#deleteGuestTitle');
+const deleteGuestMessage = document.querySelector('#deleteGuestMessage');
 const deleteGuestCount = document.querySelector('#deleteGuestCount');
 const cancelDeleteGuests = document.querySelector('#cancelDeleteGuests');
 const confirmDeleteGuests = document.querySelector('#confirmDeleteGuests');
@@ -202,7 +204,12 @@ const updateEntry = async (payload, successMessage) => {
 const openDeleteDialog = (payload, count) => {
   if (deleting) return;
   deletionPayload = payload;
-  deleteGuestCount.textContent = `${count} eligible record(s).${payload.action === 'delete-expired' ? ' All eligible records are included, regardless of filters.' : ''}`;
+  const bulk = payload.action === 'delete-expired';
+  deleteGuestTitle.textContent = bulk ? 'Delete Records?' : 'Delete Invitation?';
+  deleteGuestMessage.textContent = bulk
+    ? 'Are you sure you want to permanently delete these records? This action cannot be undone.'
+    : 'This permanently deletes the invitation and immediately revokes access through Prime Line Home. This action cannot be undone. Previously downloaded PDFs and publicly accessible Issuu URLs cannot be recalled.';
+  deleteGuestCount.textContent = bulk ? `${count} eligible record(s). All eligible records are included, regardless of filters.` : '';
   deleteGuestDialog.showModal();
 };
 
