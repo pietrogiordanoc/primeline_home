@@ -780,7 +780,7 @@ test('reused invitation expires with the authorized access period', async () => 
   assert.match(responseBody(expired).error, /expired or been revoked/i);
 });
 
-test('same device renews its short browser session while its grant is still active', async () => {
+test('an expired session requires the original invitation or verified email, not just the device', async () => {
   const state = fixture();
   const token = await inviteCustomer(state, '3-months');
   const redeemed = await createCatalogGuestRedeemHandler(state.dependencies)(
@@ -794,19 +794,145 @@ test('same device renews its short browser session while its grant is still acti
   const grant = await state.stores.grants.get(`grant:${invitation.grantId}`, { type: 'json' });
 
   state.setNow(state.now + GUEST_SESSION_LIFETIME_SECONDS * 1000 + 1000);
-  const refreshed = await createCatalogGuestSessionHandler(state.dependencies)(
-    makeEvent('GET', undefined, deviceCookie)
+  const sessionHandler = createCatalogGuestSessionHandler(state.dependencies);
+  assert.equal((await sessionHandler(makeEvent('GET', undefined, deviceCookie))).statusCode, 401);
+  const refreshed = await createCatalogGuestRedeemHandler(state.dependencies)(
+    makeEvent('POST', { token, purpose: 'invite' }, deviceCookie)
   );
   assert.equal(refreshed.statusCode, 200);
-  assert.equal(responseBody(refreshed).authenticated, true);
   assert.equal(responseBody(refreshed).expiresAt, grant.expiresAt);
-  assert.equal(refreshed.multiValueHeaders['Set-Cookie'].length, 2);
-
-  const refreshedCookie = `${refreshed.multiValueHeaders['Set-Cookie'][0].split(';')[0]}; ${deviceCookie}`;
+  const refreshedCookie = refreshed.multiValueHeaders['Set-Cookie'].map(cookie => cookie.split(';')[0]).join('; ');
   const viewerAccess = await createCatalogGuestPdfHandler(state.dependencies)(
     makeEvent('GET', undefined, refreshedCookie)
   );
   assert.equal(viewerAccess.statusCode, 200);
+});
+
+test('shared devices cannot recover another customer after missing, invalid, expired or revoked sessions', async () => {
+  const state = fixture();
+  const firstToken = await inviteCustomer(state, '3-months', 'alice@example.com', 'Alice Seller');
+  state.dependencies.getEmployeeSession = async () => ({
+    email: 'other@primelinedist.com', resource: 'catalog-pdf', expiresAt: state.now + 60000
+  });
+  const secondToken = await inviteCustomer(state, 'permanent', 'bob@example.com', 'Bob Seller');
+  const redeem = createCatalogGuestRedeemHandler(state.dependencies);
+  const first = await redeem(makeEvent('POST', { token: firstToken, purpose: 'invite' }));
+  const second = await redeem(makeEvent('POST', { token: secondToken, purpose: 'invite' }));
+  const cookie = response => response.multiValueHeaders['Set-Cookie'].map(value => value.split(';')[0]).join('; ');
+  const firstCookie = cookie(first);
+  const secondCookie = cookie(second);
+  const deviceCookie = first.multiValueHeaders['Set-Cookie'][1].split(';')[0];
+  const sessionHandler = createCatalogGuestSessionHandler(state.dependencies);
+  const transfer = createCatalogGuestTransferHandler({ ...state.dependencies, getSigningSecret: () => transferSecret });
+  for (const [cookies, customer, salesperson] of [
+    [firstCookie, 'alice@example.com', 'sales@primelinedist.com'],
+    [secondCookie, 'bob@example.com', 'other@primelinedist.com']
+  ]) {
+    assert.equal((await sessionHandler(makeEvent('GET', undefined, cookies))).statusCode, 200);
+    const response = await transfer(makeEvent('POST', undefined, cookies));
+    const payload = JSON.parse(Buffer.from(responseBody(response).credential.split('.')[1], 'base64url'));
+    assert.equal(payload.customerEmail, customer);
+    assert.equal(payload.sharedBy, salesperson);
+  }
+  for (const cookies of [deviceCookie, `${deviceCookie}; __Host-pl-guest-catalog-session=invalid`]) {
+    assert.equal((await sessionHandler(makeEvent('GET', undefined, cookies))).statusCode, 401);
+    assert.equal((await transfer(makeEvent('POST', undefined, cookies))).statusCode, 401);
+  }
+
+  const firstSessionId = firstCookie.match(/__Host-pl-guest-catalog-session=([^;]+)/)[1];
+  const firstSession = await state.stores.sessions.get(`session:${firstSessionId}`, { type: 'json' });
+  const firstGrant = await state.stores.grants.get(`grant:${firstSession.grantId}`, { type: 'json' });
+  await state.stores.grants.setJSON(`grant:${firstGrant.id}`, { ...firstGrant, status: 'revoked', revokedAt: state.now });
+  assert.equal((await sessionHandler(makeEvent('GET', undefined, firstCookie))).statusCode, 401);
+  assert.equal((await transfer(makeEvent('POST', undefined, firstCookie))).statusCode, 401);
+  assert.equal((await sessionHandler(makeEvent('GET', undefined, secondCookie))).statusCode, 200);
+  await state.stores.grants.delete(`grant:${firstGrant.id}`);
+  assert.equal((await sessionHandler(makeEvent('GET', undefined, firstCookie))).statusCode, 401);
+
+  state.setNow(state.now + GUEST_SESSION_LIFETIME_SECONDS * 1000 + 1);
+  assert.equal((await sessionHandler(makeEvent('GET', undefined, secondCookie))).statusCode, 401);
+  assert.equal((await sessionHandler(makeEvent('GET', undefined, deviceCookie))).statusCode, 401);
+  assert.equal((await transfer(makeEvent('POST', undefined, secondCookie))).statusCode, 401);
+});
+
+test('email recovery offers an explicit link for each salesperson and preserves the selected grant', async () => {
+  const state = fixture();
+  const firstToken = await inviteCustomer(state, '3-months', 'buyer@example.com', 'First Seller');
+  state.dependencies.getEmployeeSession = async () => ({
+    email: 'other@primelinedist.com', resource: 'catalog-pdf', expiresAt: state.now + 60000
+  });
+  const secondToken = await inviteCustomer(state, 'permanent', 'buyer@example.com', 'Second Seller');
+  const redeem = createCatalogGuestRedeemHandler(state.dependencies);
+  await redeem(makeEvent('POST', { token: firstToken, purpose: 'invite' }));
+  await redeem(makeEvent('POST', { token: secondToken, purpose: 'invite' }));
+  const invitations = await Promise.all([firstToken, secondToken].map(async token => {
+    const pointer = await state.stores.invitations.get(`token:${hashToken(token)}`, { type: 'json' });
+    return state.stores.invitations.get(`invitation:${pointer.invitationId}`, { type: 'json' });
+  }));
+  const response = await createCatalogGuestRequestLinkHandler(state.dependencies)(
+    makeEvent('POST', { email: 'Buyer@Example.com' })
+  );
+  assert.equal(response.statusCode, 202);
+  const message = state.emails.at(-1);
+  assert.match(message.text, /First Seller.*sales@primelinedist\.com/);
+  assert.match(message.text, /Second Seller.*other@primelinedist\.com/);
+  for (const invitation of invitations) assert.ok(message.text.includes(invitation.id));
+  const tokens = [...message.text.matchAll(/#verify=([A-Za-z0-9_-]{43})/g)].map(match => match[1]);
+  assert.equal(tokens.length, 2);
+  const transfer = createCatalogGuestTransferHandler({ ...state.dependencies, getSigningSecret: () => transferSecret });
+  for (const token of tokens) {
+    const pointer = await state.stores.verifications.get(`token:${hashToken(token)}`, { type: 'json' });
+    const invitation = invitations.find(item => item.grantId === pointer.grantId);
+    assert.ok(invitation);
+    const recovered = await redeem(makeEvent('POST', { token, purpose: 'verify' }));
+    assert.equal(recovered.statusCode, 200);
+    const cookies = recovered.multiValueHeaders['Set-Cookie'].map(value => value.split(';')[0]).join('; ');
+    const id = cookies.match(/__Host-pl-guest-catalog-session=([^;]+)/)[1];
+    const session = await state.stores.sessions.get(`session:${id}`, { type: 'json' });
+    const grant = await state.stores.grants.get(`grant:${session.grantId}`, { type: 'json' });
+    assert.equal(grant.id, invitation.grantId);
+    assert.equal(grant.invitationId, invitation.id);
+    assert.equal(grant.expiresAt, invitation.expiresAt);
+    assert.equal(grant.sharedBy, invitation.sharedBy);
+    const signed = await transfer(makeEvent('POST', undefined, cookies));
+    const claims = JSON.parse(Buffer.from(responseBody(signed).credential.split('.')[1], 'base64url'));
+    assert.equal(claims.customerEmail, invitation.customerEmail);
+    assert.equal(claims.sharedBy, invitation.sharedBy);
+  }
+});
+
+test('a verification link cannot fall through to another grant after its invitation is revoked or deleted', async () => {
+  for (const action of ['revoke', 'delete']) {
+    const state = fixture();
+    const firstToken = await inviteCustomer(state, '3-months');
+    state.dependencies.getEmployeeSession = async () => ({
+      email: 'other@primelinedist.com', resource: 'catalog-pdf', expiresAt: state.now + 60000
+    });
+    const secondToken = await inviteCustomer(state, 'permanent');
+    const redeem = createCatalogGuestRedeemHandler(state.dependencies);
+    await redeem(makeEvent('POST', { token: firstToken, purpose: 'invite' }));
+    await redeem(makeEvent('POST', { token: secondToken, purpose: 'invite' }));
+    const pointer = await state.stores.invitations.get(`token:${hashToken(firstToken)}`, { type: 'json' });
+    const invitation = await state.stores.invitations.get(`invitation:${pointer.invitationId}`, { type: 'json' });
+    await createCatalogGuestRequestLinkHandler(state.dependencies)(makeEvent('POST', { email: 'buyer@example.com' }));
+    const tokens = [...state.emails.at(-1).text.matchAll(/#verify=([A-Za-z0-9_-]{43})/g)].map(match => match[1]);
+    const pairs = await Promise.all(tokens.map(async token => ({
+      token, pointer: await state.stores.verifications.get(`token:${hashToken(token)}`, { type: 'json' })
+    })));
+    const selected = pairs.find(pair => pair.pointer.grantId === invitation.grantId);
+    const other = pairs.find(pair => pair.pointer.grantId !== invitation.grantId);
+    const admin = createCatalogGuestAdminHandler({
+      ...state.dependencies, authorizeAdmin: async () => ({ ok: true, session: { email: ADMIN_EMAIL } })
+    });
+    const request = action === 'revoke'
+      ? { action, grantId: invitation.grantId }
+      : { action, recordType: 'grant', id: invitation.grantId };
+    assert.equal((await admin(makeEvent('POST', request))).statusCode, 200);
+    assert.equal((await redeem(makeEvent('POST', { token: selected.token, purpose: 'verify' }))).statusCode, 401);
+    const recovered = await redeem(makeEvent('POST', { token: other.token, purpose: 'verify' }));
+    assert.equal(recovered.statusCode, 200);
+    assert.equal(responseBody(recovered).sharedBy, 'other@primelinedist.com');
+  }
 });
 
 test('permanent grants create only seven-day browser sessions and remain revocable', async () => {

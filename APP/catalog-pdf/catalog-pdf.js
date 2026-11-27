@@ -200,7 +200,7 @@ const initialize = async () => {
   }
   if (result.ok && result.data?.resource === 'catalog-pdf') return validateCatalogSession();
   if (result.status === 403) {
-    setAccessStatus('Catalog access could not be authorized. Customers should open their existing invitation on this device; employees should contact Prime Line.', true);
+    setAccessStatus('Catalog access could not be authorized. Customers should open their invitation or visit /catalog-pdf/guest/ to verify their email; employees should contact Prime Line.', true);
   } else if (result.status === 401 || result.status === 409) {
     setAccessStatus('This catalog transfer is invalid, expired, or already used. Please return to Web Catalog and try again.', true);
   } else {

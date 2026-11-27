@@ -85,17 +85,36 @@ const fixture = () => {
 const deviceCookie = `${GUEST_DEVICE_COOKIE}=${deviceId}`;
 const parse = response => JSON.parse(response.body);
 
-test('returning customer gets a bounded guest session without modifying the grant', async () => {
+test('returning customer without a valid guest session must reopen an invitation', async () => {
   const f = fixture();
   const response = await createCatalogWebTransferHandler(f.deps)(event(sign(makeClaims()), deviceCookie));
-  assert.equal(response.statusCode, 200);
-  assert.equal(parse(response).resource, 'catalog-guest');
-  const cookie = response.multiValueHeaders['Set-Cookie'][0];
-  assert.match(cookie, /HttpOnly; Secure; SameSite=Strict/);
-  assert.match(cookie, /Max-Age=3600/);
-  const sessionId = cookie.split('=')[1].split(';')[0];
-  assert.equal((await f.sessions.get(`session:${sessionId}`)).deviceHash, hashDeviceId(deviceId));
+  assert.equal(response.statusCode, 403);
+  assert.equal(parse(response).code, 'invitation_required');
+  assert.equal(f.sessions.data.size, 0);
   assert.deepEqual(await f.grants.get('grant:grant-1'), f.grant);
+});
+
+test('Web transfer cannot switch grants when a previous session is invalid, expired or revoked', async () => {
+  for (const state of ['invalid', 'expired', 'revoked', 'other-customer']) {
+    const f = fixture();
+    const sessionId = randomUUID();
+    const previousGrant = { ...f.grant, id: 'previous', sharedBy: 'previous@primelinedist.com' };
+    if (state === 'revoked') previousGrant.revokedAt = now - 1;
+    if (state === 'other-customer') previousGrant.email = 'other@example.com';
+    await f.grants.setJSON('grant:previous', previousGrant);
+    if (state !== 'invalid') {
+      await f.sessions.setJSON(`session:${sessionId}`, {
+        resource: 'catalog-guest', email: previousGrant.email, grantId: previousGrant.id,
+        deviceHash: hashDeviceId(deviceId), expiresAt: state === 'expired' ? now - 1 : now + 60000
+      });
+    }
+    const response = await createCatalogWebTransferHandler(f.deps)(
+      event(sign(makeClaims()), `${deviceCookie}; ${GUEST_SESSION_COOKIE}=${sessionId}`)
+    );
+    assert.equal(response.statusCode, 403, state);
+    assert.equal(parse(response).code, 'invitation_required');
+    assert.equal(f.sessions.data.size, state === 'invalid' || state === 'expired' ? 0 : 1);
+  }
 });
 
 test('preserves an existing matching guest session and rejects replay concurrently', async () => {
@@ -276,15 +295,15 @@ test('Netlify SDK conditional create rejects conflicts and server errors', async
   }
 });
 
-test('transfer is denied if authorization or session creation outlasts the credential', async () => {
+test('transfer is denied if guest session validation outlasts the credential', async () => {
   const f = fixture();
   let time = now;
   const response = await createCatalogWebTransferHandler({
     ...f.deps,
     now: () => time,
-    createGuestSession: async () => {
+    validateGuestSession: async () => {
       time += 120000;
-      return { cookie: 'should-not-be-sent' };
+      return { session: { deviceHash: hashDeviceId(deviceId) }, grant: f.grant };
     }
   })(event(sign(makeClaims()), deviceCookie));
   assert.equal(response.statusCode, 401);

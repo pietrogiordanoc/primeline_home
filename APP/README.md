@@ -28,3 +28,12 @@ y evitan que una activación concurrente recree el permiso; conservan los evento
 revocación y reinicio de dispositivos. No se modifican cuentas del catálogo web.
 Los PDF descargados y las URL públicas de Issuu no pueden retirarse; los tokens
 de transferencia ya emitidos pueden seguir siendo válidos hasta su vencimiento.
+
+### Recuperación de acceso al catálogo PDF
+
+La cookie del dispositivo no identifica por sí sola una invitación. Si una sesión
+falta o caduca, el cliente debe abrir su enlace original o solicitar una verificación
+por correo. Cuando hay varios permisos activos, el correo ofrece un enlace separado
+para cada invitación, con su referencia, vendedor y vencimiento, para que el cliente elija.
+El regreso desde Web Catalog también requiere una sesión PDF válida; de lo contrario,
+el cliente debe abrir su invitación o verificar su correo primero.

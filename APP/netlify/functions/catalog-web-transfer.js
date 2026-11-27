@@ -2,9 +2,9 @@ import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import { isSameOrigin } from '../shared/admin-auth.js';
 import {
-  GUEST_DEVICE_COOKIE, createGuestSession, getActiveGrant, getEmployeeCatalogSession,
+  GUEST_DEVICE_COOKIE, getActiveGrant, getEmployeeCatalogSession,
   getGrantStore, getGuestSessionStore, getStore, hashDeviceId, hashToken,
-  jsonResponse, listStoreRecords, normalizeEmail, parseBody, readCookie, validateGuestSession
+  jsonResponse, normalizeEmail, parseBody, readCookie, validateGuestSession
 } from '../shared/catalog-guest-access.js';
 import { verifyWebStaff } from '../shared/catalog-web-staff.js';
 
@@ -103,12 +103,12 @@ export const createCatalogWebTransferHandler = (dependencies = {}) => async (eve
       return jsonResponse({ error: 'Open your existing catalog invitation on this device to continue.', code: 'invitation_required' }, 403);
     }
     const deviceHash = hashDeviceId(deviceId);
-    const grantStore = await (dependencies.getGrantStore || getGrantStore)();
     const existing = await (dependencies.validateGuestSession || validateGuestSession)(event, {
       getGrantStore: dependencies.getGrantStore || getGrantStore,
       getGuestSessionStore: dependencies.getGuestSessionStore || getGuestSessionStore,
       now
     });
+    if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
     if (existing?.session?.deviceHash === deviceHash &&
         normalizeEmail(existing.grant?.email) === claims.email &&
         getActiveGrant(existing.grant, now()) &&
@@ -116,25 +116,7 @@ export const createCatalogWebTransferHandler = (dependencies = {}) => async (eve
       if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
       return jsonResponse({ resource: 'catalog-guest' });
     }
-    const grants = await (dependencies.listRecords || listStoreRecords)(grantStore, 'grant:');
-    const matches = grants.filter(grant =>
-      normalizeEmail(grant.email) === claims.email && getActiveGrant(grant, now()) &&
-      Array.isArray(grant.deviceHashes) && grant.deviceHashes.includes(deviceHash)
-    ).sort((a, b) => (b.expiresAt === null ? Infinity : b.expiresAt) - (a.expiresAt === null ? Infinity : a.expiresAt));
-    if (!matches.length) {
-      return jsonResponse({ error: 'An active catalog invitation on this device is required.', code: 'invitation_required' }, 403);
-    }
-    const grant = await grantStore.get(`grant:${matches[0].id}`, { type: 'json' });
-    if (!getActiveGrant(grant, now()) || grant.id !== matches[0].id || normalizeEmail(grant.email) !== claims.email ||
-        !Array.isArray(grant.deviceHashes) || !grant.deviceHashes.includes(deviceHash)) {
-      return jsonResponse({ error: 'Catalog invitation access is no longer active.', code: 'invitation_required' }, 403);
-    }
-    if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
-    const session = await (dependencies.createGuestSession || createGuestSession)(grant, {
-      getSessionStore: dependencies.getGuestSessionStore || getGuestSessionStore, now, deviceHash
-    });
-    if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
-    return jsonResponse({ resource: 'catalog-guest' }, 200, [session.cookie]);
+    return jsonResponse({ error: 'Open your catalog invitation or verify your email to continue.', code: 'invitation_required' }, 403);
   } catch {
     console.error('Web catalog transfer could not be completed.');
     return jsonResponse({ error: 'Catalog transfer is temporarily unavailable.' }, 503);

@@ -1,18 +1,10 @@
 import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import {
-  GUEST_DEVICE_COOKIE,
   GUEST_DURATIONS,
   clearGuestSessionCookie,
-  createGuestSession,
-  getActiveGrant,
-  getGrantStore,
-  getGuestSessionStore,
   guestDeviceCookieForGrant,
   guestDeviceIdentity,
-  hashDeviceId,
   jsonResponse,
-  listStoreRecords,
-  readCookie,
   validateGuestSession
 } from '../shared/catalog-guest-access.js';
 
@@ -20,43 +12,13 @@ export const createCatalogGuestSessionHandler = (dependencies = {}) => async (ev
   if (event.httpMethod !== 'GET') return jsonResponse({ error: 'Method not allowed.' }, 405);
   try {
     const now = dependencies.now || Date.now;
-    let authenticated = await (dependencies.validateSession || validateGuestSession)(event, {
+    const authenticated = await (dependencies.validateSession || validateGuestSession)(event, {
       ...dependencies,
       now
     });
     const cookies = [];
     if (!authenticated) {
-      const deviceId = readCookie(event, GUEST_DEVICE_COOKIE);
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(deviceId)) {
-        return jsonResponse({ authenticated: false }, 401, [clearGuestSessionCookie()]);
-      }
-
-      const grantStore = await (dependencies.getGrantStore || getGrantStore)();
-      const grants = await (dependencies.listRecords || listStoreRecords)(grantStore, 'grant:');
-      const deviceHash = hashDeviceId(deviceId);
-      const grant = grants
-        .filter((item) =>
-          getActiveGrant(item, now()) &&
-          Array.isArray(item.deviceHashes) &&
-          item.deviceHashes.includes(deviceHash)
-        )
-        .sort((a, b) => {
-          if (a.expiresAt === null) return b.expiresAt === null ? b.createdAt - a.createdAt : -1;
-          if (b.expiresAt === null) return 1;
-          return b.expiresAt - a.expiresAt;
-        })[0];
-      if (!grant) return jsonResponse({ authenticated: false }, 401, [clearGuestSessionCookie()]);
-
-      const session = await (dependencies.createSession || createGuestSession)(
-        grant,
-        {
-          getSessionStore: dependencies.getGuestSessionStore || getGuestSessionStore,
-          now,
-          deviceHash
-        }
-      );
-      cookies.push(session.cookie);
-      authenticated = { session: session.session, grant };
+      return jsonResponse({ authenticated: false }, 401, [clearGuestSessionCookie()]);
     }
 
     if (authenticated.session.deviceHash) {
