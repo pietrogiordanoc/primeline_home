@@ -201,7 +201,8 @@ export const authorizeGuestDevice = async (grantId, event, options = {}) => {
   const grantStore = await (options.getGrantStore || getGrantStore)();
   let startingVersion;
   return updateGuestGrant(grantStore, grantId, async (grant) => {
-    if (!getActiveGrant(grant, now())) return { expired: true };
+    if (grant.id !== grantId || !getActiveGrant(grant, now()) ||
+        (options.requireActiveStatus && grant.status !== 'active')) return { expired: true };
     if (options.email && grant.email !== options.email) return { expired: true };
     const version = grant.deviceVersion || 0;
     if (startingVersion === undefined) startingVersion = version;

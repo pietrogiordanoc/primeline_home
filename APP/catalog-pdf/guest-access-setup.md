@@ -21,7 +21,7 @@ No private bucket or storage setup is required. The guest PDF endpoint checks th
 
 Set `PDF_CATALOG_TRANSFER_SECRET` in the Home Netlify functions environment to a dedicated, cryptographically random value of at least 32 UTF-8 bytes. Configure the same value only in the Web Catalog backend; do not expose it to browser code. For example, generate a random 32-byte value and encode it as base64url.
 
-An authenticated guest may explicitly select **View as Web Catalog**. The Home function validates the existing session and active grant, then returns an HS256 JWT in a no-store response. Navigation places it only in the Web Catalog URL fragment as `pdf_transfer`; it contains `customerEmail`, `sharedBy`, `source` (`pdf_catalog_share`), `iat`, `exp`, and `jti`, plus `iss` (`https://primelinedist.com`) and `aud` (`https://catalog.primelinedist.com`). Timestamps are Unix seconds. The expiration is at most five minutes after issuance and never later than the grant expiration.
+An authenticated guest may explicitly select **View as Web Catalog**. The prepared Home function validates the existing session and active grant, then returns an HS256 JWT in a no-store response. Navigation places it only in the Web Catalog URL fragment as `pdf_transfer`; it contains `customerEmail`, `sharedBy`, `pdfGrantId`, `source` (`pdf_catalog_share`), `iat`, `exp`, and `jti`, plus `iss` (`https://primelinedist.com`) and `aud` (`https://catalog.primelinedist.com`). `pdfGrantExpiresAt` is the grant expiration in Unix seconds, or `null` for a permanent grant. The ticket expiration is at most five minutes after issuance and never later than a finite grant expiration.
 
 The Catalog Mode button in the header is available after staff or guest access is verified. Staff navigate directly to Web Catalog, while guests use the transfer described above. Hover or focus reveals the explanation; on touch devices, press and hold the button to show it without navigating.
 
@@ -38,6 +38,36 @@ For staff, configure these **server-only Netlify Functions** environment variabl
 - `WEB_CATALOG_SUPABASE_SERVICE_ROLE_KEY`: that project's service-role key. It has broad privileges; never expose it to browsers or commit it.
 
 Home checks the Supabase Auth user and matching active `staff` record before issuing a staff session, then rechecks them for the viewer, downloads, and sharing. Existing OTP sessions keep their existing behavior. For customers, Home requires an existing valid guest session bound to the browser and an active PDF grant matching the Web Catalog email. It reuses that session and never chooses a grant from a device cookie alone. Without a valid session, the customer must reopen the invitation or verify their email. Grant expiration and revocation continue to apply.
+
+### Coordinated exact-grant transfer (unpublished preparation)
+
+The prepared Home changes add `pdfGrantId` to the signed PDF-to-Web ticket and accept
+an optional `pdfGrantId` UUID in a signed customer Web-to-PDF ticket. Home looks up
+that exact grant, checks its email and active status, and creates a browser-bound
+session with conditional grant updates. It never searches by email. A different
+valid guest session is rejected rather than silently switched. Without the new claim,
+the existing session requirement remains.
+
+The prepared `validate-catalog-grants` endpoint accepts a signed, single-use Web
+request and checks each exact grant ID, owner, original salesperson, status and
+expiration against Home's grant store. It signs only eligible grants, using `null`
+for a permanent grant's `expiresAt`. The Web receiver validates the response,
+prefers permanent grants, and otherwise selects the latest expiration. Home rechecks
+the selected grant when redeeming the transfer. Validation is a snapshot, not an
+authorization for later Web requests. The updated Web registration verifier also
+requires `pdfGrantId` and `pdfGrantExpiresAt`, so previously issued PDF-to-Web
+tickets cannot be used with it.
+
+Web must securely bind verified grants to the authenticated customer and protect
+linking against replay; email or salesperson alone cannot reconstruct a grant.
+The prepared Web contract requires authenticated existing-account linking and
+single-use transfer credentials; both sides require a coordinated release.
+
+This validation supports Web-to-PDF transfer only; it does not enforce expiration
+on Web sessions or direct Web data access. Unified expiration requires an audited
+distinction between independently authorized Web accounts and PDF-only leads,
+and server-side checks for protected Web operations and existing sessions.
+Do not copy secrets into browser code or logs.
 
 `@netlify/blobs` 11 requires Node.js 22.12 or newer. Manually confirm the Netlify build and Functions runtime use a compatible version before deploying. The Web Catalog transfer issuer and its secret must also be configured and deployed manually by the user; no Supabase schema or configuration changes are made here. Scheduled cleanup runs on production deploys.
 

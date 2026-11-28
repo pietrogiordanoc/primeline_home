@@ -9,6 +9,7 @@ import {
 } from '../shared/catalog-guest-access.js';
 
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export const createCatalogGuestTransferHandler = (dependencies = {}) => async (event) => {
   if (event.httpMethod !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405);
@@ -30,7 +31,7 @@ export const createCatalogGuestTransferHandler = (dependencies = {}) => async (e
     const { grant } = authenticated;
     const customerEmail = normalizeEmail(grant.email);
     const sharedBy = normalizeEmail(grant.sharedBy);
-    if (!customerEmail || !sharedBy || !/^[^\s@]+@primelinedist\.com$/.test(sharedBy)) {
+    if (!customerEmail || !sharedBy || !/^[^\s@]+@primelinedist\.com$/.test(sharedBy) || !UUID.test(grant.id || '')) {
       return jsonResponse({ error: 'Invitation details are unavailable. Please contact your sales representative.' }, 422);
     }
 
@@ -54,6 +55,8 @@ export const createCatalogGuestTransferHandler = (dependencies = {}) => async (e
       aud: 'https://catalog.primelinedist.com',
       customerEmail,
       sharedBy,
+      pdfGrantId: grant.id,
+      pdfGrantExpiresAt: grant.expiresAt === null ? null : Math.floor(grant.expiresAt / 1000),
       source: 'pdf_catalog_share',
       iat: issuedAt,
       exp: expiresAt,

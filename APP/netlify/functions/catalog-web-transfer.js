@@ -2,8 +2,8 @@ import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { adaptNetlifyHandler } from '../shared/adapt-netlify-handler.js';
 import { isSameOrigin } from '../shared/admin-auth.js';
 import {
-  GUEST_DEVICE_COOKIE, getActiveGrant, getEmployeeCatalogSession,
-  getGrantStore, getGuestSessionStore, getStore, hashDeviceId, hashToken,
+  GUEST_DEVICE_COOKIE, authorizeGuestDevice, getActiveGrant, getEmployeeCatalogSession,
+  getGrantStore, getGuestSessionStore, getStore, guestDeviceIdentity, hashDeviceId, hashToken,
   jsonResponse, normalizeEmail, parseBody, readCookie, validateGuestSession
 } from '../shared/catalog-guest-access.js';
 import { verifyWebStaff } from '../shared/catalog-web-staff.js';
@@ -47,6 +47,8 @@ export const verifyTransferCredential = (credential, secret, nowSeconds) => {
           typeof claims.staffRole !== 'string' || !claims.staffRole || claims.staffRole.length > 128) return null;
     } else if (claims.userType === 'customer') {
       if (typeof claims.customerId !== 'string' || !claims.customerId || claims.customerId.length > 128) return null;
+      if (Object.hasOwn(claims, 'pdfGrantId') &&
+          (typeof claims.pdfGrantId !== 'string' || !UUID.test(claims.pdfGrantId))) return null;
     } else return null;
     return claims;
   } catch {
@@ -99,10 +101,10 @@ export const createCatalogWebTransferHandler = (dependencies = {}) => async (eve
     }
 
     const deviceId = readCookie(event, GUEST_DEVICE_COOKIE);
-    if (!UUID.test(deviceId)) {
+    if (!claims.pdfGrantId && !UUID.test(deviceId)) {
       return jsonResponse({ error: 'Open your existing catalog invitation on this device to continue.', code: 'invitation_required' }, 403);
     }
-    const deviceHash = hashDeviceId(deviceId);
+    const deviceHash = UUID.test(deviceId) ? hashDeviceId(deviceId) : '';
     const existing = await (dependencies.validateGuestSession || validateGuestSession)(event, {
       getGrantStore: dependencies.getGrantStore || getGrantStore,
       getGuestSessionStore: dependencies.getGuestSessionStore || getGuestSessionStore,
@@ -111,9 +113,29 @@ export const createCatalogWebTransferHandler = (dependencies = {}) => async (eve
     if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
     if (existing?.session?.deviceHash === deviceHash &&
         normalizeEmail(existing.grant?.email) === claims.email &&
-        getActiveGrant(existing.grant, now())) {
+        getActiveGrant(existing.grant, now()) &&
+        (!claims.pdfGrantId || (existing.grant.id === claims.pdfGrantId && existing.grant.status === 'active'))) {
       if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
       return jsonResponse({ resource: 'catalog-guest' });
+    }
+    if (claims.pdfGrantId && existing) {
+      return jsonResponse({ error: 'A different catalog session is active. Open the intended invitation to continue.', code: 'session_conflict' }, 403);
+    }
+    if (claims.pdfGrantId) {
+      const identity = guestDeviceIdentity(event);
+      const selectedDevice = identity?.deviceId || randomUUID();
+      const authorization = await (dependencies.authorizeDevice || authorizeGuestDevice)(
+        claims.pdfGrantId,
+        { headers: { cookie: `${GUEST_DEVICE_COOKIE}=${selectedDevice}` } },
+        { ...dependencies, now, email: claims.email, requireActiveStatus: true }
+      );
+      if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
+      if (authorization.grant?.id !== claims.pdfGrantId ||
+          !getActiveGrant(authorization.grant, now()) || authorization.grant.status !== 'active' ||
+          authorization.grant.email !== claims.email || !authorization.session || !authorization.deviceCookie) {
+        return jsonResponse({ error: 'Catalog invitation access is no longer active.', code: 'invitation_required' }, 403);
+      }
+      return jsonResponse({ resource: 'catalog-guest' }, 200, [authorization.session.cookie, authorization.deviceCookie]);
     }
     return jsonResponse({ error: 'Open your catalog invitation or verify your email to continue.', code: 'invitation_required' }, 403);
   } catch {

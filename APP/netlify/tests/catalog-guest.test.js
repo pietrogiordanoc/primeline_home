@@ -1348,8 +1348,8 @@ const createTransferFixture = async (duration = '7-days') => {
 };
 
 test('guest transfer signs the validated grant identity, not request data', async () => {
-  const { state, invitationToken, cookies, transfer } = await createTransferFixture();
-  const event = makeEvent('POST', { customerEmail: 'other@example.com', sharedBy: 'other@primelinedist.com' }, cookies);
+  const { state, grant, invitationToken, cookies, transfer } = await createTransferFixture();
+  const event = makeEvent('POST', { customerEmail: 'other@example.com', sharedBy: 'other@primelinedist.com', pdfGrantId: randomUUID() }, cookies);
   const response = await transfer(event);
   assert.equal(response.statusCode, 200);
   assert.equal(response.headers['Cache-Control'], 'no-store');
@@ -1362,6 +1362,8 @@ test('guest transfer signs the validated grant identity, not request data', asyn
   const claims = JSON.parse(Buffer.from(payloadPart, 'base64url'));
   assert.equal(claims.customerEmail, 'buyer@example.com');
   assert.equal(claims.sharedBy, 'sales@primelinedist.com');
+  assert.equal(claims.pdfGrantId, grant.id);
+  assert.equal(claims.pdfGrantExpiresAt, Math.floor(grant.expiresAt / 1000));
   assert.equal(claims.source, 'pdf_catalog_share');
   assert.equal(claims.iss, 'https://primelinedist.com');
   assert.equal(claims.aud, 'https://catalog.primelinedist.com');
@@ -1389,6 +1391,7 @@ test('guest transfer expiration is capped by finite grants and five minutes for 
   const permanentResponse = await permanent.transfer(makeEvent('POST', undefined, permanent.cookies));
   const permanentClaims = JSON.parse(Buffer.from(responseBody(permanentResponse).credential.split('.')[1], 'base64url'));
   assert.equal(permanentClaims.exp - permanentClaims.iat, 300);
+  assert.equal(permanentClaims.pdfGrantExpiresAt, null);
 
   finite.state.setNow(finite.grant.expiresAt - 500);
   assert.equal((await finite.transfer(makeEvent('POST', undefined, finite.cookies))).statusCode, 401);
