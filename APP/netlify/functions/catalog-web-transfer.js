@@ -4,7 +4,7 @@ import { isSameOrigin } from '../shared/admin-auth.js';
 import {
   GUEST_DEVICE_COOKIE, authorizeGuestDevice, getActiveGrant, getEmployeeCatalogSession,
   getGrantStore, getGuestSessionStore, getStore, guestDeviceIdentity, hashDeviceId, hashToken,
-  jsonResponse, normalizeEmail, parseBody, readCookie, validateGuestSession
+  jsonResponse, listStoreRecords, normalizeEmail, parseBody, readCookie, validateGuestSession
 } from '../shared/catalog-guest-access.js';
 import { verifyWebStaff } from '../shared/catalog-web-staff.js';
 
@@ -101,9 +101,6 @@ export const createCatalogWebTransferHandler = (dependencies = {}) => async (eve
     }
 
     const deviceId = readCookie(event, GUEST_DEVICE_COOKIE);
-    if (!claims.pdfGrantId && !UUID.test(deviceId)) {
-      return jsonResponse({ error: 'Open your existing catalog invitation on this device to continue.', code: 'invitation_required' }, 403);
-    }
     const deviceHash = UUID.test(deviceId) ? hashDeviceId(deviceId) : '';
     const existing = await (dependencies.validateGuestSession || validateGuestSession)(event, {
       getGrantStore: dependencies.getGrantStore || getGrantStore,
@@ -113,31 +110,47 @@ export const createCatalogWebTransferHandler = (dependencies = {}) => async (eve
     if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
     if (existing?.session?.deviceHash === deviceHash &&
         normalizeEmail(existing.grant?.email) === claims.email &&
-        getActiveGrant(existing.grant, now()) &&
+        getActiveGrant(existing.grant, now()) && existing.grant.status === 'active' &&
         (!claims.pdfGrantId || (existing.grant.id === claims.pdfGrantId && existing.grant.status === 'active'))) {
       if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
       return jsonResponse({ resource: 'catalog-guest' });
     }
-    if (claims.pdfGrantId && existing) {
-      return jsonResponse({ error: 'A different catalog session is active. Open the intended invitation to continue.', code: 'session_conflict' }, 403);
+    if (existing) {
+      return jsonResponse({ error: 'A different catalog session is active. Contact Customer Service to continue.', code: 'session_conflict' }, 403);
     }
-    if (claims.pdfGrantId) {
+    let pdfGrantId = claims.pdfGrantId;
+    if (!pdfGrantId) {
+      const grantStore = await (dependencies.getGrantStore || getGrantStore)();
+      const grants = await (dependencies.listRecords || listStoreRecords)(grantStore, 'grant:');
+      const eligible = grants.filter(grant =>
+        UUID.test(grant.id || '') && grant.email === claims.email &&
+        grant.status === 'active' && getActiveGrant(grant, now())
+      );
+      eligible.sort((left, right) => {
+        if (left.expiresAt === null) return right.expiresAt === null ? left.id.localeCompare(right.id) : -1;
+        if (right.expiresAt === null) return 1;
+        return right.expiresAt - left.expiresAt || left.id.localeCompare(right.id);
+      });
+      pdfGrantId = eligible[0]?.id;
+      if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
+    }
+    if (pdfGrantId) {
       const identity = guestDeviceIdentity(event);
       const selectedDevice = identity?.deviceId || randomUUID();
       const authorization = await (dependencies.authorizeDevice || authorizeGuestDevice)(
-        claims.pdfGrantId,
+        pdfGrantId,
         { headers: { cookie: `${GUEST_DEVICE_COOKIE}=${selectedDevice}` } },
         { ...dependencies, now, email: claims.email, requireActiveStatus: true }
       );
       if (claims.exp * 1000 <= now()) return jsonResponse({ error: 'This transfer is invalid or expired.' }, 401);
-      if (authorization.grant?.id !== claims.pdfGrantId ||
+      if (authorization.grant?.id !== pdfGrantId ||
           !getActiveGrant(authorization.grant, now()) || authorization.grant.status !== 'active' ||
           authorization.grant.email !== claims.email || !authorization.session || !authorization.deviceCookie) {
         return jsonResponse({ error: 'Catalog invitation access is no longer active.', code: 'invitation_required' }, 403);
       }
       return jsonResponse({ resource: 'catalog-guest' }, 200, [authorization.session.cookie, authorization.deviceCookie]);
     }
-    return jsonResponse({ error: 'Open your catalog invitation or verify your email to continue.', code: 'invitation_required' }, 403);
+    return jsonResponse({ error: 'No active PDF Catalog access is available. Contact Customer Service.', code: 'invitation_required' }, 403);
   } catch {
     console.error('Web catalog transfer could not be completed.');
     return jsonResponse({ error: 'Catalog transfer is temporarily unavailable.' }, 503);

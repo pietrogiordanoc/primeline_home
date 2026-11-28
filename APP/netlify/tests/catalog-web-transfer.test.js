@@ -89,13 +89,109 @@ const fixture = () => {
 const deviceCookie = `${GUEST_DEVICE_COOKIE}=${deviceId}`;
 const parse = response => JSON.parse(response.body);
 
-test('returning customer without a valid guest session must reopen an invitation', async () => {
+test('customer without an active matching grant is denied without an invitation link', async () => {
   const f = fixture();
   const response = await createCatalogWebTransferHandler(f.deps)(event(sign(makeClaims()), deviceCookie));
   assert.equal(response.statusCode, 403);
   assert.equal(parse(response).code, 'invitation_required');
   assert.equal(f.sessions.data.size, 0);
   assert.deepEqual(await f.grants.get('grant:grant-1'), f.grant);
+});
+
+test('verified Web customer can use an existing active Home grant without a link or cookie', async () => {
+  const f = fixture();
+  const selectedId = randomUUID();
+  const selected = { ...f.grant, id: selectedId, sharedBy: 'seller@primelinedist.com', expiresAt: null };
+  await f.grants.setJSON(`grant:${selectedId}`, selected);
+  const temporaryId = randomUUID();
+  await f.grants.setJSON(`grant:${temporaryId}`, { ...f.grant, id: temporaryId });
+  const foreignId = randomUUID();
+  await f.grants.setJSON(`grant:${foreignId}`, { ...f.grant, id: foreignId, email: 'other@example.com' });
+  const handler = createCatalogWebTransferHandler(f.deps);
+  const ticket = sign(makeClaims());
+  const response = await handler(event(ticket));
+  assert.equal(response.statusCode, 200);
+  assert.equal(parse(response).resource, 'catalog-guest');
+  const cookies = response.multiValueHeaders['Set-Cookie'];
+  const sessionId = cookies[0].split(';')[0].split('=')[1];
+  const session = await f.sessions.get(`session:${sessionId}`);
+  assert.equal(session.grantId, selectedId);
+  assert.equal(session.email, email);
+  assert.deepEqual(await f.grants.get(`grant:${selectedId}`), selected);
+  assert.equal((await handler(event(ticket))).statusCode, 409);
+});
+
+test('identity-only transfer deterministically selects a grant without changing its salesperson or expiry', async () => {
+  for (const mode of ['temporary-tie', 'temporary-latest', 'permanent-tie']) {
+    const f = fixture();
+    const ids = [randomUUID(), randomUUID()].sort();
+    const grants = ids.map((id, index) => ({
+      ...f.grant, id,
+      expiresAt: mode === 'permanent-tie' ? null : now + 600000 * (mode === 'temporary-latest' ? index + 1 : 1),
+      sharedBy: `seller${index}@primelinedist.com`
+    }));
+    const selected = grants[mode === 'temporary-latest' ? 1 : 0];
+    for (const grant of grants) await f.grants.setJSON(`grant:${grant.id}`, grant);
+    for (const listed of [grants, [...grants].reverse()]) {
+      const handler = createCatalogWebTransferHandler({ ...f.deps, listRecords: async () => listed });
+      const response = await handler(event(sign(makeClaims())));
+      assert.equal(response.statusCode, 200);
+      const cookies = response.multiValueHeaders['Set-Cookie'].map(value => value.split(';')[0]).join('; ');
+      const session = await validateGuestSession({ headers: { cookie: cookies } }, f.deps);
+      assert.equal(session.grant.id, selected.id);
+      assert.equal(session.grant.sharedBy, selected.sharedBy);
+      assert.equal(session.grant.expiresAt, selected.expiresAt);
+    }
+    for (const grant of grants) assert.deepEqual(await f.grants.get(`grant:${grant.id}`), grant);
+  }
+});
+
+test('identity-only transfer fails closed when Home lookup fails or the ticket expires', async () => {
+  const f = fixture();
+  const unavailable = createCatalogWebTransferHandler({
+    ...f.deps, listRecords: async () => { throw new Error('offline'); }
+  });
+  assert.equal((await unavailable(event(sign(makeClaims())))).statusCode, 503);
+  let time = now;
+  const delayed = createCatalogWebTransferHandler({
+    ...f.deps, now: () => time,
+    listRecords: async () => { time += 120000; return []; }
+  });
+  assert.equal((await delayed(event(sign(makeClaims())))).statusCode, 401);
+  assert.equal(f.sessions.data.size, 0);
+});
+
+test('identity-only transfer rejects revoked, expired, pending and foreign Home grants', async () => {
+  for (const change of ['revoked', 'expired', 'pending', 'foreign']) {
+    const f = fixture();
+    const id = randomUUID();
+    const grant = { ...f.grant, id };
+    if (change === 'revoked') grant.revokedAt = now - 1;
+    if (change === 'expired') grant.expiresAt = now - 1;
+    if (change === 'pending') grant.status = 'pending';
+    if (change === 'foreign') grant.email = 'other@example.com';
+    await f.grants.setJSON(`grant:${id}`, grant);
+    const response = await createCatalogWebTransferHandler(f.deps)(event(sign(makeClaims())));
+    assert.equal(response.statusCode, 403, change);
+    assert.equal(parse(response).code, 'invitation_required', change);
+    assert.equal(f.sessions.data.size, 0, change);
+  }
+});
+
+test('identity-only transfer rechecks a discovered grant after revocation', async () => {
+  const f = fixture();
+  const id = randomUUID();
+  const grant = { ...f.grant, id };
+  await f.grants.setJSON(`grant:${id}`, grant);
+  const response = await createCatalogWebTransferHandler({
+    ...f.deps,
+    listRecords: async () => {
+      await f.grants.setJSON(`grant:${id}`, { ...grant, revokedAt: now });
+      return [grant];
+    }
+  })(event(sign(makeClaims())));
+  assert.equal(response.statusCode, 403);
+  assert.equal(f.sessions.data.size, 0);
 });
 
 test('signed exact grant creates an isolated session without a prior PDF cookie', async () => {
@@ -263,7 +359,7 @@ test('Web transfer cannot switch grants when a previous session is invalid, expi
       event(sign(makeClaims()), `${deviceCookie}; ${GUEST_SESSION_COOKIE}=${sessionId}`)
     );
     assert.equal(response.statusCode, 403, state);
-    assert.equal(parse(response).code, 'invitation_required');
+    assert.equal(parse(response).code, state === 'other-customer' ? 'session_conflict' : 'invitation_required');
     assert.equal(f.sessions.data.size, state === 'invalid' || state === 'expired' ? 0 : 1);
   }
 });
